@@ -492,30 +492,17 @@ html,body{
       <div class="wd-hero-sub">Available Balance</div>
       <div class="wd-hero-bal"><span id="wd-balance">0.00</span> TON</div>
     </div>
-    <div class="crypto-addr-card">
-      <div class="crypto-addr-label">🔐 Your Crypto Wallet Address</div>
-      <div class="crypto-addr-desc">Enter your TON wallet address. Must start with <strong>EQ</strong> or <strong>UQ</strong>.</div>
-      <input class="crypto-addr-input" id="wd-wallet" type="text" placeholder="EQ... or UQ... your TON wallet address" spellcheck="false" autocomplete="off">
-      <div class="crypto-saved-badge" id="wallet-saved-badge">✅ Wallet address saved</div>
-      <button class="btn-save-addr" onclick="saveWalletAddress()">💾 Save Wallet Address</button>
-    </div>
-    <div id="wd-locked-section" style="display:none;">
-      <div class="wd-locked-card">
-        <div class="wd-locked-title">🔒 Withdrawals Locked</div>
-        <div class="wd-locked-sub">Make a deposit first. Admin will review and unlock your withdrawals. Save your wallet address above so it's ready.</div>
-      </div>
-    </div>
-    <div id="wd-form-section" style="display:none;">
-      <div class="wd-form-card">
-        <div class="wd-form-title">Request Withdrawal</div>
-        <div class="wd-form-sub">Sending to: <span id="wd-wallet-preview" style="font-family:'DM Mono',monospace;color:var(--ton2);word-break:break-all;display:block;margin-top:4px;"></span></div>
-        <label class="form-label">Amount (TON)</label>
-        <input class="wd-input" id="wd-amount" type="number" min="0.1" step="0.1" placeholder="Amount to withdraw">
-        <button class="btn-gold" onclick="submitWithdraw()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-          Submit Withdrawal Request
-        </button>
-      </div>
+    <div class="wd-form-card">
+      <div class="wd-form-title">Request Withdrawal</div>
+      <div class="wd-form-sub">Enter your TON wallet address and the amount you wish to withdraw. Our team will process it shortly.</div>
+      <label class="form-label" style="margin-top:8px;">Your TON Wallet Address</label>
+      <input class="wd-input" id="wd-wallet-input" type="text" placeholder="EQ... or UQ... your TON wallet address" spellcheck="false" autocomplete="off" style="margin-bottom:10px;">
+      <label class="form-label">Amount (TON)</label>
+      <input class="wd-input" id="wd-amount" type="number" min="0.1" step="0.1" placeholder="Amount to withdraw">
+      <button class="btn-gold" onclick="submitWithdraw()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        Submit Withdrawal Request
+      </button>
     </div>
     <div class="sec-title" id="wd-history-title" style="display:none;">Withdrawal History</div>
     <div class="card" id="wd-history-list"></div>
@@ -654,9 +641,9 @@ tonConnectUI.onStatusChange(wallet => {
     document.getElementById('wallet-addr-display').textContent = connectedWalletFriendly;
     document.getElementById('info-wallet').textContent = short;
     document.getElementById('btn-pay').disabled = false;
-    if (userData && !userData.walletAddress) {
-      document.getElementById('wd-wallet').value = connectedWalletFriendly;
-    }
+    // Pre-fill withdraw wallet input if empty
+    const wdInput = document.getElementById('wd-wallet-input');
+    if (wdInput && !wdInput.value) wdInput.value = connectedWalletFriendly;
   } else {
     connectedWalletAddr     = null;
     connectedWalletFriendly = null;
@@ -1149,10 +1136,10 @@ function renderAll() {
   document.getElementById('header-stars').textContent   = stars;
   document.getElementById('info-stars').textContent     = stars + ' ⭐';
 
+  // Pre-fill wallet if saved
   if (userData.walletAddress) {
-    document.getElementById('wd-wallet').value = userData.walletAddress;
-    document.getElementById('wallet-saved-badge').classList.add('show');
-    document.getElementById('wd-wallet-preview').textContent = userData.walletAddress;
+    const wdInput = document.getElementById('wd-wallet-input');
+    if (wdInput && !wdInput.value) wdInput.value = userData.walletAddress;
   }
 
   const refCode = userData.referralCode || '';
@@ -1165,7 +1152,7 @@ function renderAll() {
   document.getElementById('info-tgid').textContent    = userData.userId || '—';
   document.getElementById('info-username').textContent = userData.userName ? '@' + userData.userName : '—';
   document.getElementById('info-ref-code').textContent = refCode || '—';
-  document.getElementById('info-wd-status').textContent = userData.withdrawUnlocked ? '🔓 Unlocked' : '🔒 Locked';
+  document.getElementById('info-wd-status').textContent = 'Open';
 
   const refUsed = document.getElementById('ref-used-display');
   if (userData.referredBy) {
@@ -1173,11 +1160,6 @@ function renderAll() {
     document.getElementById('ref-code-input').disabled = true;
     document.getElementById('ref-submit-btn').disabled = true;
   }
-
-  document.getElementById('wd-locked-section').style.display = userData.withdrawUnlocked ? 'none' : 'block';
-  document.getElementById('wd-form-section').style.display   = userData.withdrawUnlocked ? 'block' : 'none';
-  if (userData.withdrawUnlocked && userData.walletAddress)
-    document.getElementById('wd-wallet-preview').textContent = userData.walletAddress;
 
   renderMilestones();
 }
@@ -1270,7 +1252,7 @@ function renderDeposits() {
 
 async function loadWithdrawals() {
   try {
-    const snap = await getDocs(query(collection(db, 'withdrawRequests'), where('userId', '==', String(currentUser.id)), orderBy('createdAt', 'desc'), limit(20)));
+    const snap = await getDocs(query(collection(db, 'withdrawals'), where('userId', '==', String(currentUser.id)), orderBy('createdAt', 'desc'), limit(20)));
     const list  = document.getElementById('wd-history-list');
     const title = document.getElementById('wd-history-title');
     const docs  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1290,41 +1272,42 @@ async function loadWithdrawals() {
 
 window.submitWithdraw = async function() {
   const amount = parseFloat(document.getElementById('wd-amount').value);
-  const wallet = userData?.walletAddress || '';
+  const wallet = document.getElementById('wd-wallet-input').value.trim();
   const bal    = userData?.balance || 0;
   if (isNaN(amount) || amount <= 0) { showToast('⚠️ Enter a valid amount'); return; }
-  if (!wallet) { showToast('⚠️ Save your wallet address first'); return; }
+  if (!wallet) { showToast('⚠️ Enter your TON wallet address'); return; }
+  if (!wallet.startsWith('EQ') && !wallet.startsWith('UQ')) { showToast('⚠️ Address must start with EQ or UQ'); return; }
   if (amount > bal) { showToast('⚠️ Insufficient balance'); return; }
   openModal('💸 Confirm Withdrawal',
     `<div style="font-size:13px;color:var(--sub);line-height:1.7;">Withdraw <strong style="color:var(--text);">${amount.toFixed(2)} TON</strong> to:<br><code style="font-size:10px;word-break:break-all;">${wallet}</code></div>`,
     async () => {
       try {
-        await addDoc(collection(db, 'withdrawRequests'), {
-          userId: String(currentUser.id), userName: currentUser.username || '',
-          displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
+        const uid = String(currentUser.id);
+        const displayName = ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim();
+        const userName = currentUser.username || '';
+        await addDoc(collection(db, 'withdrawals'), {
+          userId: uid, userName, displayName,
           amount, walletAddress: wallet, status: 'pending', createdAt: serverTimestamp()
         });
+        // Notify admin via bot with full user info
+        await sendBotMessage(
+          `💸 <b>New Withdrawal Request!</b>\n\n` +
+          `👤 <b>User:</b> ${userName ? '@' + userName : uid} (${displayName})\n` +
+          `🆔 <b>Telegram ID:</b> <code>${uid}</code>\n` +
+          `💰 <b>Amount:</b> ${amount.toFixed(2)} TON\n` +
+          `📊 <b>Current Balance:</b> ${bal.toFixed(2)} TON\n` +
+          `🔑 <b>Wallet Address:</b> <code>${wallet}</code>\n` +
+          `📅 <b>Time:</b> ${new Date().toLocaleString()}`
+        );
         showToast('✅ Withdrawal request submitted!');
         document.getElementById('wd-amount').value = '';
+        document.getElementById('wd-wallet-input').value = '';
         await loadWithdrawals();
       } catch(e) { showToast('❌ ' + e.message); }
     }
   );
 };
 
-window.saveWalletAddress = async function() {
-  const wallet = document.getElementById('wd-wallet').value.trim();
-  if (!wallet) { showToast('⚠️ Enter your TON wallet address'); return; }
-  if (!wallet.startsWith('EQ') && !wallet.startsWith('UQ')) { showToast('⚠️ Address must start with EQ or UQ'); return; }
-  try {
-    await updateDoc(doc(db, 'users', String(currentUser.id)), { walletAddress: wallet });
-    userData.walletAddress = wallet;
-    document.getElementById('info-wallet').textContent = wallet;
-    document.getElementById('wallet-saved-badge').classList.add('show');
-    document.getElementById('wd-wallet-preview').textContent = wallet;
-    showToast('✅ Wallet address saved!');
-  } catch(e) { showToast('❌ ' + e.message); }
-};
 
 window.copyRefLink = function() {
   const code = userData?.referralCode || '';
