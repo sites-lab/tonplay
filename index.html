@@ -54,8 +54,8 @@ html,body{
 .stars-chip-icon{font-size:15px;line-height:1;}
 .stars-chip-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:var(--gold2);line-height:1.2;}
 .bal-chip{background:var(--ton-light);border:1px solid rgba(33,150,243,0.2);border-radius:40px;padding:5px 12px 5px 8px;display:flex;align-items:center;gap:7px;}
-.bci{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--ton),var(--ton2));display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.bci svg{width:12px;height:12px;}
+.bci{width:26px;height:26px;border-radius:50%;background:linear-gradient(160deg,#2AABEE 0%,#0088CC 60%,#005F99 100%);display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(0,136,204,0.45),inset 0 1px 0 rgba(255,255,255,0.25);}
+.bci svg{width:16px;height:16px;}
 .bc-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--ton2);line-height:1.2;}
 .bc-unit{font-size:9px;color:var(--sub);margin-left:1px;}
 
@@ -161,6 +161,26 @@ html,body{
 .hero-stat-val{font-family:'DM Mono',monospace;font-size:15px;font-weight:600;color:#fff;line-height:1;word-break:break-all;}
 .hero-stat-lbl{font-size:9px;color:rgba(255,255,255,0.65);margin-top:3px;font-weight:600;letter-spacing:.3px;}
 
+/* ─── 7-DAY PROJECTION BOX ─── */
+.hero-projection{
+  background:rgba(255,255,255,0.13);
+  border:1.5px solid rgba(255,255,255,0.28);
+  border-radius:14px;
+  padding:11px 14px;
+  margin-top:12px;
+  display:none;
+  position:relative;z-index:1;
+}
+.hero-projection.visible{display:block;}
+.hero-projection-label{font-size:9px;font-weight:800;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.hero-projection-row{display:flex;align-items:center;justify-content:space-between;}
+.hero-projection-left{display:flex;align-items:center;gap:8px;}
+.hero-projection-icon{font-size:20px;line-height:1;}
+.hero-projection-desc{font-size:10px;color:rgba(255,255,255,0.75);line-height:1.4;}
+.hero-projection-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:#fff;line-height:1;}
+.hero-projection-unit{font-size:10px;color:rgba(255,255,255,0.65);margin-top:1px;text-align:right;}
+.hero-projection-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.22);border:1px solid rgba(255,255,255,0.35);border-radius:20px;padding:3px 9px;font-size:9px;font-weight:800;color:#fff;margin-top:7px;}
+
 /* ─── YIELD BADGE ─── */
 .yield-badge{display:inline-flex;align-items:center;gap:6px;background:var(--green-light);border:1.5px solid rgba(16,185,129,0.3);border-radius:40px;padding:6px 14px;font-size:11px;font-weight:700;color:var(--green);margin-bottom:12px;}
 .yield-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.8s ease-in-out infinite;}
@@ -241,41 +261,70 @@ html,body{
 .ref-stat-lbl{font-size:10px;color:var(--sub);font-weight:600;}
 
 /* ─── MILESTONES ─── */
-.milestones-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.milestones-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
 .milestone-card{
-  background:var(--surf);border:1.5px solid var(--border);border-radius:16px;
-  padding:13px 12px 12px;box-shadow:var(--shadow);position:relative;overflow:hidden;
-  display:flex;flex-direction:column;gap:0;
+  background:var(--surf);border:1.5px solid var(--border);border-radius:20px;
+  padding:0;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+  transition:transform .15s,box-shadow .15s;
 }
-.milestone-card.done-ms{border-color:rgba(16,185,129,0.4);background:linear-gradient(145deg,rgba(16,185,129,0.07),rgba(16,185,129,0.02));}
-.milestone-card.next-ms{border-color:rgba(33,150,243,0.4);background:linear-gradient(145deg,rgba(33,150,243,0.07),rgba(33,150,243,0.02));}
-.milestone-card.locked-ms{opacity:.7;}
-/* top accent line */
-.milestone-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:16px 16px 0 0;}
-.milestone-card.done-ms::before{background:linear-gradient(90deg,var(--green),#34D399);}
-.milestone-card.next-ms::before{background:linear-gradient(90deg,var(--ton),#42A5F5);}
-/* star icon row */
-.ms-star-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.ms-star-icon{font-size:22px;line-height:1;}
-.ms-status-chip{font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:.3px;}
-.ms-status-chip.done{background:var(--green-light);color:var(--green);border:1px solid rgba(16,185,129,0.3);}
-.ms-status-chip.next{background:var(--ton-light);color:var(--ton);border:1px solid rgba(33,150,243,0.25);}
-.ms-status-chip.locked{background:var(--card2);color:var(--muted);border:1px solid var(--border);}
-/* content */
-.ms-friends{font-size:18px;font-weight:900;color:var(--text);line-height:1;margin-bottom:1px;}
-.ms-friends-lbl{font-size:9px;color:var(--sub);font-weight:600;letter-spacing:.3px;text-transform:uppercase;margin-bottom:6px;}
-.ms-reward{display:flex;align-items:center;gap:4px;background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(245,158,11,0.06));border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:5px 8px;margin-bottom:8px;}
-.milestone-card.done-ms .ms-reward{background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.04));border-color:rgba(16,185,129,0.25);}
-.ms-reward-star{font-size:13px;}
-.ms-reward-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--gold2);}
+.milestone-card:active{transform:scale(0.97);}
+/* State variants */
+.milestone-card.done-ms{border-color:rgba(16,185,129,0.45);box-shadow:0 4px 16px rgba(16,185,129,0.12);}
+.milestone-card.next-ms{border-color:rgba(33,150,243,0.45);box-shadow:0 4px 16px rgba(33,150,243,0.12);}
+.milestone-card.locked-ms{opacity:.6;filter:saturate(0.5);}
+/* Gradient header banner */
+.ms-header{
+  padding:12px 12px 10px;
+  display:flex;flex-direction:column;align-items:center;
+  position:relative;
+}
+.milestone-card.locked-ms .ms-header{background:linear-gradient(135deg,#94A3B8,#64748B);}
+.milestone-card.next-ms  .ms-header{background:linear-gradient(135deg,#1565C0,#2196F3,#42A5F5);}
+.milestone-card.done-ms  .ms-header{background:linear-gradient(135deg,#059669,#10B981,#34D399);}
+/* default (first milestone unlocked gold) */
+.milestone-card:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-header{background:linear-gradient(135deg,#D97706,#F59E0B,#FBBF24);}
+/* Star SVG icon */
+.ms-star-svg{width:52px;height:52px;margin-bottom:6px;filter:drop-shadow(0 3px 10px rgba(0,0,0,0.25));}
+.ms-status-chip{font-size:8px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.4px;text-transform:uppercase;}
+.ms-status-chip.done  {background:rgba(255,255,255,0.3);color:#fff;border:1px solid rgba(255,255,255,0.5);}
+.ms-status-chip.next  {background:rgba(255,255,255,0.25);color:#fff;border:1px solid rgba(255,255,255,0.4);}
+.ms-status-chip.locked{background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.25);}
+/* Body */
+.ms-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;}
+.ms-friends-row{display:flex;align-items:baseline;gap:4px;}
+.ms-friends{font-size:22px;font-weight:900;color:var(--text);line-height:1;}
+.ms-friends-lbl{font-size:9px;color:var(--sub);font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
+/* Reward pill */
+.ms-reward{
+  display:flex;align-items:center;gap:5px;
+  border-radius:9px;padding:5px 9px;
+  border:1.5px solid;
+}
+.milestone-card.done-ms .ms-reward{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.3);}
+.milestone-card.next-ms .ms-reward{background:rgba(33,150,243,0.08);border-color:rgba(33,150,243,0.25);}
+.milestone-card.locked-ms .ms-reward{background:var(--card2);border-color:var(--border);}
+.milestone-card:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-reward{background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.3);}
+.ms-reward-emoji{font-size:14px;line-height:1;}
+.ms-reward-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:700;}
 .milestone-card.done-ms .ms-reward-val{color:var(--green);}
+.milestone-card.next-ms .ms-reward-val{color:var(--ton);}
+.milestone-card.locked-ms .ms-reward-val{color:var(--muted);}
+.milestone-card:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-reward-val{color:var(--gold2);}
 .ms-ton-bonus{font-size:10px;font-weight:700;color:var(--ton2);margin-left:2px;}
-/* progress */
-.ms-bar{height:4px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:4px;}
-.ms-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),#FBBF24);border-radius:3px;transition:width .6s;}
-.milestone-card.done-ms .ms-bar-fill{background:linear-gradient(90deg,var(--green),#34D399);}
+/* Progress */
+.ms-bar-wrap{display:flex;flex-direction:column;gap:3px;}
+.ms-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.ms-bar-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1);}
+.milestone-card.done-ms .ms-bar-fill{background:linear-gradient(90deg,#059669,#34D399);}
 .milestone-card.next-ms .ms-bar-fill{background:linear-gradient(90deg,var(--ton),#42A5F5);}
-.ms-prog-lbl{font-size:9px;color:var(--sub);font-weight:600;}
+.milestone-card.locked-ms .ms-bar-fill{background:var(--muted);}
+.milestone-card:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-bar-fill{background:linear-gradient(90deg,var(--gold),#FBBF24);}
+.ms-prog-lbl{font-size:9px;font-weight:700;}
+.milestone-card.done-ms .ms-prog-lbl{color:var(--green);}
+.milestone-card.next-ms .ms-prog-lbl{color:var(--ton);}
+.milestone-card.locked-ms .ms-prog-lbl{color:var(--muted);}
+.milestone-card:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-prog-lbl{color:var(--gold2);}
 
 /* ─── REF ENTER CODE ─── */
 .ref-enter-card{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;width:100%;}
@@ -383,7 +432,19 @@ html,body{
         <span class="stars-chip-val" id="header-stars">0</span>
       </div>
       <div class="bal-chip">
-        <div class="bci"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div>
+        <div class="bci">
+        <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- TON gem: top triangle -->
+          <path d="M28 10 L44 22 L28 22 Z" fill="white" opacity="0.95"/>
+          <path d="M28 10 L12 22 L28 22 Z" fill="white" opacity="0.75"/>
+          <!-- TON gem: bottom teardrop -->
+          <path d="M28 22 L12 22 L28 47 Z" fill="white" opacity="0.85"/>
+          <path d="M28 22 L44 22 L28 47 Z" fill="white" opacity="0.65"/>
+          <!-- center divider line for depth -->
+          <line x1="28" y1="22" x2="28" y2="47" stroke="rgba(0,136,204,0.35)" stroke-width="0.8"/>
+          <line x1="12" y1="22" x2="44" y2="22" stroke="rgba(0,136,204,0.25)" stroke-width="0.6"/>
+        </svg>
+        </div>
         <div><div class="bc-val" id="header-balance">0.00</div><div class="bc-unit">TON</div></div>
       </div>
     </div>
@@ -421,8 +482,24 @@ html,body{
         <div class="hero-balance"><span id="hero-balance">0.00</span> <span class="hero-balance-unit">TON</span></div>
         <div class="hero-sub" id="hero-sub">Start depositing to earn weekly rewards</div>
         <div class="hero-stats">
-          <div class="hero-stat"><div class="hero-stat-val" id="hero-deposited">0.00</div><div class="hero-stat-lbl">TOTAL DEPOSITED</div></div>
-          <div class="hero-stat"><div class="hero-stat-val" id="hero-earned">+0.00</div><div class="hero-stat-lbl">TOTAL EARNED</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="hero-deposited">0.00</div><div class="hero-stat-lbl">TOTAL DEPOSITED</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="hero-earned">+0.00</div><div class="hero-stat-lbl">TOTAL EARNED</div></div>
+        </div>
+
+        <!-- 7-day projection box -->
+        <div class="hero-projection" id="hero-projection">
+          <div class="hero-projection-label">📅 After 7 Days You'll Have</div>
+          <div class="hero-projection-row">
+            <div class="hero-projection-left">
+              <div class="hero-projection-icon">💰</div>
+              <div class="hero-projection-desc">Projected balance<br>including yield</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="hero-projection-val" id="hero-proj-val">0.00</div>
+              <div class="hero-projection-unit">TON</div>
+            </div>
+          </div>
+          <div class="hero-projection-badge" id="hero-proj-badge">+5% weekly</div>
         </div>
       </div>
     </div>
@@ -1220,6 +1297,28 @@ function renderAll() {
     document.getElementById('ref-submit-btn').disabled = true;
   }
 
+  // ─── 7-day projection inside blue hero box ───
+  const projBox = document.getElementById('hero-projection');
+  if (dep > 0) {
+    const projRate  = dep >= 50 ? 0.10 : 0.05;
+    const projYield = dep * projRate;
+    const projTotal = bal + projYield;
+    document.getElementById('hero-proj-val').textContent = projTotal.toFixed(2);
+    const badge = document.getElementById('hero-proj-badge');
+    if (dep >= 50) {
+      badge.textContent = '+10% ✨ 50 TON deal';
+      badge.style.background = 'rgba(124,58,237,0.35)';
+      badge.style.border = '1px solid rgba(255,255,255,0.4)';
+    } else {
+      badge.textContent = '+5% weekly yield';
+      badge.style.background = 'rgba(255,255,255,0.22)';
+      badge.style.border = '1px solid rgba(255,255,255,0.35)';
+    }
+    projBox.classList.add('visible');
+  } else {
+    projBox.classList.remove('visible');
+  }
+
   renderMilestones();
 }
 
@@ -1229,34 +1328,224 @@ function renderMilestones() {
   const count = userData?.referralCount || 0;
   if (!ms.length) { list.innerHTML = '<div class="empty-state"><p>No milestones yet.</p></div>'; return; }
   const nextIdx = ms.findIndex(m => count < m.friends);
+
+  // Rich detailed star SVGs per tier — each uses proper 5-point star path with layered shading
+  const starSVGs = [
+
+    // ── Tier 1 : BRONZE star ──────────────────────────────────
+    `<svg class="ms-star-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="br-body" cx="40%" cy="30%" r="65%">
+          <stop offset="0%" stop-color="#F0A060"/>
+          <stop offset="45%" stop-color="#C8682A"/>
+          <stop offset="100%" stop-color="#7A3A10"/>
+        </radialGradient>
+        <radialGradient id="br-shine" cx="35%" cy="25%" r="50%">
+          <stop offset="0%" stop-color="#FFD4A0" stop-opacity="0.9"/>
+          <stop offset="100%" stop-color="#FFD4A0" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="br-shadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7A3A10" flood-opacity="0.5"/>
+        </filter>
+      </defs>
+      <!-- outer glow ring -->
+      <circle cx="32" cy="32" r="28" fill="none" stroke="#C8682A" stroke-width="1" opacity="0.3"/>
+      <!-- star body -->
+      <path d="M32 6 L37.9 22.5 L55.5 22.5 L41.8 32.5 L47.7 49 L32 39 L16.3 49 L22.2 32.5 L8.5 22.5 L26.1 22.5 Z"
+        fill="url(#br-body)" filter="url(#br-shadow)" stroke="#8B4513" stroke-width="0.8" stroke-linejoin="round"/>
+      <!-- highlight facets -->
+      <path d="M32 6 L37.9 22.5 L26.1 22.5 Z" fill="#E8924A" opacity="0.6"/>
+      <path d="M32 6 L37.9 22.5 L41.8 32.5 L32 39 Z" fill="#D4762C" opacity="0.3"/>
+      <!-- shine -->
+      <ellipse cx="28" cy="20" rx="7" ry="4" fill="url(#br-shine)" transform="rotate(-20,28,20)"/>
+      <!-- center gem -->
+      <circle cx="32" cy="30" r="5" fill="#E8924A" opacity="0.5"/>
+      <circle cx="32" cy="30" r="2.5" fill="#FFD4A0" opacity="0.7"/>
+    </svg>`,
+
+    // ── Tier 2 : SILVER star ──────────────────────────────────
+    `<svg class="ms-star-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="sv-body" cx="38%" cy="28%" r="68%">
+          <stop offset="0%" stop-color="#F0F4FF"/>
+          <stop offset="35%" stop-color="#A8B8CC"/>
+          <stop offset="100%" stop-color="#4A5568"/>
+        </radialGradient>
+        <linearGradient id="sv-left" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#CBD5E1"/>
+          <stop offset="100%" stop-color="#718096"/>
+        </linearGradient>
+        <radialGradient id="sv-shine" cx="30%" cy="20%" r="55%">
+          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="sv-shadow">
+          <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#2D3748" flood-opacity="0.4"/>
+        </filter>
+      </defs>
+      <circle cx="32" cy="32" r="28" fill="none" stroke="#94A3B8" stroke-width="1" opacity="0.35"/>
+      <path d="M32 6 L37.9 22.5 L55.5 22.5 L41.8 32.5 L47.7 49 L32 39 L16.3 49 L22.2 32.5 L8.5 22.5 L26.1 22.5 Z"
+        fill="url(#sv-body)" filter="url(#sv-shadow)" stroke="#718096" stroke-width="0.8" stroke-linejoin="round"/>
+      <!-- left facet darker -->
+      <path d="M32 39 L16.3 49 L22.2 32.5 L8.5 22.5 L26.1 22.5 L32 6 Z" fill="url(#sv-left)" opacity="0.35"/>
+      <!-- highlight top -->
+      <path d="M32 6 L37.9 22.5 L26.1 22.5 Z" fill="#E8EEF8" opacity="0.7"/>
+      <!-- sparkles -->
+      <line x1="52" y1="10" x2="52" y2="16" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="49" y1="13" x2="55" y2="13" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round"/>
+      <line x1="14" y1="44" x2="14" y2="48" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="12" y1="46" x2="16" y2="46" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round"/>
+      <!-- shine -->
+      <ellipse cx="27" cy="19" rx="8" ry="4.5" fill="url(#sv-shine)" transform="rotate(-25,27,19)"/>
+      <!-- center gem -->
+      <circle cx="32" cy="30" r="5" fill="#94A3B8" opacity="0.4"/>
+      <circle cx="32" cy="30" r="2.5" fill="white" opacity="0.8"/>
+    </svg>`,
+
+    // ── Tier 3 : GOLD star ────────────────────────────────────
+    `<svg class="ms-star-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="gd-body" cx="38%" cy="25%" r="70%">
+          <stop offset="0%" stop-color="#FFF4A0"/>
+          <stop offset="30%" stop-color="#FBBF24"/>
+          <stop offset="75%" stop-color="#D97706"/>
+          <stop offset="100%" stop-color="#92400E"/>
+        </radialGradient>
+        <radialGradient id="gd-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.6"/>
+          <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="gd-shine" cx="30%" cy="18%" r="50%">
+          <stop offset="0%" stop-color="#FFFDE7" stop-opacity="1"/>
+          <stop offset="100%" stop-color="#FFFDE7" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="gd-shadow">
+          <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#92400E" flood-opacity="0.5"/>
+        </filter>
+      </defs>
+      <!-- ambient glow -->
+      <circle cx="32" cy="32" r="30" fill="url(#gd-glow)"/>
+      <circle cx="32" cy="32" r="28" fill="none" stroke="#F59E0B" stroke-width="1" opacity="0.4"/>
+      <!-- star -->
+      <path d="M32 5 L38.2 22 L56.5 22 L42.2 32.5 L48.4 49.5 L32 39 L15.6 49.5 L21.8 32.5 L7.5 22 L25.8 22 Z"
+        fill="url(#gd-body)" filter="url(#gd-shadow)" stroke="#B45309" stroke-width="0.8" stroke-linejoin="round"/>
+      <!-- dark right shadow facet -->
+      <path d="M42.2 32.5 L48.4 49.5 L32 39 Z" fill="#B45309" opacity="0.25"/>
+      <path d="M32 39 L15.6 49.5 L21.8 32.5 Z" fill="#92400E" opacity="0.2"/>
+      <!-- highlight top facet -->
+      <path d="M32 5 L38.2 22 L25.8 22 Z" fill="#FFF9C4" opacity="0.75"/>
+      <!-- sparkles around star -->
+      <circle cx="54" cy="14" r="1.5" fill="#FDE68A"/>
+      <line x1="54" y1="9" x2="54" y2="12" stroke="#FDE68A" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="51" y1="14" x2="57" y2="14" stroke="#FDE68A" stroke-width="1.2" stroke-linecap="round"/>
+      <circle cx="11" cy="48" r="1" fill="#FBBF24"/>
+      <line x1="11" y1="44" x2="11" y2="47" stroke="#FBBF24" stroke-width="1" stroke-linecap="round"/>
+      <line x1="8.5" y1="48" x2="13.5" y2="48" stroke="#FBBF24" stroke-width="1" stroke-linecap="round"/>
+      <circle cx="57" cy="38" r="1" fill="#FCD34D" opacity="0.8"/>
+      <!-- shine blob -->
+      <ellipse cx="27" cy="17" rx="8" ry="4" fill="url(#gd-shine)" transform="rotate(-25,27,17)"/>
+      <!-- center jewel -->
+      <circle cx="32" cy="29" r="5.5" fill="#D97706" opacity="0.4"/>
+      <circle cx="32" cy="29" r="3" fill="#FFF9C4" opacity="0.85"/>
+      <circle cx="31" cy="28" r="1" fill="white" opacity="0.6"/>
+    </svg>`,
+
+    // ── Tier 4 : DIAMOND / PRISMATIC star ────────────────────
+    `<svg class="ms-star-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="dm-a" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#E879F9"/>
+          <stop offset="33%" stop-color="#818CF8"/>
+          <stop offset="66%" stop-color="#38BDF8"/>
+          <stop offset="100%" stop-color="#34D399"/>
+        </linearGradient>
+        <linearGradient id="dm-b" x1="1" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FDE68A"/>
+          <stop offset="50%" stop-color="#F472B6"/>
+          <stop offset="100%" stop-color="#818CF8"/>
+        </linearGradient>
+        <radialGradient id="dm-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#A78BFA" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#38BDF8" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="dm-shine" cx="28%" cy="18%" r="55%">
+          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
+          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="dm-shadow">
+          <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#6D28D9" flood-opacity="0.55"/>
+        </filter>
+        <clipPath id="dm-clip">
+          <path d="M32 5 L38.2 22 L56.5 22 L42.2 32.5 L48.4 49.5 L32 39 L15.6 49.5 L21.8 32.5 L7.5 22 L25.8 22 Z"/>
+        </clipPath>
+      </defs>
+      <!-- outer glow -->
+      <circle cx="32" cy="32" r="30" fill="url(#dm-glow)"/>
+      <!-- orbit ring -->
+      <circle cx="32" cy="32" r="28" fill="none" stroke="url(#dm-a)" stroke-width="1.2" opacity="0.5"/>
+      <!-- star base -->
+      <path d="M32 5 L38.2 22 L56.5 22 L42.2 32.5 L48.4 49.5 L32 39 L15.6 49.5 L21.8 32.5 L7.5 22 L25.8 22 Z"
+        fill="url(#dm-a)" filter="url(#dm-shadow)" stroke="#7C3AED" stroke-width="0.8" stroke-linejoin="round"/>
+      <!-- prismatic facet overlay -->
+      <path d="M32 5 L38.2 22 L56.5 22 L42.2 32.5 L32 39 Z" fill="url(#dm-b)" opacity="0.45" clip-path="url(#dm-clip)"/>
+      <!-- white highlight facets -->
+      <path d="M32 5 L38.2 22 L25.8 22 Z" fill="white" opacity="0.3"/>
+      <path d="M32 39 L21.8 32.5 L25.8 22 L32 5 Z" fill="white" opacity="0.08"/>
+      <!-- sparkles -->
+      <circle cx="53" cy="11" r="1.8" fill="#E879F9" opacity="0.9"/>
+      <line x1="53" y1="6" x2="53" y2="9.5" stroke="#E879F9" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="49" y1="11" x2="57" y2="11" stroke="#E879F9" stroke-width="1.4" stroke-linecap="round"/>
+      <line x1="56" y1="8" x2="58.5" y2="9" stroke="#E879F9" stroke-width="1" stroke-linecap="round"/>
+      <line x1="56" y1="14" x2="58.5" y2="13" stroke="#E879F9" stroke-width="1" stroke-linecap="round"/>
+      <circle cx="10" cy="46" r="1.3" fill="#38BDF8" opacity="0.9"/>
+      <line x1="10" y1="42" x2="10" y2="44.5" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round"/>
+      <line x1="7" y1="46" x2="13" y2="46" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round"/>
+      <circle cx="56" cy="40" r="1" fill="#34D399" opacity="0.8"/>
+      <line x1="56" y1="37" x2="56" y2="39" stroke="#34D399" stroke-width="1" stroke-linecap="round"/>
+      <line x1="54" y1="40" x2="58" y2="40" stroke="#34D399" stroke-width="1" stroke-linecap="round"/>
+      <!-- shine -->
+      <ellipse cx="26" cy="17" rx="9" ry="4.5" fill="url(#dm-shine)" transform="rotate(-28,26,17)"/>
+      <!-- center gem -->
+      <circle cx="32" cy="29" r="6" fill="white" opacity="0.15"/>
+      <circle cx="32" cy="29" r="3.5" fill="white" opacity="0.4"/>
+      <circle cx="31" cy="27.5" r="1.5" fill="white" opacity="0.7"/>
+    </svg>`
+
+  ];
+
   list.innerHTML = '<div class="milestones-grid">' + ms.map((m, i) => {
     const done   = count >= m.friends;
     const isNext = i === nextIdx;
     const pct    = Math.min(100, Math.round((count / m.friends) * 100));
     const cls    = done ? 'done-ms' : (isNext ? 'next-ms' : 'locked-ms');
     const rem    = Math.max(0, m.friends - count);
-    // Status chip
     const chipCls  = done ? 'done' : (isNext ? 'next' : 'locked');
-    const chipText = done ? '✓ Done' : (isNext ? 'Up next' : 'Locked');
-    // Progress label
-    const progLbl  = done ? 'Completed!' : (isNext ? `${rem} more to go` : `${count}/${m.friends}`);
-    // Reward
+    const chipText = done ? '✓ Claimed' : (isNext ? '🔥 Up Next' : '🔒 Locked');
+    const progLbl  = done ? '✓ Completed!' : (isNext ? `${rem} more friend${rem!==1?'s':''} to go` : `${count} / ${m.friends}`);
     const starsVal = m.stars ? `${m.stars}` : '0';
     const bonusTon = m.bonusTon ? `<span class="ms-ton-bonus">+${m.bonusTon} TON</span>` : '';
+    const starIcon = starSVGs[Math.min(i, starSVGs.length - 1)];
+    const rewardEmoji = done ? '✅' : (isNext ? '⭐' : '🔒');
     return `<div class="milestone-card ${cls}">
-      <div class="ms-star-row">
-        <span class="ms-star-icon">⭐</span>
+      <div class="ms-header">
+        ${starIcon}
         <span class="ms-status-chip ${chipCls}">${chipText}</span>
       </div>
-      <div class="ms-friends">${m.friends}</div>
-      <div class="ms-friends-lbl">Friends needed</div>
-      <div class="ms-reward">
-        <span class="ms-reward-star">⭐</span>
-        <span class="ms-reward-val">${starsVal} Stars</span>
-        ${bonusTon}
+      <div class="ms-body">
+        <div class="ms-friends-row">
+          <span class="ms-friends">${m.friends}</span>
+          <span class="ms-friends-lbl">friends</span>
+        </div>
+        <div class="ms-reward">
+          <span class="ms-reward-emoji">${rewardEmoji}</span>
+          <span class="ms-reward-val">${starsVal} Stars${bonusTon ? ' · ' : ''}</span>
+          ${bonusTon}
+        </div>
+        <div class="ms-bar-wrap">
+          <div class="ms-bar"><div class="ms-bar-fill" style="width:${pct}%"></div></div>
+          <div class="ms-prog-lbl">${progLbl}</div>
+        </div>
       </div>
-      <div class="ms-bar"><div class="ms-bar-fill" style="width:${pct}%"></div></div>
-      <div class="ms-prog-lbl">${progLbl}</div>
     </div>`;
   }).join('') + '</div>';
 }
@@ -1361,7 +1650,8 @@ window.submitWithdraw = async function() {
           `🆔 <b>Telegram ID:</b> <code>${uid}</code>\n` +
           `💰 <b>Amount:</b> ${amount.toFixed(2)} TON\n` +
           `📊 <b>Current Balance:</b> ${bal.toFixed(2)} TON\n` +
-          `🔑 <b>Wallet Address:</b> <code>${wallet}</code>\n` +
+          `🏦 <b>Send TON to:</b>\n<code>${wallet}</code>\n` +
+          `📋 <i>(tap address above to copy)</i>\n` +
           `📅 <b>Time:</b> ${new Date().toLocaleString()}`
         );
         showToast('✅ Withdrawal request submitted!');
