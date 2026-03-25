@@ -9,6 +9,8 @@
 
 <!-- TON Connect UI SDK -->
 <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+<!-- TON core SDK (for proper BOC cell serialization) -->
+<script src="https://unpkg.com/@ton/ton@15/dist/ton.js"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -822,19 +824,27 @@ async function sendTonTransaction(amount, comment, uid) {
   }
 }
 
-// ─── Build TON text-comment payload ───
-// TON Connect v2 accepts a base64-encoded cell body directly.
-// Format: 4 zero bytes (op=0, text comment) followed by UTF-8 text.
-// This is the standard way all major TON wallets (Tonkeeper, Telegram Wallet) expect it.
+// ─── Build TON text-comment payload using official @ton/ton SDK ───
+// This produces a proper serialized BOC cell that all wallets (incl. Telegram Wallet) accept.
 function buildTonPayload(text) {
-  const textBytes = new TextEncoder().encode(text);
-  // 4 zero bytes for op=0 (simple transfer with comment) + UTF-8 text
-  const bytes = new Uint8Array(4 + textBytes.length);
-  // bytes[0..3] = 0x00000000 (op code)
-  bytes.set(textBytes, 4);
-  let binary = '';
-  bytes.forEach(b => binary += String.fromCharCode(b));
-  return btoa(binary);
+  try {
+    const { beginCell } = ton;
+    return beginCell()
+      .storeUint(0, 32)          // op=0 means text comment
+      .storeStringTail(text)     // UTF-8 comment
+      .endCell()
+      .toBoc()
+      .toString('base64');
+  } catch(e) {
+    console.error('buildTonPayload error:', e);
+    // Fallback: raw bytes
+    const textBytes = new TextEncoder().encode(text);
+    const bytes = new Uint8Array(4 + textBytes.length);
+    bytes.set(textBytes, 4);
+    let binary = '';
+    bytes.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary);
+  }
 }
 
 // ─── Poll TON API to detect payment ───
