@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TonPlay</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- TON Connect UI SDK -->
+<script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#F0F4FF;--surf:#FFFFFF;--card:#FFFFFF;--card2:#F7F9FF;
+  --ton:#2196F3;--ton2:#1565C0;--ton-light:#E3F0FF;
+  --gold:#F59E0B;--gold2:#D97706;--gold-light:#FEF3C7;
+  --green:#10B981;--green-light:#D1FAE5;
+  --red:#EF4444;--red-light:#FEE2E2;
+  --text:#0F172A;--sub:#64748B;--muted:#94A3B8;--border:#E2E8F0;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 12px rgba(0,0,0,0.04);
+  --r:16px;--r-sm:10px;
+}
+
+html,body{
+  height:100%;width:100%;
+  background:var(--bg);color:var(--text);
+  font-family:'Inter',sans-serif;
+  overflow:hidden;
+  user-select:none;-webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.bg-layer{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;}
+.bg-layer::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 20% 10%,rgba(33,150,243,0.08) 0%,transparent 55%),
+             radial-gradient(ellipse at 85% 80%,rgba(99,102,241,0.07) 0%,transparent 50%),
+             radial-gradient(ellipse at 50% 50%,rgba(16,185,129,0.04) 0%,transparent 60%);}
+.bg-circle{position:absolute;border-radius:50%;background:rgba(33,150,243,0.06);animation:floatCircle var(--d,12s) ease-in-out infinite var(--dl,0s);}
+@keyframes floatCircle{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(var(--tx,10px),var(--ty,-15px)) scale(1.04)}}
+
+.app{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
+
+/* ─── HEADER ─── */
+.header{padding:10px 14px 9px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--surf);border-bottom:1px solid var(--border);box-shadow:0 1px 4px rgba(0,0,0,0.06);width:100%;}
+.logo{display:flex;align-items:center;gap:9px;}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,#2196F3,#1565C0);border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(33,150,243,0.3);flex-shrink:0;}
+.logo-icon svg{width:18px;height:18px;}
+.logo-name{font-size:19px;font-weight:900;color:var(--text);letter-spacing:-0.5px;}
+.logo-name span{color:var(--ton);}
+.header-right{display:flex;align-items:center;gap:7px;}
+.stars-chip{background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(245,158,11,0.06));border:1.5px solid rgba(245,158,11,0.35);border-radius:40px;padding:4px 10px 4px 7px;display:flex;align-items:center;gap:5px;}
+.stars-chip-icon{font-size:15px;line-height:1;}
+.stars-chip-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:var(--gold2);line-height:1.2;}
+.bal-chip{background:var(--ton-light);border:1px solid rgba(33,150,243,0.2);border-radius:40px;padding:5px 12px 5px 8px;display:flex;align-items:center;gap:7px;}
+.bci{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--ton),var(--ton2));display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.bci svg{width:12px;height:12px;}
+.bc-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:600;color:var(--ton2);line-height:1.2;}
+.bc-unit{font-size:9px;color:var(--sub);margin-left:1px;}
+
+/* ─── TAB BAR ─── */
+.tab-bar{display:flex;padding:8px 12px 4px;gap:4px;flex-shrink:0;background:var(--surf);border-bottom:1px solid var(--border);}
+.tab-btn{flex:1;padding:8px 4px;border:1.5px solid var(--border);background:var(--surf);color:var(--sub);font-family:'Inter',sans-serif;font-size:9px;font-weight:700;letter-spacing:.3px;cursor:pointer;border-radius:12px;transition:all 0.18s;display:flex;flex-direction:column;align-items:center;gap:3px;line-height:1;}
+.tab-btn svg{width:17px;height:17px;}
+.tab-btn.active{background:linear-gradient(145deg,rgba(33,150,243,0.1),rgba(33,150,243,0.04));border-color:rgba(33,150,243,0.4);color:var(--ton);box-shadow:0 2px 8px rgba(33,150,243,0.1);}
+.tab-btn.ref-tab.active{background:linear-gradient(145deg,rgba(16,185,129,0.1),rgba(16,185,129,0.03));border-color:rgba(16,185,129,0.4);color:var(--green);}
+.tab-btn.wd-tab.active{background:linear-gradient(145deg,rgba(245,158,11,0.1),rgba(245,158,11,0.03));border-color:rgba(245,158,11,0.4);color:var(--gold);}
+
+/* ─── USER LINE ─── */
+.user-line{padding:3px 14px 4px;font-size:10px;color:var(--sub);font-weight:500;flex-shrink:0;background:var(--surf);border-bottom:1px solid var(--border);}
+
+/* ─── TAB CONTENT ─── */
+.tab-content{flex:1;width:100%;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:12px 12px 80px;display:none;}
+.tab-content.active{display:block;}
+.tab-content::-webkit-scrollbar{width:3px;}
+.tab-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ─── TON CONNECT WALLET BANNER ─── */
+.wallet-banner{
+  background:linear-gradient(135deg,rgba(33,150,243,0.08),rgba(21,101,192,0.04));
+  border:1.5px solid rgba(33,150,243,0.2);
+  border-radius:16px;padding:14px 16px;margin-bottom:12px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  width:100%;
+}
+.wallet-banner-info{display:flex;align-items:center;gap:10px;min-width:0;}
+.wallet-banner-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s;}
+.wallet-banner-dot.connected{background:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,0.2);animation:pulse 1.8s ease-in-out infinite;}
+.wallet-banner-text{min-width:0;}
+.wallet-banner-label{font-size:10px;font-weight:700;color:var(--sub);letter-spacing:.3px;text-transform:uppercase;}
+.wallet-banner-addr{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* TON Connect Button Overrides */
+#ton-connect-btn-container{flex-shrink:0;}
+#ton-connect-btn-container tc-root{
+  --tc-button-background:linear-gradient(135deg,var(--ton),var(--ton2)) !important;
+  --tc-button-border-radius:10px !important;
+}
+
+/* ─── DEPOSIT CARD (new Web3 style) ─── */
+.deposit-web3-card{
+  background:var(--surf);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px;margin-bottom:10px;
+  box-shadow:var(--shadow);width:100%;
+}
+.deposit-web3-title{font-size:13px;font-weight:800;color:var(--text);margin-bottom:4px;}
+.deposit-web3-sub{font-size:10px;color:var(--sub);line-height:1.5;margin-bottom:14px;}
+
+/* ─── PAY BUTTON ─── */
+.btn-pay{
+  width:100%;padding:15px;
+  background:linear-gradient(135deg,#1565C0,#2196F3,#42A5F5);
+  color:#fff;border:none;border-radius:14px;
+  font-family:'Inter',sans-serif;font-size:15px;font-weight:800;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;
+  box-shadow:0 6px 20px rgba(33,150,243,0.35);
+  transition:all .2s;
+  letter-spacing:-.2px;
+}
+.btn-pay:not(:disabled):active{transform:scale(0.97);}
+.btn-pay:disabled{opacity:.5;cursor:not-allowed;}
+.btn-pay-icon{width:22px;height:22px;background:rgba(255,255,255,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+/* Payment status indicator */
+.pay-status{
+  display:none;align-items:center;gap:10px;
+  background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.04));
+  border:1.5px solid rgba(16,185,129,0.3);
+  border-radius:12px;padding:12px 14px;margin-top:10px;
+}
+.pay-status.show{display:flex;}
+.pay-status-icon{font-size:18px;flex-shrink:0;}
+.pay-status-text{font-size:11px;color:var(--green);font-weight:700;line-height:1.4;}
+
+/* Pending detection banner */
+.detection-banner{
+  display:none;
+  align-items:center;gap:10px;
+  background:rgba(245,158,11,0.08);
+  border:1.5px solid rgba(245,158,11,0.3);
+  border-radius:12px;padding:12px 14px;margin-top:10px;
+}
+.detection-banner.show{display:flex;}
+.detection-banner-text{font-size:11px;color:var(--gold2);font-weight:600;line-height:1.4;}
+
+/* ─── GENERIC CARD ─── */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;width:100%;}
+.card-pad{padding:16px;}
+
+/* ─── HERO BALANCE CARD ─── */
+.hero-card{background:linear-gradient(135deg,#1565C0 0%,#2196F3 50%,#42A5F5 100%);border-radius:20px;padding:20px 16px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 6px 24px rgba(33,150,243,0.3);width:100%;display:block;}
+.hero-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.07);}
+.hero-card::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.05);}
+.hero-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;}
+.hero-balance{font-family:'DM Mono',monospace;font-size:32px;font-weight:500;color:#fff;line-height:1.1;margin-bottom:2px;word-break:break-all;}
+.hero-balance-unit{font-size:14px;color:rgba(255,255,255,0.7);font-weight:500;}
+.hero-sub{font-size:11px;color:rgba(255,255,255,0.65);margin-bottom:16px;}
+.hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative;z-index:1;}
+.hero-stat{background:rgba(255,255,255,0.12);border-radius:12px;padding:10px 12px;}
+.hero-stat-val{font-family:'DM Mono',monospace;font-size:15px;font-weight:600;color:#fff;line-height:1;word-break:break-all;}
+.hero-stat-lbl{font-size:9px;color:rgba(255,255,255,0.65);margin-top:3px;font-weight:600;letter-spacing:.3px;}
+
+/* ─── YIELD BADGE ─── */
+.yield-badge{display:inline-flex;align-items:center;gap:6px;background:var(--green-light);border:1.5px solid rgba(16,185,129,0.3);border-radius:40px;padding:6px 14px;font-size:11px;font-weight:700;color:var(--green);margin-bottom:12px;}
+.yield-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 1.8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
+
+/* ─── DEPOSIT FORM ─── */
+.deposit-form{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;width:100%;display:block;}
+.form-label{font-size:11px;font-weight:700;color:var(--sub);letter-spacing:.4px;text-transform:uppercase;margin-bottom:6px;display:block;}
+.amount-input-wrap{position:relative;margin-bottom:12px;}
+.amount-input{width:100%;padding:14px 54px 14px 16px;background:var(--surf);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Mono',monospace;font-size:18px;font-weight:600;outline:none;transition:border-color .2s;}
+.amount-input:focus{border-color:var(--ton);box-shadow:0 0 0 3px rgba(33,150,243,0.1);}
+.amount-input::placeholder{color:var(--muted);font-size:14px;font-weight:400;}
+.ton-label{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;color:var(--sub);}
+.amount-presets{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+.preset-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surf);font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:var(--sub);cursor:pointer;}
+.preset-btn.selected{border-color:var(--ton);background:var(--ton-light);color:var(--ton);}
+
+/* ─── DEPOSIT ITEMS ─── */
+.deposit-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);}
+.deposit-item:last-child{border:none;}
+.di-icon{width:40px;height:40px;border-radius:12px;background:var(--ton-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.di-icon svg{width:18px;height:18px;}
+.di-info{flex:1;min-width:0;}
+.di-amount{font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:var(--text);}
+.di-date{font-size:10px;color:var(--sub);margin-top:2px;}
+.di-right{text-align:right;flex-shrink:0;}
+.di-yield{font-size:11px;font-weight:700;color:var(--green);}
+.di-weeks{font-size:10px;color:var(--sub);}
+
+/* ─── INFO TILES ─── */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;width:100%;}
+.info-tile{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:12px;box-shadow:var(--shadow);text-align:center;}
+.info-tile-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:600;color:var(--ton);margin-bottom:2px;}
+.info-tile-lbl{font-size:10px;color:var(--sub);font-weight:600;}
+.info-box{background:var(--ton-light);border:1.5px solid rgba(33,150,243,0.2);border-radius:14px;padding:14px;margin-bottom:10px;width:100%;}
+.info-box-title{font-size:12px;font-weight:800;color:var(--ton2);margin-bottom:8px;}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(33,150,243,0.1);font-size:11px;}
+.info-row:last-child{border:none;}
+.ir-l{color:var(--sub);font-weight:600;}
+.ir-r{font-family:'DM Mono',monospace;color:var(--text);font-weight:600;}
+
+/* ─── REFERRAL HERO ─── */
+.ref-hero{background:linear-gradient(135deg,#059669,#10B981);border-radius:20px;padding:18px 16px 20px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 6px 20px rgba(16,185,129,0.25);width:100%;display:block;}
+.ref-hero::before{content:'';position:absolute;top:-20px;right:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,0.08);pointer-events:none;}
+.ref-hero-title{font-size:16px;font-weight:800;color:#fff;margin-bottom:4px;}
+.ref-hero-sub{font-size:11px;color:rgba(255,255,255,0.8);margin-bottom:14px;line-height:1.5;}
+.ref-code-box{background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.3);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;width:100%;}
+.ref-code-label{font-size:10px;color:rgba(255,255,255,0.75);letter-spacing:1.2px;text-transform:uppercase;font-weight:700;}
+.ref-code-val{font-family:'DM Mono',monospace;font-size:24px;color:#fff;font-weight:700;letter-spacing:4px;word-break:break-all;line-height:1.3;}
+.ref-link-box{background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:10px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.9);word-break:break-all;line-height:1.5;width:100%;}
+.ref-copy-btn{background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.5);border-radius:10px;padding:12px 16px;font-size:13px;font-weight:800;color:#fff;cursor:pointer;width:100%;text-align:center;}
+.ref-copy-btn:active{transform:scale(0.97);background:rgba(255,255,255,0.35);}
+
+/* ─── REF STATS ─── */
+.ref-stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;width:100%;}
+.ref-stat{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;box-shadow:var(--shadow);}
+.ref-stat-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--green);margin-bottom:2px;}
+.ref-stat-lbl{font-size:10px;color:var(--sub);font-weight:600;}
+
+/* ─── MILESTONES ─── */
+.milestone-card{background:var(--surf);border:1.5px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow);position:relative;overflow:hidden;width:100%;}
+.milestone-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--gold),var(--gold2));border-radius:16px 0 0 16px;}
+.milestone-card.done-ms::before{background:linear-gradient(180deg,var(--green),#059669);}
+.milestone-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--gold-light),rgba(245,158,11,0.15));border:1.5px solid rgba(245,158,11,0.25);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.milestone-icon.done{background:linear-gradient(135deg,var(--green-light),rgba(16,185,129,0.15));border-color:rgba(16,185,129,0.3);}
+.milestone-info{flex:1;min-width:0;}
+.milestone-title{font-size:12px;font-weight:800;color:var(--text);}
+.milestone-reward{font-size:11px;font-weight:700;color:var(--gold2);margin-top:2px;}
+.milestone-card.done-ms .milestone-reward{color:var(--green);}
+.milestone-sub{font-size:10px;color:var(--sub);margin-top:4px;}
+.milestone-prog{flex-shrink:0;text-align:right;min-width:38px;}
+.mp-pct{font-size:13px;font-weight:800;color:var(--ton);}
+.mp-done-badge{font-size:18px;}
+.milestone-bar{height:5px;background:var(--border);border-radius:3px;margin-top:6px;overflow:hidden;}
+.milestone-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),#F59E0B);border-radius:3px;transition:width .6s;}
+.milestone-card.done-ms .milestone-bar-fill{background:linear-gradient(90deg,var(--green),#34D399);}
+.milestone-card.done-ms{border-color:rgba(16,185,129,0.35);background:linear-gradient(135deg,rgba(16,185,129,0.06),rgba(16,185,129,0.02));}
+.milestone-card.done-ms .milestone-title{color:#065F46;}
+.milestone-card.next-ms{border-color:rgba(33,150,243,0.35);background:linear-gradient(135deg,rgba(33,150,243,0.05),rgba(33,150,243,0.01));}
+.milestone-card.next-ms::before{background:linear-gradient(180deg,var(--ton),var(--ton2));}
+.milestone-card.next-ms .mp-pct{color:var(--ton);}
+.milestone-card.next-ms .milestone-bar-fill{background:linear-gradient(90deg,var(--ton),#42A5F5);}
+
+/* ─── REF ENTER CODE ─── */
+.ref-enter-card{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;width:100%;}
+.ref-input{width:100%;padding:13px 16px;background:var(--surf);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Mono',monospace;font-size:16px;outline:none;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+.ref-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,0.1);}
+.ref-input::placeholder{text-transform:none;letter-spacing:0;font-size:12px;font-family:'Inter',sans-serif;}
+.btn-green{width:100%;padding:13px;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(16,185,129,0.25);}
+.btn-green:active{transform:scale(0.97);}
+.ref-used-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:20px;font-size:10px;font-weight:700;background:var(--green-light);border:1px solid rgba(16,185,129,0.3);color:var(--green);margin-bottom:8px;}
+.btn-share{width:100%;padding:11px;background:var(--ton-light);border:1.5px solid rgba(33,150,243,0.3);border-radius:12px;color:var(--ton);font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:12px;}
+.btn-share:active{transform:scale(0.97);}
+
+/* ─── WITHDRAW HERO ─── */
+.wd-hero{background:linear-gradient(135deg,#D97706,#F59E0B);border-radius:20px;padding:18px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 6px 20px rgba(245,158,11,0.25);width:100%;display:block;}
+.wd-hero-title{font-size:16px;font-weight:800;color:#fff;margin-bottom:4px;}
+.wd-hero-sub{font-size:11px;color:rgba(255,255,255,0.75);}
+.wd-hero-bal{font-family:'DM Mono',monospace;font-size:28px;font-weight:600;color:#fff;margin:10px 0 4px;word-break:break-all;}
+.wd-form-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;box-shadow:var(--shadow);width:100%;}
+.wd-form-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.wd-form-sub{font-size:10px;color:var(--sub);margin-bottom:12px;line-height:1.5;}
+.wd-input{width:100%;padding:11px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:11px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;margin-bottom:8px;}
+.wd-input:focus{border-color:var(--ton);}
+.wd-input::placeholder{color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;}
+.btn-gold{width:100%;padding:13px;background:linear-gradient(135deg,#D97706,#F59E0B);color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(245,158,11,0.3);display:flex;align-items:center;justify-content:center;gap:7px;}
+.btn-gold:active{transform:scale(0.97);}
+.wd-locked-card{background:var(--red-light);border:1.5px solid rgba(239,68,68,0.2);border-radius:14px;padding:16px;text-align:center;margin-bottom:10px;width:100%;}
+.wd-locked-title{font-size:14px;font-weight:800;color:var(--red);margin-bottom:6px;}
+.wd-locked-sub{font-size:11px;color:var(--sub);line-height:1.6;}
+
+/* ─── CRYPTO WALLET CARD ─── */
+.crypto-addr-card{background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(217,119,6,0.04));border:1.5px solid rgba(245,158,11,0.3);border-radius:16px;padding:16px 16px 16px 20px;margin-bottom:10px;position:relative;width:100%;}
+.crypto-addr-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--gold),var(--gold2));border-radius:16px 0 0 16px;}
+.crypto-addr-label{font-size:10px;font-weight:800;color:var(--gold2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:4px;}
+.crypto-addr-desc{font-size:11px;color:var(--sub);line-height:1.5;margin-bottom:10px;}
+.crypto-addr-input{width:100%;padding:13px 14px;background:var(--surf);border:1.5px solid var(--border);border-radius:11px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;margin-bottom:8px;}
+.crypto-addr-input:focus{border-color:var(--gold);}
+.crypto-addr-input::placeholder{color:var(--muted);font-family:'Inter',sans-serif;font-size:11px;}
+.crypto-saved-badge{display:none;align-items:center;gap:5px;padding:7px 12px;border-radius:9px;font-size:11px;font-weight:700;background:var(--green-light);border:1px solid rgba(16,185,129,0.3);color:var(--green);margin-bottom:8px;}
+.crypto-saved-badge.show{display:flex;}
+.btn-save-addr{width:100%;padding:12px;background:linear-gradient(135deg,#D97706,#F59E0B);color:#fff;border:none;border-radius:11px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(245,158,11,0.25);}
+.btn-save-addr:active{transform:scale(0.97);}
+
+/* ─── WITHDRAWAL HISTORY ─── */
+.wd-req-item{padding:12px 14px;border-bottom:1px solid var(--border);}
+.wd-req-item:last-child{border:none;}
+.wri-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;}
+.wri-amount{font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--text);}
+.wri-status{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.wri-status.pending{background:var(--gold-light);color:var(--gold2);}
+.wri-status.done{background:var(--green-light);color:var(--green);}
+.wri-addr{font-size:10px;color:var(--sub);font-family:'DM Mono',monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wri-date{font-size:9px;color:var(--muted);margin-top:1px;}
+
+/* ─── TOAST ─── */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:#fff;padding:10px 20px;border-radius:20px;font-size:12px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;white-space:nowrap;z-index:999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* ─── MODAL SHEET ─── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(4px);}
+.modal-bg.open{opacity:1;pointer-events:all;}
+.modal-sheet{background:var(--surf);border-radius:24px 24px 0 0;padding:24px 20px 32px;width:100%;max-width:100%;transform:translateY(100%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);max-height:85vh;overflow-y:auto;}
+.modal-bg.open .modal-sheet{transform:translateY(0);}
+.modal-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 18px;}
+.modal-title{font-size:16px;font-weight:800;color:var(--text);margin-bottom:16px;}
+.modal-field{margin-bottom:12px;}
+.modal-label{font-size:10px;color:var(--sub);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px;display:block;}
+.modal-input{width:100%;padding:11px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;}
+.modal-input:focus{border-color:var(--ton);}
+.modal-btns{display:flex;gap:8px;margin-top:14px;}
+.btn-modal{flex:1;padding:12px;border-radius:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.btn-modal.confirm{background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;border:none;box-shadow:0 4px 12px rgba(33,150,243,0.25);}
+.btn-modal.cancel{background:var(--card2);color:var(--sub);border:1.5px solid var(--border);}
+.btn-modal:active{transform:scale(0.97);}
+
+/* ─── MISC ─── */
+.spinner{width:20px;height:20px;border:2px solid rgba(33,150,243,0.2);border-top-color:var(--ton);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:32px 20px;color:var(--sub);}
+.empty-state p{font-size:12px;line-height:1.6;}
+.sec-title{font-size:10px;font-weight:800;color:var(--sub);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;}
+.notice{background:var(--ton-light);border:1.5px solid rgba(33,150,243,0.2);border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:11px;color:var(--ton2);line-height:1.6;width:100%;}
+.notice strong{font-weight:700;}
+</style>
+</head>
+<body>
+
+<div class="bg-layer">
+  <div class="bg-circle" style="width:300px;height:300px;top:-80px;right:-60px;--d:14s;--tx:-20px;--ty:25px;"></div>
+  <div class="bg-circle" style="width:200px;height:200px;bottom:-40px;left:-50px;--d:11s;--dl:2s;--tx:15px;--ty:-20px;"></div>
+</div>
+
+<div class="app">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6L12 2z" fill="white" opacity=".9"/><path d="M9 12l2 2 4-4" stroke="rgba(33,150,243,0.9)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="logo-name">Ton<span>Play</span></div>
+    </div>
+    <div class="header-right">
+      <div class="stars-chip" id="stars-chip">
+        <span class="stars-chip-icon">⭐</span>
+        <span class="stars-chip-val" id="header-stars">0</span>
+      </div>
+      <div class="bal-chip">
+        <div class="bci"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg></div>
+        <div><div class="bc-val" id="header-balance">0.00</div><div class="bc-unit">TON</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- User line -->
+  <div class="user-line" id="user-line">Loading...</div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('home',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      HOME
+    </button>
+    <button class="tab-btn ref-tab" onclick="switchTab('referral',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+      REFERRAL
+    </button>
+    <button class="tab-btn wd-tab" onclick="switchTab('withdraw',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      WITHDRAW
+    </button>
+    <button class="tab-btn" onclick="switchTab('info',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      INFO
+    </button>
+  </div>
+
+  <!-- ════════════════ HOME TAB ════════════════ -->
+  <div class="tab-content active" id="tab-home">
+
+    <div class="hero-card">
+      <div style="position:relative;z-index:1;">
+        <div class="hero-label">Total Balance</div>
+        <div class="hero-balance"><span id="hero-balance">0.00</span> <span class="hero-balance-unit">TON</span></div>
+        <div class="hero-sub" id="hero-sub">Start depositing to earn weekly rewards</div>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="hero-stat-val" id="hero-deposited">0.00</div><div class="hero-stat-lbl">TOTAL DEPOSITED</div></div>
+          <div class="hero-stat"><div class="hero-stat-val" id="hero-earned">+0.00</div><div class="hero-stat-lbl">TOTAL EARNED</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-bottom:10px;">
+      <div class="yield-badge"><div class="yield-dot"></div>+5% Weekly Yield on every deposit</div>
+    </div>
+
+    <!-- ══ TON CONNECT WALLET BANNER ══ -->
+    <div class="wallet-banner" id="wallet-banner">
+      <div class="wallet-banner-info">
+        <div class="wallet-banner-dot" id="wallet-dot"></div>
+        <div class="wallet-banner-text">
+          <div class="wallet-banner-label" id="wallet-status-label">Wallet not connected</div>
+          <div class="wallet-banner-addr" id="wallet-addr-display">Connect to pay in 1 click</div>
+        </div>
+      </div>
+      <div id="ton-connect-btn-container"></div>
+    </div>
+
+    <!-- ══ DEPOSIT FORM ══ -->
+    <div class="deposit-form">
+      <div class="sec-title">Make a Deposit</div>
+      <label class="form-label">Amount (min 0.5 TON)</label>
+      <div class="amount-input-wrap">
+        <input class="amount-input" id="deposit-amount" type="number" min="0.5" step="0.1" placeholder="0.5">
+        <span class="ton-label">TON</span>
+      </div>
+      <div class="amount-presets">
+        <button class="preset-btn" onclick="setAmount(1,this)">1</button>
+        <button class="preset-btn" onclick="setAmount(5,this)">5</button>
+        <button class="preset-btn" onclick="setAmount(10,this)">10</button>
+        <button class="preset-btn" onclick="setAmount(25,this)">25</button>
+        <button class="preset-btn" onclick="setAmount(50,this)">50</button>
+        <button class="preset-btn" onclick="setAmount(100,this)">100</button>
+      </div>
+
+      <!-- PAY button (TON Connect flow) -->
+      <button class="btn-pay" id="btn-pay" onclick="handlePay()">
+        <div class="btn-pay-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+        </div>
+        Pay with TON Wallet
+      </button>
+
+      <!-- Detection status banners -->
+      <div class="detection-banner" id="detection-banner">
+        <span style="font-size:18px;">⏳</span>
+        <div class="detection-banner-text" id="detection-text">Waiting for blockchain confirmation…<br>Your balance will update automatically.</div>
+      </div>
+      <div class="pay-status" id="pay-status">
+        <span class="pay-status-icon">✅</span>
+        <div class="pay-status-text" id="pay-status-text">Payment confirmed!<br>Your balance has been updated.</div>
+      </div>
+    </div>
+
+    <div class="sec-title" id="deposits-title" style="display:none;">Active Deposits</div>
+    <div class="card" id="deposits-list" style="display:none;"></div>
+  </div>
+
+  <!-- ════════════════ REFERRAL TAB ════════════════ -->
+  <div class="tab-content" id="tab-referral">
+    <div class="ref-hero">
+      <div style="position:relative;z-index:1;">
+        <div class="ref-hero-title">🎁 Invite Friends, Earn ⭐ Stars</div>
+        <div class="ref-hero-sub">Share your unique link. Every friend who joins earns you Telegram Stars!</div>
+        <div class="ref-code-box">
+          <div class="ref-code-label">🔑 Your Referral Code</div>
+          <div class="ref-code-val" id="ref-code-val">—</div>
+          <div class="ref-code-label">🔗 Your Invite Link</div>
+          <div class="ref-link-box" id="ref-link-display">—</div>
+          <button class="ref-copy-btn" onclick="copyRefLink()">📋 Copy Invite Link</button>
+        </div>
+      </div>
+    </div>
+    <div class="ref-stats-grid">
+      <div class="ref-stat"><div class="ref-stat-val" id="ref-count">0</div><div class="ref-stat-lbl">Friends Invited</div></div>
+      <div class="ref-stat"><div class="ref-stat-val" style="color:var(--ton);font-size:16px;" id="ref-earned">0 ⭐</div><div class="ref-stat-lbl">Stars Earned</div></div>
+    </div>
+    <button class="btn-share" onclick="shareRefLink()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Share Invite Link via Telegram
+    </button>
+    <div class="sec-title">⭐ Reward Milestones</div>
+    <div id="milestones-list"><div class="empty-state"><div class="spinner"></div></div></div>
+    <div class="ref-enter-card">
+      <div class="sec-title">Enter a Referral Code</div>
+      <div id="ref-used-display"></div>
+      <input class="ref-input" id="ref-code-input" type="text" maxlength="10" placeholder="Enter code (e.g. ABC123)">
+      <button class="btn-green" id="ref-submit-btn" onclick="submitRefCode()">✓ Apply Code</button>
+    </div>
+    <div class="sec-title" id="invited-title" style="display:none;margin-top:4px;">👥 Invited Friends</div>
+    <div class="card" id="invited-list" style="display:none;"></div>
+  </div>
+
+  <!-- ════════════════ WITHDRAW TAB ════════════════ -->
+  <div class="tab-content" id="tab-withdraw">
+    <div class="wd-hero">
+      <div class="wd-hero-title">💸 Withdraw TON</div>
+      <div class="wd-hero-sub">Available Balance</div>
+      <div class="wd-hero-bal"><span id="wd-balance">0.00</span> TON</div>
+    </div>
+    <div class="crypto-addr-card">
+      <div class="crypto-addr-label">🔐 Your Crypto Wallet Address</div>
+      <div class="crypto-addr-desc">Enter your TON wallet address. Must start with <strong>EQ</strong> or <strong>UQ</strong>.</div>
+      <input class="crypto-addr-input" id="wd-wallet" type="text" placeholder="EQ... or UQ... your TON wallet address" spellcheck="false" autocomplete="off">
+      <div class="crypto-saved-badge" id="wallet-saved-badge">✅ Wallet address saved</div>
+      <button class="btn-save-addr" onclick="saveWalletAddress()">💾 Save Wallet Address</button>
+    </div>
+    <div id="wd-locked-section" style="display:none;">
+      <div class="wd-locked-card">
+        <div class="wd-locked-title">🔒 Withdrawals Locked</div>
+        <div class="wd-locked-sub">Make a deposit first. Admin will review and unlock your withdrawals. Save your wallet address above so it's ready.</div>
+      </div>
+    </div>
+    <div id="wd-form-section" style="display:none;">
+      <div class="wd-form-card">
+        <div class="wd-form-title">Request Withdrawal</div>
+        <div class="wd-form-sub">Sending to: <span id="wd-wallet-preview" style="font-family:'DM Mono',monospace;color:var(--ton2);word-break:break-all;display:block;margin-top:4px;"></span></div>
+        <label class="form-label">Amount (TON)</label>
+        <input class="wd-input" id="wd-amount" type="number" min="0.1" step="0.1" placeholder="Amount to withdraw">
+        <button class="btn-gold" onclick="submitWithdraw()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Submit Withdrawal Request
+        </button>
+      </div>
+    </div>
+    <div class="sec-title" id="wd-history-title" style="display:none;">Withdrawal History</div>
+    <div class="card" id="wd-history-list"></div>
+  </div>
+
+  <!-- ════════════════ INFO TAB ════════════════ -->
+  <div class="tab-content" id="tab-info">
+    <div class="info-box">
+      <div class="info-box-title">📈 How TonPlay Works</div>
+      <div class="info-row"><span class="ir-l">Weekly Return</span><span class="ir-r" style="color:var(--green);">+5% per week</span></div>
+      <div class="info-row"><span class="ir-l">Min Deposit</span><span class="ir-r">0.5 TON</span></div>
+      <div class="info-row"><span class="ir-l">Payout Schedule</span><span class="ir-r">Weekly (7 days)</span></div>
+      <div class="info-row"><span class="ir-l">Compounding</span><span class="ir-r" style="color:var(--ton);">Yes</span></div>
+    </div>
+    <div class="info-grid">
+      <div class="info-tile"><div class="info-tile-val">5%</div><div class="info-tile-lbl">Weekly Yield</div></div>
+      <div class="info-tile"><div class="info-tile-val">26%</div><div class="info-tile-lbl">Annual Est.</div></div>
+      <div class="info-tile"><div class="info-tile-val" id="info-deposits">0</div><div class="info-tile-lbl">My Deposits</div></div>
+      <div class="info-tile"><div class="info-tile-val" id="info-weeks">0</div><div class="info-tile-lbl">Weeks Active</div></div>
+    </div>
+    <div class="card">
+      <div class="card-pad">
+        <div class="sec-title">Example Returns</div>
+        <div class="info-row"><span class="ir-l">1 TON · 1 week</span><span class="ir-r" style="color:var(--green);">1.05 TON</span></div>
+        <div class="info-row"><span class="ir-l">10 TON · 2 weeks</span><span class="ir-r" style="color:var(--green);">11.03 TON</span></div>
+        <div class="info-row"><span class="ir-l">100 TON · 4 weeks</span><span class="ir-r" style="color:var(--green);">121.55 TON</span></div>
+      </div>
+    </div>
+    <div class="notice"><strong>💡 Compound Growth:</strong> Each week your balance grows by 5%. Week 1 you earn 5% of your deposit, week 2 you earn 5% of the new total — growth accelerates over time.</div>
+    <div class="card">
+      <div class="card-pad">
+        <div class="sec-title">My Account</div>
+        <div class="info-row"><span class="ir-l">Telegram ID</span><span class="ir-r" id="info-tgid">—</span></div>
+        <div class="info-row"><span class="ir-l">Username</span><span class="ir-r" id="info-username">—</span></div>
+        <div class="info-row"><span class="ir-l">Referral Code</span><span class="ir-r" id="info-ref-code" style="color:var(--green);font-weight:700;">—</span></div>
+        <div class="info-row"><span class="ir-l">TON Wallet</span><span class="ir-r" id="info-wallet" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">Not connected</span></div>
+        <div class="info-row"><span class="ir-l">Withdrawals</span><span class="ir-r" id="info-wd-status">—</span></div>
+        <div class="info-row"><span class="ir-l">Stars</span><span class="ir-r" id="info-stars">0 ⭐</span></div>
+      </div>
+    </div>
+    <div class="notice" style="background:var(--green-light);border-color:rgba(16,185,129,0.3);">
+      <strong>🎁 Referral System:</strong> Every player gets a unique referral code. Share your link — when a friend joins and uses your code, you earn Stars!
+    </div>
+  </div>
+
+</div><!-- .app -->
+
+<div class="toast" id="toast"></div>
+<div class="modal-bg" id="modal-bg">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="modal-title"></div>
+    <div id="modal-body"></div>
+    <div class="modal-btns">
+      <button class="btn-modal cancel" id="modal-cancel">Cancel</button>
+      <button class="btn-modal confirm" id="modal-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc,
+  collection, addDoc, getDocs,
+  query, where, orderBy, limit, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ─── Firebase Config ───
+const firebaseConfig = {
+  apiKey: "AIzaSyAml8c0QPKlbEmXG7C4eXd-WYbbOvOHtP8",
+  authDomain: "miniapp-ton.firebaseapp.com",
+  projectId: "miniapp-ton",
+  storageBucket: "miniapp-ton.firebasestorage.app",
+  messagingSenderId: "991105630391",
+  appId: "1:991105630791:web:551166c522317fad980d32"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+window._db = db;
+
+// ─── Constants ───
+const VAULT_ADDRESS  = 'UQBnGPixB1lrqOvhgaJNEzOuI_mLkVlq49i3wBysTE8WZJFE';
+const BOT_TOKEN      = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
+const ADMIN_CHAT     = '5222030484';
+const BOT_USERNAME   = 'Ton_Play_tbot';
+const APP_PATH       = 'make_free_ton';
+// TON API endpoint (mainnet)
+const TONAPI_BASE    = 'https://toncenter.com/api/v2';
+const TONAPI_KEY     = ''; // optional: add your toncenter API key here for higher rate limits
+
+// ─── TON Connect ───
+const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+  manifestUrl: 'https://tonplay-miniapp.netlify.app/tonconnect-manifest.json',
+  buttonRootId: 'ton-connect-btn-container'
+});
+
+let connectedWalletAddr = null;
+
+// Watch wallet connection state
+tonConnectUI.onStatusChange(wallet => {
+  if (wallet) {
+    connectedWalletAddr = wallet.account.address;
+    const friendly = toFriendlyAddress(connectedWalletAddr);
+    document.getElementById('wallet-dot').classList.add('connected');
+    document.getElementById('wallet-status-label').textContent = 'Wallet connected';
+    document.getElementById('wallet-addr-display').textContent = friendly.slice(0,8)+'…'+friendly.slice(-6);
+    document.getElementById('info-wallet').textContent = friendly.slice(0,12)+'…';
+    document.getElementById('btn-pay').disabled = false;
+  } else {
+    connectedWalletAddr = null;
+    document.getElementById('wallet-dot').classList.remove('connected');
+    document.getElementById('wallet-status-label').textContent = 'Wallet not connected';
+    document.getElementById('wallet-addr-display').textContent = 'Connect to pay in 1 click';
+    document.getElementById('info-wallet').textContent = 'Not connected';
+    document.getElementById('btn-pay').disabled = true;
+  }
+});
+
+// Initially disable pay button until wallet connects
+document.getElementById('btn-pay').disabled = true;
+
+// ─── Helper: convert raw address to friendly (EQ/UQ) format ───
+function toFriendlyAddress(rawAddr) {
+  // If it's already friendly, return as-is
+  if (rawAddr && (rawAddr.startsWith('EQ') || rawAddr.startsWith('UQ'))) return rawAddr;
+  // Otherwise return truncated raw (TON Connect returns raw hex-like)
+  return rawAddr || '';
+}
+
+// ─── Helper: generate unique payment comment ───
+function generatePaymentComment(userId, amount) {
+  const ts = Date.now().toString(36).toUpperCase();
+  return `TP-${String(userId).slice(-6)}-${ts}`;
+}
+
+// ─── Handle Pay button click ───
+window.handlePay = async function() {
+  if (!connectedWalletAddr) {
+    showToast('⚠️ Connect your wallet first');
+    return;
+  }
+  const amountStr = document.getElementById('deposit-amount').value;
+  const amount = parseFloat(amountStr);
+  if (isNaN(amount) || amount < 0.5) {
+    showToast('⚠️ Minimum deposit is 0.5 TON');
+    return;
+  }
+
+  // Generate unique comment for this payment
+  const uid = String(currentUser.id);
+  const comment = generatePaymentComment(uid, amount);
+
+  // Show confirmation modal
+  openModal('💎 Confirm Payment',
+    `<div style="text-align:center;padding:8px 0 16px;">
+      <div style="font-size:11px;color:var(--sub);margin-bottom:16px;">You are about to send:</div>
+      <div style="background:var(--ton-light);border-radius:16px;padding:18px;margin-bottom:14px;">
+        <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;color:var(--ton);">${amount.toFixed(2)}</div>
+        <div style="font-size:14px;color:var(--ton2);font-weight:600;margin-top:2px;">TON</div>
+      </div>
+      <div style="font-size:10px;color:var(--sub);margin-bottom:8px;">Your wallet will open to confirm the transaction.</div>
+      <div style="background:var(--card2);border-radius:10px;padding:10px 12px;text-align:left;">
+        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">PAYMENT REFERENCE</div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text);font-weight:600;">${comment}</div>
+      </div>
+    </div>`,
+    async () => {
+      await sendTonTransaction(amount, comment, uid);
+    }
+  );
+};
+
+// ─── Send TON Transaction via TON Connect ───
+async function sendTonTransaction(amount, comment, uid) {
+  const btn = document.getElementById('btn-pay');
+  btn.textContent = 'Opening wallet…';
+  btn.disabled = true;
+
+  try {
+    // Convert amount to nanotons (1 TON = 1,000,000,000 nanotons)
+    const amountNano = Math.floor(amount * 1e9).toString();
+
+    // Encode comment as UTF-8 hex for TON payload
+    const commentBytes = new TextEncoder().encode(comment);
+    // TON text comment payload: 4-byte opcode 0x00000000 + comment bytes
+    const payload = uint8ArrayToBase64(buildCommentPayload(commentBytes));
+
+    const transaction = {
+      validUntil: Math.floor(Date.now() / 1000) + 600, // 10 min
+      messages: [
+        {
+          address: VAULT_ADDRESS,
+          amount: amountNano,
+          payload: payload
+        }
+      ]
+    };
+
+    // Send transaction — opens wallet app for user confirmation
+    const result = await tonConnectUI.sendTransaction(transaction);
+
+    // Transaction was submitted (user confirmed in wallet)
+    showToast('✅ Transaction sent! Detecting payment…');
+    btn.textContent = 'Pay with TON Wallet';
+    btn.disabled = false;
+
+    // Record pending payment in Firestore
+    const pendingRef = await addDoc(collection(db, 'pendingPayments'), {
+      userId: uid,
+      userName: currentUser.username || '',
+      displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
+      amount,
+      comment,
+      boc: result.boc || '',
+      status: 'pending',
+      createdAt: serverTimestamp()
+    });
+
+    // Show detection banner
+    showDetectionBanner('Waiting for blockchain confirmation…');
+
+    // Start polling to detect the payment on-chain
+    startPaymentDetection(comment, amount, uid, pendingRef.id);
+
+  } catch (err) {
+    btn.textContent = 'Pay with TON Wallet';
+    btn.disabled = false;
+
+    if (err?.message?.includes('User rejects')) {
+      showToast('❌ Transaction cancelled');
+    } else if (err?.message?.includes('Wallet is not connected')) {
+      showToast('⚠️ Wallet disconnected. Please reconnect.');
+    } else {
+      showToast('❌ Transaction failed: ' + (err?.message || 'Unknown error'));
+    }
+    console.error('TON transaction error:', err);
+  }
+}
+
+// ─── Build TON text-comment payload (op=0 + text) ───
+function buildCommentPayload(textBytes) {
+  // 4-byte opcode 0x00000000 + UTF-8 text
+  const buf = new Uint8Array(4 + textBytes.length);
+  buf[0] = 0; buf[1] = 0; buf[2] = 0; buf[3] = 0;
+  buf.set(textBytes, 4);
+  return buf;
+}
+
+function uint8ArrayToBase64(bytes) {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+// ─── Poll TON API to detect payment ───
+let detectionInterval = null;
+
+function startPaymentDetection(comment, expectedAmount, uid, pendingDocId) {
+  let attempts = 0;
+  const MAX_ATTEMPTS = 60; // poll for ~10 minutes (every 10s)
+
+  if (detectionInterval) clearInterval(detectionInterval);
+
+  detectionInterval = setInterval(async () => {
+    attempts++;
+    if (attempts > MAX_ATTEMPTS) {
+      clearInterval(detectionInterval);
+      showDetectionBanner('Detection timed out. Contact support if payment was sent.', true);
+      return;
+    }
+
+    try {
+      const found = await checkTransactionOnChain(comment, expectedAmount);
+      if (found) {
+        clearInterval(detectionInterval);
+        await confirmPaymentInFirebase(comment, expectedAmount, uid, pendingDocId);
+      }
+    } catch (e) {
+      console.error('Detection poll error:', e);
+    }
+  }, 10000); // every 10 seconds
+}
+
+// ─── Query TON API for matching transaction ───
+async function checkTransactionOnChain(comment, expectedAmount) {
+  try {
+    const apiKeyParam = TONAPI_KEY ? `&api_key=${TONAPI_KEY}` : '';
+    const url = `${TONAPI_BASE}/getTransactions?address=${VAULT_ADDRESS}&limit=20&to_lt=0&archival=false${apiKeyParam}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data.ok || !data.result) return false;
+
+    const minNano = Math.floor(expectedAmount * 1e9 * 0.99); // allow 1% slippage
+
+    for (const tx of data.result) {
+      const inMsg = tx.in_msg;
+      if (!inMsg) continue;
+
+      // Check amount (with small tolerance)
+      const valueNano = parseInt(inMsg.value || '0');
+      if (valueNano < minNano) continue;
+
+      // Check comment matches
+      const msgBody = inMsg.msg_data;
+      if (!msgBody) continue;
+
+      // Decode comment from msg_data
+      let txComment = '';
+      if (msgBody['@type'] === 'msg.dataText') {
+        txComment = msgBody.text || '';
+        // toncenter returns base64-encoded text
+        try { txComment = atob(txComment); } catch(e) {}
+      }
+
+      if (txComment.includes(comment)) {
+        return true;
+      }
+    }
+    return false;
+  } catch (e) {
+    console.error('TON API error:', e);
+    return false;
+  }
+}
+
+// ─── Confirm payment in Firebase once detected ───
+async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
+  try {
+    // Mark pending payment as confirmed
+    await updateDoc(doc(db, 'pendingPayments', pendingDocId), {
+      status: 'confirmed',
+      confirmedAt: serverTimestamp()
+    });
+
+    // Create deposit record
+    const depRef = await addDoc(collection(db, 'deposits'), {
+      userId: uid,
+      userName: currentUser.username || '',
+      displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
+      amount,
+      comment,
+      walletAddress: connectedWalletAddr || '',
+      status: 'active',
+      weeksActive: 0,
+      earned: 0,
+      autoDetected: true,
+      createdAt: serverTimestamp()
+    });
+
+    // Update user balance
+    const userRef = doc(db, 'users', uid);
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const ud = userSnap.data();
+      await updateDoc(userRef, {
+        balance: parseFloat(((ud.balance || 0) + amount).toFixed(6)),
+        totalDeposited: parseFloat(((ud.totalDeposited || 0) + amount).toFixed(6)),
+        withdrawUnlocked: true
+      });
+      // Refresh local userData
+      userData.balance = (userData.balance || 0) + amount;
+      userData.totalDeposited = (userData.totalDeposited || 0) + amount;
+      userData.withdrawUnlocked = true;
+    }
+
+    // Show success
+    hideDetectionBanner();
+    showPaySuccess(`+${amount.toFixed(2)} TON added to your balance!`);
+    renderAll();
+    await loadDeposits();
+
+    // Notify admin via bot
+    await sendBotMessage(
+      `✅ <b>Auto-Detected Deposit!</b>\n\n` +
+      `👤 <b>User:</b> ${currentUser.username ? '@' + currentUser.username : uid}\n` +
+      `💰 <b>Amount:</b> ${amount} TON\n` +
+      `🔑 <b>Comment:</b> <code>${comment}</code>\n` +
+      `📱 <b>Source:</b> TON Connect (auto-detected)`
+    );
+
+    showToast('🎉 Payment confirmed! Balance updated.');
+  } catch (e) {
+    console.error('Firebase confirmation error:', e);
+    showToast('⚠️ Detected but update failed. Contact support.');
+  }
+}
+
+// ─── Detection banner helpers ───
+function showDetectionBanner(text, isError = false) {
+  const banner = document.getElementById('detection-banner');
+  const textEl = document.getElementById('detection-text');
+  banner.style.background = isError
+    ? 'rgba(239,68,68,0.08)'
+    : 'rgba(245,158,11,0.08)';
+  banner.style.borderColor = isError
+    ? 'rgba(239,68,68,0.3)'
+    : 'rgba(245,158,11,0.3)';
+  textEl.style.color = isError ? 'var(--red)' : 'var(--gold2)';
+  textEl.textContent = text;
+  banner.classList.add('show');
+  document.getElementById('pay-status').classList.remove('show');
+}
+
+function hideDetectionBanner() {
+  document.getElementById('detection-banner').classList.remove('show');
+}
+
+function showPaySuccess(text) {
+  document.getElementById('pay-status-text').textContent = text;
+  document.getElementById('pay-status').classList.add('show');
+  document.getElementById('detection-banner').classList.remove('show');
+}
+
+// ─── Telegram / Bot helpers ───
+const tg = window.Telegram?.WebApp;
+tg?.ready();
+tg?.expand();
+
+async function sendBotMessage(text) {
+  try {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: ADMIN_CHAT, text, parse_mode: 'HTML' })
+    });
+  } catch(e) {}
+}
+
+// ─── User / Data ───
+let currentUser = null;
+let userData    = null;
+let globalSettings = { referralBonus: 0.05, referralMilestones: [] };
+
+function getStartParam() {
+  const tgParam = tg?.initDataUnsafe?.start_param;
+  if (tgParam) return tgParam.toUpperCase();
+  const url = new URL(location.href);
+  const ref = url.searchParams.get('ref') || url.searchParams.get('startapp') || url.searchParams.get('start');
+  return ref ? ref.toUpperCase() : null;
+}
+
+function generateReferralCode(uid) {
+  const suffix = Math.random().toString(36).slice(-2).toUpperCase();
+  return String(uid).slice(-6).toUpperCase() + suffix;
+}
+
+function buildRefLink(code) {
+  return `https://t.me/${BOT_USERNAME}/${APP_PATH}?startapp=${code}`;
+}
+
+async function init() {
+  const tgUser = tg?.initDataUnsafe?.user;
+  currentUser = tgUser?.id ? tgUser : { id: 'dev_user', first_name: 'Dev', last_name: '', username: 'devuser' };
+
+  document.getElementById('user-line').textContent =
+    `👤 ${currentUser.first_name||''} ${currentUser.last_name||''} ${currentUser.username ? '@'+currentUser.username : ''}`.trim();
+
+  await loadGlobalSettings();
+  await loadOrCreateUser();
+  renderAll();
+  loadDeposits();
+  loadWithdrawals();
+  loadInvitedFriends();
+
+  const startCode = getStartParam();
+  if (startCode && !userData.referredBy && startCode !== userData.referralCode) {
+    document.getElementById('ref-code-input').value = startCode;
+    switchTab('referral', document.querySelector('.tab-btn.ref-tab'));
+    await applyRefCode(startCode, true);
+  }
+}
+
+async function loadGlobalSettings() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'global'));
+    if (snap.exists()) {
+      const d = snap.data();
+      if (d.referralBonus != null) globalSettings.referralBonus = d.referralBonus;
+      if (d.referralMilestones) globalSettings.referralMilestones = d.referralMilestones;
+    }
+  } catch(e) {}
+  if (!globalSettings.referralMilestones.length) {
+    globalSettings.referralMilestones = [
+      {friends:5,stars:30},{friends:10,stars:60},{friends:25,stars:150},{friends:50,stars:500,bonusTon:5}
+    ];
+  }
+}
+
+async function loadOrCreateUser() {
+  const uid = String(currentUser.id);
+  const ref = doc(db, 'users', uid);
+  const snap = await getDoc(ref);
+  if (snap.exists()) {
+    userData = { id: uid, ...snap.data() };
+    if (!userData.referralCode && userData.referral_code) userData.referralCode = userData.referral_code;
+    if (!userData.referralCode) {
+      const code = generateReferralCode(uid);
+      userData.referralCode = code;
+      try { await updateDoc(ref, { referralCode: code }); } catch(e) {}
+    }
+  } else {
+    const code = generateReferralCode(uid);
+    userData = {
+      id: uid, userId: uid,
+      userName: currentUser.username || '',
+      displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
+      balance: 0, totalDeposited: 0, totalEarned: 0,
+      walletAddress: '', referralCode: code, referredBy: null,
+      referralCount: 0, referralEarned: 0, referralStars: 0,
+      withdrawUnlocked: false, createdAt: serverTimestamp()
+    };
+    await setDoc(ref, userData);
+  }
+}
+
+function renderAll() {
+  if (!userData) return;
+  const bal    = userData.balance || 0;
+  const dep    = userData.totalDeposited || 0;
+  const earned = userData.totalEarned || 0;
+  const stars  = userData.referralStars || 0;
+
+  document.getElementById('header-balance').textContent = bal.toFixed(2);
+  document.getElementById('hero-balance').textContent   = bal.toFixed(2);
+  document.getElementById('hero-deposited').textContent = dep.toFixed(2);
+  document.getElementById('hero-earned').textContent    = '+' + earned.toFixed(2);
+  document.getElementById('hero-sub').textContent       = dep > 0 ? 'Next yield in ~7 days' : 'Start depositing to earn weekly rewards';
+  document.getElementById('wd-balance').textContent     = bal.toFixed(2);
+  document.getElementById('header-stars').textContent   = stars;
+  document.getElementById('info-stars').textContent     = stars + ' ⭐';
+
+  if (userData.walletAddress) {
+    document.getElementById('wd-wallet').value = userData.walletAddress;
+    document.getElementById('wallet-saved-badge').classList.add('show');
+    document.getElementById('wd-wallet-preview').textContent = userData.walletAddress;
+  }
+
+  const refCode = userData.referralCode || '';
+  const refLink = refCode ? buildRefLink(refCode) : '—';
+  document.getElementById('ref-code-val').textContent     = refCode || '—';
+  document.getElementById('ref-link-display').textContent = refLink;
+  document.getElementById('ref-count').textContent        = userData.referralCount || 0;
+  document.getElementById('ref-earned').textContent       = stars + ' ⭐';
+
+  document.getElementById('info-tgid').textContent    = userData.userId || '—';
+  document.getElementById('info-username').textContent = userData.userName ? '@' + userData.userName : '—';
+  document.getElementById('info-ref-code').textContent = refCode || '—';
+  document.getElementById('info-wd-status').textContent = userData.withdrawUnlocked ? '🔓 Unlocked' : '🔒 Locked';
+
+  const refUsed = document.getElementById('ref-used-display');
+  if (userData.referredBy) {
+    refUsed.innerHTML = `<div class="ref-used-badge">✓ Code applied: ${userData.referredBy}</div>`;
+    document.getElementById('ref-code-input').disabled = true;
+    document.getElementById('ref-submit-btn').disabled = true;
+  }
+
+  document.getElementById('wd-locked-section').style.display = userData.withdrawUnlocked ? 'none' : 'block';
+  document.getElementById('wd-form-section').style.display   = userData.withdrawUnlocked ? 'block' : 'none';
+  if (userData.withdrawUnlocked && userData.walletAddress)
+    document.getElementById('wd-wallet-preview').textContent = userData.walletAddress;
+
+  renderMilestones();
+}
+
+function renderMilestones() {
+  const list  = document.getElementById('milestones-list');
+  const ms    = globalSettings.referralMilestones;
+  const count = userData?.referralCount || 0;
+  if (!ms.length) { list.innerHTML = '<div class="empty-state"><p>No milestones yet.</p></div>'; return; }
+  const nextIdx = ms.findIndex(m => count < m.friends);
+  const icons   = ['🥉', '🥈', '🥇', '💎', '👑', '🏆'];
+  list.innerHTML = ms.map((m, i) => {
+    const done   = count >= m.friends;
+    const isNext = i === nextIdx;
+    const pct    = Math.min(100, Math.round((count / m.friends) * 100));
+    const icon   = done ? '✅' : (icons[i] || '🎯');
+    const cls    = done ? 'done-ms' : (isNext ? 'next-ms' : '');
+    const rem    = Math.max(0, m.friends - count);
+    const sub    = done
+      ? `<span style="color:var(--green);font-weight:700;">✓ Completed!</span>`
+      : isNext ? `<span style="color:var(--ton);font-weight:700;">🎯 ${rem} more to go</span>`
+               : `${count}/${m.friends} friends`;
+    const reward = [m.stars ? `⭐ ${m.stars} Stars` : '', m.bonusTon ? `💰 ${m.bonusTon} TON` : ''].filter(Boolean).join(' + ');
+    return `<div class="milestone-card ${cls}">
+      <div class="milestone-icon ${done?'done':''}">${icon}</div>
+      <div class="milestone-info">
+        <div class="milestone-title">${m.friends} Friends Milestone</div>
+        <div class="milestone-reward">${reward}</div>
+        <div class="milestone-sub">${sub}</div>
+        <div class="milestone-bar"><div class="milestone-bar-fill" style="width:${pct}%"></div></div>
+      </div>
+      <div class="milestone-prog">${done ? '<span class="mp-done-badge">🏅</span>' : '<span class="mp-pct">'+pct+'%</span>'}</div>
+    </div>`;
+  }).join('');
+}
+
+async function loadInvitedFriends() {
+  try {
+    const refCode = userData.referralCode || '';
+    if (!refCode) return;
+    const snap = await getDocs(query(collection(db, 'users'), where('referredBy', '==', refCode), limit(50)));
+    const friends = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const title = document.getElementById('invited-title');
+    const list  = document.getElementById('invited-list');
+    if (!friends.length) { title.style.display = 'none'; list.style.display = 'none'; return; }
+    title.style.display = 'block'; list.style.display = 'block';
+    list.innerHTML = friends.map(f => {
+      const name = f.displayName || (f.userName ? '@' + f.userName : f.userId || f.id);
+      const un   = f.userName ? '@' + f.userName : '';
+      const dt   = f.createdAt?.toDate ? f.createdAt.toDate().toLocaleDateString() : '';
+      return `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#059669,#10B981);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">👤</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</div>
+          <div style="font-size:10px;color:var(--sub);">${un}${dt?' · Joined '+dt:''}</div>
+        </div>
+        <div style="background:var(--green-light);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">✓ Joined</div>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+let depositsData = [];
+async function loadDeposits() {
+  try {
+    const snap = await getDocs(query(collection(db, 'deposits'), where('userId', '==', String(currentUser.id)), orderBy('createdAt', 'desc'), limit(20)));
+    depositsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderDeposits();
+  } catch(e) {}
+}
+
+function renderDeposits() {
+  const list  = document.getElementById('deposits-list');
+  const title = document.getElementById('deposits-title');
+  if (!depositsData.length) { list.style.display = 'none'; title.style.display = 'none'; return; }
+  title.style.display = 'block'; list.style.display = 'block';
+  list.innerHTML = depositsData.map(d => {
+    const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
+    const autoTag = d.autoDetected ? ' · <span style="color:var(--ton);font-size:9px;font-weight:700;">⚡ AUTO</span>' : '';
+    return `<div class="deposit-item">
+      <div class="di-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ton)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="di-info"><div class="di-amount">${(d.amount||0).toFixed(2)} TON</div>
+        <div class="di-date">${dt} · ${d.status==='active'?'<span style="color:var(--green);">Active</span>':d.status||'Pending'}${autoTag}</div></div>
+      <div class="di-right"><div class="di-yield">+${(d.earned||0).toFixed(2)} TON</div><div class="di-weeks">Week ${d.weeksActive||0}</div></div>
+    </div>`;
+  }).join('');
+  document.getElementById('info-deposits').textContent = depositsData.length;
+  document.getElementById('info-weeks').textContent = Math.max(...depositsData.map(d => d.weeksActive || 0), 0);
+}
+
+async function loadWithdrawals() {
+  try {
+    const snap = await getDocs(query(collection(db, 'withdrawals'), where('userId', '==', String(currentUser.id)), orderBy('createdAt', 'desc'), limit(20)));
+    const list  = document.getElementById('wd-history-list');
+    const title = document.getElementById('wd-history-title');
+    const docs  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!docs.length) { list.innerHTML = ''; title.style.display = 'none'; return; }
+    title.style.display = 'block';
+    list.innerHTML = docs.map(d => {
+      const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
+      return `<div class="wd-req-item">
+        <div class="wri-top"><div class="wri-amount">${(d.amount||0).toFixed(2)} TON</div>
+          <div class="wri-status ${d.status==='done'?'done':'pending'}">${d.status==='done'?'✅ Done':'⏳ Pending'}</div></div>
+        <div class="wri-addr">${d.walletAddress || '—'}</div>
+        <div class="wri-date">${dt}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {}
+}
+
+window.submitWithdraw = async function() {
+  const amount = parseFloat(document.getElementById('wd-amount').value);
+  const wallet = userData?.walletAddress || '';
+  const bal    = userData?.balance || 0;
+  if (isNaN(amount) || amount <= 0) { showToast('⚠️ Enter a valid amount'); return; }
+  if (!wallet) { showToast('⚠️ Save your wallet address first'); return; }
+  if (amount > bal) { showToast('⚠️ Insufficient balance'); return; }
+  openModal('💸 Confirm Withdrawal',
+    `<div style="font-size:13px;color:var(--sub);line-height:1.7;">Withdraw <strong style="color:var(--text);">${amount.toFixed(2)} TON</strong> to:<br><code style="font-size:10px;word-break:break-all;">${wallet}</code></div>`,
+    async () => {
+      try {
+        await addDoc(collection(db, 'withdrawals'), {
+          userId: String(currentUser.id), userName: currentUser.username || '',
+          displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
+          amount, walletAddress: wallet, status: 'pending', createdAt: serverTimestamp()
+        });
+        showToast('✅ Withdrawal request submitted!');
+        document.getElementById('wd-amount').value = '';
+        await loadWithdrawals();
+      } catch(e) { showToast('❌ ' + e.message); }
+    }
+  );
+};
+
+window.saveWalletAddress = async function() {
+  const wallet = document.getElementById('wd-wallet').value.trim();
+  if (!wallet) { showToast('⚠️ Enter your TON wallet address'); return; }
+  if (!wallet.startsWith('EQ') && !wallet.startsWith('UQ')) { showToast('⚠️ Address must start with EQ or UQ'); return; }
+  try {
+    await updateDoc(doc(db, 'users', String(currentUser.id)), { walletAddress: wallet });
+    userData.walletAddress = wallet;
+    document.getElementById('info-wallet').textContent = wallet;
+    document.getElementById('wallet-saved-badge').classList.add('show');
+    document.getElementById('wd-wallet-preview').textContent = wallet;
+    showToast('✅ Wallet address saved!');
+  } catch(e) { showToast('❌ ' + e.message); }
+};
+
+window.copyRefLink = function() {
+  const code = userData?.referralCode || '';
+  if (!code) { showToast('⚠️ No referral code yet'); return; }
+  navigator.clipboard?.writeText(buildRefLink(code)).catch(() => {});
+  showToast('✅ Invite link copied!');
+};
+
+window.shareRefLink = function() {
+  const code = userData?.referralCode || '';
+  if (!code) { showToast('⚠️ No referral code yet'); return; }
+  const link = buildRefLink(code);
+  const text = `💎 Join TonPlay — earn +5% every week on your TON!\nUse my invite link:`;
+  if (tg?.openTelegramLink) {
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
+  } else {
+    navigator.clipboard?.writeText(link).catch(() => {});
+    showToast('✅ Link copied!');
+  }
+};
+
+async function applyRefCode(code, silent = false) {
+  if (!code) { if (!silent) showToast('⚠️ Enter a referral code'); return; }
+  if (userData.referredBy) { if (!silent) showToast('⚠️ You already used a code'); return; }
+  if (code === userData.referralCode) { if (!silent) showToast('⚠️ Cannot use your own code'); return; }
+  try {
+    const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', code), limit(1)));
+    if (snap.empty) { if (!silent) showToast('❌ Invalid referral code'); return; }
+    const refDoc  = snap.docs[0];
+    if (refDoc.id === String(currentUser.id)) { if (!silent) showToast('⚠️ Cannot use your own code'); return; }
+    const refData = refDoc.data();
+    const uid     = String(currentUser.id);
+    await updateDoc(doc(db, 'users', uid), { referredBy: code });
+    userData.referredBy = code;
+    const newCount = (refData.referralCount || 0) + 1;
+    await updateDoc(doc(db, 'users', refDoc.id), { referralCount: newCount });
+    showToast('✅ Code applied! Welcome 🎉');
+    renderAll();
+    const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
+    const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
+    await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${newCount}\n🔑 <b>Code used:</b> <code>${code}</code>`);
+  } catch(e) { if (!silent) showToast('❌ ' + e.message); }
+}
+
+window.submitRefCode = async function() {
+  await applyRefCode(document.getElementById('ref-code-input').value.trim().toUpperCase(), false);
+};
+
+window.setAmount = function(val, btn) {
+  document.getElementById('deposit-amount').value = val;
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+};
+
+window.switchTab = function(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).scrollTop = 0;
+};
+
+let modalAction = null;
+window.openModal = function(title, body, action) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML    = body;
+  modalAction = action;
+  document.getElementById('modal-bg').classList.add('open');
+};
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); modalAction = null; }
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+document.getElementById('modal-confirm').addEventListener('click', async () => { if (modalAction) await modalAction(); closeModal(); });
+document.getElementById('modal-bg').addEventListener('click', e => { if (e.target === document.getElementById('modal-bg')) closeModal(); });
+
+window.showToast = function(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+};
+
+init();
+</script>
+</body>
+</html>

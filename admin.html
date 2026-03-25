@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TonPlay Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#F0F4FF;--surf:#FFFFFF;--card:#FFFFFF;--card2:#F7F9FF;
+  --ton:#2196F3;--ton2:#1565C0;--ton-light:#E3F0FF;
+  --gold:#F59E0B;--gold2:#D97706;--gold-light:#FEF3C7;
+  --green:#10B981;--green-light:#D1FAE5;
+  --red:#EF4444;--red-light:#FEE2E2;
+  --purple:#7C3AED;--purple-light:#EDE9FE;
+  --text:#0F172A;--sub:#64748B;--muted:#94A3B8;--border:#E2E8F0;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 12px rgba(0,0,0,0.04);
+  --r:14px;--r-sm:9px;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;}
+
+/* Login */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+#login-screen.gone{display:none;}
+.login-box{background:var(--surf);border:1px solid var(--border);border-radius:24px;padding:36px 32px;width:100%;max-width:380px;text-align:center;box-shadow:var(--shadow);}
+.login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;}
+.login-logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#2196F3,#1565C0);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(33,150,243,0.3);}
+.login-logo-name{font-size:22px;font-weight:900;}.login-logo-name span{color:var(--ton);}
+.login-title{font-size:18px;font-weight:800;margin-bottom:6px;}
+.login-sub{font-size:12px;color:var(--sub);margin-bottom:24px;}
+.lf{margin-bottom:14px;text-align:left;}
+.ll{font-size:11px;color:var(--sub);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;display:block;}
+.li{width:100%;padding:12px 14px;background:var(--card2);border:1.5px solid var(--border);border-radius:11px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.li:focus{border-color:var(--ton);box-shadow:0 0 0 3px rgba(33,150,243,0.1);}
+.li::placeholder{color:var(--muted);}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;box-shadow:0 4px 16px rgba(33,150,243,0.25);transition:all .18s;}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(33,150,243,0.35);}
+.btn-login:active{transform:scale(0.98);}
+.login-err{font-size:11px;color:var(--red);margin-top:10px;min-height:16px;}
+
+/* App */
+#admin-app{display:none;min-height:100vh;}
+#admin-app.visible{display:block;}
+.topbar{background:var(--surf);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow);}
+.tb-logo{display:flex;align-items:center;gap:10px;}
+.tb-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--ton),var(--ton2));border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.tb-logo-icon svg{width:18px;height:18px;}
+.tb-logo-name{font-size:16px;font-weight:900;}.tb-logo-name span{color:var(--ton);}
+.tb-badge{background:var(--red-light);border:1px solid rgba(239,68,68,0.25);color:var(--red);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.btn-logout{padding:7px 16px;background:var(--red-light);border:1px solid rgba(239,68,68,0.25);color:var(--red);border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .16s;}
+.btn-logout:hover{background:rgba(239,68,68,0.15);}
+.main{max-width:1100px;margin:0 auto;padding:24px 20px 40px;}
+
+/* Summary */
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+@media(max-width:700px){.summary-row{grid-template-columns:repeat(2,1fr);}}
+.sum-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px;box-shadow:var(--shadow);}
+.sum-icon{font-size:22px;margin-bottom:8px;}
+.sum-val{font-family:'DM Mono',monospace;font-size:26px;font-weight:500;line-height:1.1;}
+.sum-val.blue{color:var(--ton);}.sum-val.gold{color:var(--gold2);}.sum-val.green{color:var(--green);}.sum-val.purple{color:var(--purple);}
+.sum-lbl{font-size:10px;color:var(--sub);margin-top:4px;font-weight:700;letter-spacing:.3px;}
+
+/* Tabs */
+.admin-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+.atab{padding:9px 18px;border-radius:10px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .16s;border:1.5px solid var(--border);background:var(--surf);color:var(--sub);}
+.atab.active{background:var(--ton-light);border-color:rgba(33,150,243,0.35);color:var(--ton);}
+.atab-content{display:none;}
+.atab-content.active{display:block;}
+
+/* Panel */
+.panel{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);margin-bottom:20px;overflow:hidden;box-shadow:var(--shadow);}
+.panel-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-size:13px;font-weight:800;}
+.search-bar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;}
+.search-input{flex:1;padding:9px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;outline:none;}
+.search-input:focus{border-color:var(--ton);}
+.search-input::placeholder{color:var(--muted);}
+.btn-refresh{padding:9px 16px;background:var(--ton-light);border:1.5px solid rgba(33,150,243,0.25);color:var(--ton);border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .16s;}
+.btn-refresh:hover{background:rgba(33,150,243,0.15);}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{padding:10px 14px;text-align:left;color:var(--sub);font-weight:700;letter-spacing:.4px;text-transform:uppercase;background:var(--card2);white-space:nowrap;}
+td{padding:11px 14px;border-top:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+tr:hover td{background:rgba(33,150,243,0.02);}
+.mono{font-family:'DM Mono',monospace;}
+
+/* Chips */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.chip.blue{background:var(--ton-light);color:var(--ton);}
+.chip.green{background:var(--green-light);color:var(--green);}
+.chip.gold{background:var(--gold-light);color:var(--gold2);}
+.chip.red{background:var(--red-light);color:var(--red);}
+.chip.purple{background:var(--purple-light);color:var(--purple);}
+.chip.locked{background:var(--red-light);color:var(--red);}
+.chip.unlocked{background:var(--green-light);color:var(--green);}
+.chip.pending{background:var(--gold-light);color:var(--gold2);}
+.chip.done{background:var(--green-light);color:var(--green);}
+
+/* Action buttons */
+.act-grp{display:flex;gap:5px;flex-wrap:wrap;}
+.btn-act{padding:5px 10px;border-radius:7px;font-family:'Inter',sans-serif;font-size:10px;font-weight:700;cursor:pointer;transition:all .14s;white-space:nowrap;border:1.5px solid;}
+.btn-act:active{transform:scale(0.96);}
+.btn-act.blue{background:var(--ton-light);border-color:rgba(33,150,243,0.3);color:var(--ton);}
+.btn-act.blue:hover{background:rgba(33,150,243,0.15);}
+.btn-act.gold{background:var(--gold-light);border-color:rgba(245,158,11,0.3);color:var(--gold2);}
+.btn-act.gold:hover{background:rgba(245,158,11,0.15);}
+.btn-act.green{background:var(--green-light);border-color:rgba(16,185,129,0.28);color:var(--green);}
+.btn-act.green:hover{background:rgba(16,185,129,0.15);}
+.btn-act.red{background:var(--red-light);border-color:rgba(239,68,68,0.22);color:var(--red);}
+.btn-act.red:hover{background:rgba(239,68,68,0.15);}
+.btn-act.purple{background:var(--purple-light);border-color:rgba(124,58,237,0.25);color:var(--purple);}
+
+/* Notif rows */
+.notif-list{padding:0;}
+.notif-row{display:flex;align-items:flex-start;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);gap:12px;}
+.notif-row:last-child{border:none;}
+.notif-info{flex:1;min-width:0;}
+.notif-user{font-size:12px;font-weight:800;}
+.notif-sub{font-size:10px;color:var(--sub);margin-top:3px;}
+.notif-addr{font-family:'DM Mono',monospace;font-size:10px;color:var(--ton);word-break:break-all;max-width:220px;white-space:normal;margin-top:3px;}
+.notif-actions{display:flex;gap:6px;flex-shrink:0;align-items:flex-start;}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(4px);}
+.modal-bg.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surf);border:1px solid var(--border);border-radius:20px;padding:26px 22px;width:100%;max-width:420px;position:relative;box-shadow:var(--shadow);}
+.modal-title{font-size:15px;font-weight:800;margin-bottom:14px;}
+.modal-field{margin-bottom:12px;}
+.modal-label{font-size:10px;color:var(--sub);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px;display:block;}
+.modal-input{width:100%;padding:10px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:border-color .2s;}
+.modal-input:focus{border-color:var(--ton);}
+.modal-btns{display:flex;gap:8px;margin-top:14px;}
+.btn-modal{flex:1;padding:11px;border-radius:10px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .16s;}
+.btn-modal.confirm{background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;border:none;box-shadow:0 3px 10px rgba(33,150,243,0.2);}
+.btn-modal.cancel{background:var(--card2);color:var(--sub);border:1.5px solid var(--border);}
+.btn-modal:active{transform:scale(0.97);}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:#fff;padding:10px 20px;border-radius:20px;font-size:12px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;white-space:nowrap;z-index:999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* Empty state */
+.empty-state{text-align:center;padding:36px 20px;color:var(--sub);font-size:12px;}
+.empty-state .emoji{font-size:32px;margin-bottom:8px;}
+.spinner{width:20px;height:20px;border:2px solid rgba(33,150,243,0.2);border-top-color:var(--ton);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Settings inputs */
+.settings-section{max-width:560px;}
+.set-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.set-label{font-size:10px;color:var(--sub);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px;display:block;}
+.set-input{width:100%;padding:10px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .2s;}
+.set-input:focus{border-color:var(--ton);}
+.ms-card{background:var(--card2);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
+.ms-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end;}
+.btn-save{padding:11px 24px;background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(33,150,243,0.2);transition:all .15s;}
+.btn-save:hover{transform:translateY(-1px);}
+.btn-save:active{transform:scale(0.97);}
+.btn-add-ms{padding:9px 18px;background:var(--ton-light);border:1.5px solid rgba(33,150,243,0.25);color:var(--ton);border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+.status-msg{font-size:11px;color:var(--green);min-height:16px;margin-top:8px;}
+.sec-title{font-size:11px;font-weight:800;color:var(--sub);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;}
+
+/* Add player form */
+.add-player-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+@media(max-width:600px){.add-player-grid{grid-template-columns:1fr;}}
+
+/* Wallet badge */
+.wallet-cell{font-family:'DM Mono',monospace;font-size:10px;color:var(--ton);max-width:150px;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6L12 2z" fill="white"/></svg></div>
+      <div class="login-logo-name">Ton<span>Play</span></div>
+    </div>
+    <div class="login-title">🔐 Admin Panel</div>
+    <div class="login-sub">Sign in with your admin credentials</div>
+    <div class="lf"><label class="ll">Email</label><input class="li" type="email" id="login-email" placeholder="admin@example.com" autocomplete="email"></div>
+    <div class="lf"><label class="ll">Password</label><input class="li" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-login" id="login-btn">Sign In</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="admin-app">
+  <div class="topbar">
+    <div class="tb-logo">
+      <div class="tb-logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6L12 2z"/></svg></div>
+      <div class="tb-logo-name">Ton<span>Play</span></div>
+      <div class="tb-badge">ADMIN</div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  </div>
+
+  <div class="main">
+    <!-- Summary -->
+    <div class="summary-row">
+      <div class="sum-card"><div class="sum-icon">👥</div><div class="sum-val blue" id="s-players">0</div><div class="sum-lbl">Total Players</div></div>
+      <div class="sum-card"><div class="sum-icon">💰</div><div class="sum-val gold" id="s-deposits">0</div><div class="sum-lbl">Pending Deposits</div></div>
+      <div class="sum-card"><div class="sum-icon">💸</div><div class="sum-val green" id="s-withdrawals">0</div><div class="sum-lbl">Pending Withdrawals</div></div>
+      <div class="sum-card"><div class="sum-icon">📈</div><div class="sum-val purple" id="s-total-bal">0</div><div class="sum-lbl">Total Balance (TON)</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+      <button class="atab active" data-tab="players" onclick="switchAdminTab('players',this)">👥 Players</button>
+      <button class="atab" data-tab="deposits" onclick="switchAdminTab('deposits',this)">💰 Deposits</button>
+      <button class="atab" data-tab="withdrawals" onclick="switchAdminTab('withdrawals',this)">💸 Withdrawals</button>
+      <button class="atab" data-tab="settings" onclick="switchAdminTab('settings',this)">⚙️ Settings</button>
+      <button class="atab" data-tab="addplayer" onclick="switchAdminTab('addplayer',this)">➕ Add Player</button>
+    </div>
+
+    <!-- PLAYERS -->
+    <div class="atab-content active" id="tab-players">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Players</div></div>
+        <div class="search-bar">
+          <input class="search-input" id="player-search" placeholder="Search by name, username or ID…" oninput="filterPlayers()">
+          <button class="btn-refresh" id="refresh-players">🔄 Refresh</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Name / Username</th>
+              <th>ID</th>
+              <th>Balance (TON)</th>
+              <th>Deposited</th>
+              <th>Wallet</th>
+              <th>Refs</th>
+              <th>Withdraw</th>
+              <th>Actions</th>
+            </tr></thead>
+            <tbody id="players-tbody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEPOSITS -->
+    <div class="atab-content" id="tab-deposits">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Deposit Requests</div><button class="btn-refresh" id="refresh-deposits">🔄 Refresh</button></div>
+        <div class="notif-list" id="deposit-list"><div class="empty-state"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- WITHDRAWALS -->
+    <div class="atab-content" id="tab-withdrawals">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Withdrawal Requests</div><button class="btn-refresh" id="refresh-withdrawals">🔄 Refresh</button></div>
+        <div class="notif-list" id="withdrawal-list"><div class="empty-state"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="atab-content" id="tab-settings">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">⚙️ Global Settings</div></div>
+        <div style="padding:20px;">
+          <div class="settings-section">
+            <div class="sec-title">💰 Referral Bonus</div>
+            <div style="margin-bottom:16px;">
+              <label class="set-label">TON per invited friend</label>
+              <input class="set-input" type="number" id="ref-bonus-ton" step="0.001" min="0" value="0.05" placeholder="0.05" style="max-width:180px;">
+              <div style="font-size:10px;color:var(--sub);margin-top:4px;">Credited instantly to the referrer when someone uses their code.</div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
+            <div class="sec-title">⭐ Referral Milestones</div>
+            <div style="font-size:11px;color:var(--sub);margin-bottom:14px;line-height:1.6;">Configure TG Stars rewards for reaching friend milestones. The last milestone can also include a TON bonus.</div>
+
+            <div id="ref-milestones-editor" style="margin-bottom:12px;"></div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+              <button class="btn-add-ms" onclick="addMilestone()">+ Add Milestone</button>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
+            <div class="sec-title">📈 Weekly Yield Rate</div>
+            <div style="margin-bottom:16px;">
+              <label class="set-label">Yield % per week</label>
+              <input class="set-input" type="number" id="yield-rate" step="0.1" min="0" max="100" value="5" placeholder="5" style="max-width:180px;">
+              <div style="font-size:10px;color:var(--sub);margin-top:4px;">Default: 10%. Shown to users as weekly return.</div>
+            </div>
+
+            <button class="btn-save" onclick="saveSettings()">💾 Save All Settings</button>
+            <div class="status-msg" id="settings-msg"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD PLAYER -->
+    <div class="atab-content" id="tab-addplayer">
+      <div class="panel" style="max-width:580px;">
+        <div class="panel-head"><div class="panel-title">➕ Add Player Manually</div></div>
+        <div style="padding:20px;">
+          <div class="add-player-grid">
+            <div>
+              <label class="set-label">Telegram User ID *</label>
+              <input class="set-input" id="np-userid" type="text" placeholder="e.g. 123456789">
+            </div>
+            <div>
+              <label class="set-label">Username *</label>
+              <input class="set-input" id="np-username" type="text" placeholder="e.g. johndoe">
+            </div>
+            <div>
+              <label class="set-label">Display Name</label>
+              <input class="set-input" id="np-displayname" type="text" placeholder="e.g. John Doe">
+            </div>
+            <div>
+              <label class="set-label">Balance (TON)</label>
+              <input class="set-input" id="np-balance" type="number" step="0.01" value="0" placeholder="0">
+            </div>
+            <div>
+              <label class="set-label">Total Deposited (TON)</label>
+              <input class="set-input" id="np-deposited" type="number" step="0.01" value="0" placeholder="0">
+            </div>
+            <div>
+              <label class="set-label">Wallet Address</label>
+              <input class="set-input" id="np-wallet" type="text" placeholder="EQ...">
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <label class="set-label" style="margin:0;">Withdrawals Unlocked:</label>
+            <button id="np-wd-toggle" onclick="toggleNpWd()" style="padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:var(--red-light);border:1.5px solid rgba(239,68,68,0.25);color:var(--red);font-family:'Inter',sans-serif;">🔒 Locked</button>
+          </div>
+          <button class="btn-save" onclick="createNewPlayer()">✅ Create Player</button>
+          <div class="status-msg" id="np-error"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-title" id="modal-title"></div>
+    <div id="modal-body"></div>
+    <div class="modal-btns">
+      <button class="btn-modal cancel" id="modal-cancel">Cancel</button>
+      <button class="btn-modal confirm" id="modal-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, addDoc, getDocs, query, orderBy, limit, where, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAml8c0QPKlbEmXG7C4eXd-WYbbOvOHtP8",
+  authDomain: "miniapp-ton.firebaseapp.com",
+  projectId: "miniapp-ton",
+  storageBucket: "miniapp-ton.firebasestorage.app",
+  messagingSenderId: "991105630391",
+  appId: "1:991105630791:web:551166c522317fad980d32"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ── Auth ──
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  const err = document.getElementById('login-err');
+  err.textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) { err.textContent = '❌ ' + (e.code === 'auth/invalid-credential' ? 'Wrong email or password' : e.message); }
+});
+
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-btn').click(); });
+
+window.logout = function() { signOut(auth); };
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    document.getElementById('login-screen').classList.add('gone');
+    document.getElementById('admin-app').classList.add('visible');
+    loadAll();
+  } else {
+    document.getElementById('login-screen').classList.remove('gone');
+    document.getElementById('admin-app').classList.remove('visible');
+  }
+});
+
+function loadAll() {
+  loadPlayers();
+  loadDeposits();
+  loadWithdrawals();
+  loadSettings();
+}
+
+// ── Players ──
+let allPlayers = [];
+
+async function loadPlayers() {
+  document.getElementById('players-tbody').innerHTML = '<tr><td colspan="8" class="empty-state"><div class="spinner"></div></td></tr>';
+  try {
+    const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(200)));
+    allPlayers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderPlayers(allPlayers);
+    updateSummary();
+  } catch(e) { document.getElementById('players-tbody').innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:14px;">${e.message}</td></tr>`; }
+}
+
+function renderPlayers(list) {
+  const tb = document.getElementById('players-tbody');
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="8" class="empty-state">No players found</td></tr>'; return; }
+  tb.innerHTML = list.map(p => {
+    const name = p.displayName || (p.userName ? '@' + p.userName : p.id);
+    const bal = (p.balance || 0).toFixed(2);
+    const dep = (p.totalDeposited || 0).toFixed(2);
+    const wallet = p.walletAddress ? `<span class="wallet-cell" title="${p.walletAddress}" onclick="navigator.clipboard?.writeText('${p.walletAddress}')">${p.walletAddress.slice(0,12)}…</span>` : '<span style="color:var(--muted);">—</span>';
+    const wdChip = p.withdrawUnlocked ? '<span class="chip unlocked">🔓 Open</span>' : '<span class="chip locked">🔒 Locked</span>';
+    return `<tr>
+      <td><div style="font-weight:700;">${name}</div><div style="font-size:10px;color:var(--sub);">@${p.userName || '—'}</div></td>
+      <td class="mono" style="font-size:10px;">${p.userId || p.id}</td>
+      <td><span class="mono" style="color:var(--ton);font-weight:600;">${bal} TON</span></td>
+      <td class="mono">${dep} TON</td>
+      <td>${wallet}</td>
+      <td class="mono">${p.referralCount || 0}</td>
+      <td>${wdChip}</td>
+      <td><div class="act-grp">
+        <button class="btn-act blue" onclick="editBalance('${p.id}','${p.userName||p.id}',${p.balance||0})">✏️ Balance</button>
+        <button class="btn-act green" onclick="addDeposit('${p.id}','${p.userName||p.id}')">💰 Add Deposit</button>
+        <button class="btn-act ${p.withdrawUnlocked?'red':'green'}" onclick="toggleWithdraw('${p.id}','${p.userName||p.id}',${!!p.withdrawUnlocked})">${p.withdrawUnlocked?'🔒 Lock':'🔓 Unlock'}</button>
+        <button class="btn-act red" onclick="deletePlayer('${p.id}','${p.userName||p.id}')">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterPlayers() {
+  const q = document.getElementById('player-search').value.toLowerCase();
+  if (!q) { renderPlayers(allPlayers); return; }
+  renderPlayers(allPlayers.filter(p =>
+    (p.displayName || '').toLowerCase().includes(q) ||
+    (p.userName || '').toLowerCase().includes(q) ||
+    (p.userId || p.id || '').toLowerCase().includes(q)
+  ));
+}
+window.filterPlayers = filterPlayers;
+
+function updateSummary() {
+  document.getElementById('s-players').textContent = allPlayers.length;
+  const totalBal = allPlayers.reduce((s, p) => s + (p.balance || 0), 0);
+  document.getElementById('s-total-bal').textContent = totalBal.toFixed(1);
+}
+
+// ── Deposits ──
+let depositDocs = [];
+async function loadDeposits() {
+  const list = document.getElementById('deposit-list');
+  list.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+  try {
+    const snap = await getDocs(query(collection(db, 'depositNotifications'), orderBy('timestamp', 'desc'), limit(100)));
+    depositDocs = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    renderDeposits();
+    document.getElementById('s-deposits').textContent = depositDocs.filter(d => d.status !== 'done').length;
+  } catch(e) { list.innerHTML = `<div class="empty-state"><div style="color:var(--red);">${e.message}</div></div>`; }
+}
+
+function renderDeposits() {
+  const list = document.getElementById('deposit-list');
+  if (!depositDocs.length) { list.innerHTML = '<div class="empty-state"><div class="emoji">✅</div>No deposit requests</div>'; return; }
+  list.innerHTML = depositDocs.map(d => {
+    const ts = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleString() : '—';
+    const statusChip = d.status === 'done' ? '<span class="chip done">✅ Confirmed</span>' : '<span class="chip pending">⏳ Pending</span>';
+    return `<div class="notif-row">
+      <div class="notif-info">
+        <div class="notif-user">@${d.userName || d.userId} <span style="font-weight:400;font-size:10px;color:var(--sub);">(${d.userId})</span></div>
+        <div class="notif-sub">Amount: <strong style="color:var(--ton);">${d.amount || '?'}</strong> · ${ts}</div>
+        <div class="notif-addr">💼 ${d.walletAddress || '—'}</div>
+      </div>
+      <div class="notif-actions">
+        ${statusChip}
+        ${d.status !== 'done' ? `<button class="btn-act green" onclick="confirmDeposit('${d.docId}','${d.userId}',${parseFloat(d.amount)||0})">✅ Confirm</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.confirmDeposit = async function(docId, userId, amount) {
+  if (!confirm(`Confirm deposit of ${amount} TON for user ${userId}?`)) return;
+  try {
+    await updateDoc(doc(db, 'depositNotifications', docId), { status: 'done', processedAt: serverTimestamp() });
+    // Also update the deposit doc and user balance
+    const depositsSnap = await getDocs(query(
+      collection(db, 'deposits'),
+      where('userId', '==', userId),
+      where('status', '==', 'pending'),
+      limit(5)
+    ));
+    for (const d of depositsSnap.docs) {
+      const da = d.data();
+      if (Math.abs((da.amount || 0) - amount) < 0.001) {
+        await updateDoc(doc(db, 'deposits', d.id), { status: 'active', activatedAt: serverTimestamp() });
+        // Add to user balance and totalDeposited
+        const userSnap = await getDoc(doc(db, 'users', userId));
+        if (userSnap.exists()) {
+          const ud = userSnap.data();
+          await updateDoc(doc(db, 'users', userId), {
+            balance: parseFloat(((ud.balance || 0) + amount).toFixed(6)),
+            totalDeposited: parseFloat(((ud.totalDeposited || 0) + amount).toFixed(6)),
+            withdrawUnlocked: true
+          });
+        }
+        break;
+      }
+    }
+    showToast('✅ Deposit confirmed!');
+    await loadDeposits(); await loadPlayers();
+  } catch(e) { showToast('❌ ' + e.message); }
+};
+
+// ── Withdrawals ──
+async function loadWithdrawals() {
+  const list = document.getElementById('withdrawal-list');
+  list.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+  try {
+    const snap = await getDocs(query(collection(db, 'withdrawals'), orderBy('createdAt', 'desc'), limit(100)));
+    const docs = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    if (!docs.length) { list.innerHTML = '<div class="empty-state"><div class="emoji">✅</div>No withdrawal requests</div>'; return; }
+    document.getElementById('s-withdrawals').textContent = docs.filter(d => d.status !== 'done').length;
+    list.innerHTML = docs.map(d => {
+      const ts = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleString() : '—';
+      const statusChip = d.status === 'done' ? '<span class="chip done">✅ Paid</span>' : '<span class="chip pending">⏳ Pending</span>';
+      return `<div class="notif-row">
+        <div class="notif-info">
+          <div class="notif-user">@${d.userName || d.userId} <span style="font-weight:400;font-size:10px;color:var(--sub);">(${d.userId})</span></div>
+          <div class="notif-sub">Amount: <strong style="color:var(--gold2);">${(d.amount || 0).toFixed(2)} TON</strong> · ${ts}</div>
+          <div class="notif-addr">📤 To: ${d.walletAddress || '—'}</div>
+        </div>
+        <div class="notif-actions">
+          ${statusChip}
+          ${d.status !== 'done' ? `<button class="btn-act green" onclick="markWithdrawalDone('${d.docId}','${d.userId}',${d.amount||0})">✅ Mark Paid</button>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { list.innerHTML = `<div class="empty-state"><div style="color:var(--red);">${e.message}</div></div>`; }
+}
+
+window.markWithdrawalDone = async function(docId, userId, amount) {
+  if (!confirm(`Mark withdrawal of ${amount} TON as paid for ${userId}?`)) return;
+  try {
+    await updateDoc(doc(db, 'withdrawals', docId), { status: 'done', processedAt: serverTimestamp() });
+    // Deduct balance
+    const userSnap = await getDoc(doc(db, 'users', userId));
+    if (userSnap.exists()) {
+      const ud = userSnap.data();
+      const newBal = Math.max(0, parseFloat(((ud.balance || 0) - amount).toFixed(6)));
+      await updateDoc(doc(db, 'users', userId), { balance: newBal });
+    }
+    showToast('✅ Marked as paid and balance deducted!');
+    await loadWithdrawals(); await loadPlayers();
+  } catch(e) { showToast('❌ ' + e.message); }
+};
+
+// ── Settings / Milestones ──
+let referralMilestonesAdmin = [
+  { friends: 5, stars: 30 },
+  { friends: 10, stars: 60 },
+  { friends: 25, stars: 150 },
+  { friends: 50, stars: 500, bonusTon: 5 }
+];
+
+async function loadSettings() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'global'));
+    if (snap.exists()) {
+      const d = snap.data();
+      if (d.referralBonus != null) document.getElementById('ref-bonus-ton').value = d.referralBonus;
+      if (d.yieldRate != null) document.getElementById('yield-rate').value = d.yieldRate;
+      if (d.referralMilestones?.length) referralMilestonesAdmin = d.referralMilestones;
+    }
+  } catch(e) {}
+  renderMilestonesEditor();
+}
+
+function renderMilestonesEditor() {
+  const c = document.getElementById('ref-milestones-editor');
+  c.innerHTML = referralMilestonesAdmin.map((m, i) => `
+    <div class="ms-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+        <div style="font-size:10px;font-weight:800;color:var(--gold2);letter-spacing:.4px;">MILESTONE ${i + 1}</div>
+        ${referralMilestonesAdmin.length > 1 ? `<button class="btn-act red" style="padding:3px 8px;font-size:10px;" onclick="removeMilestone(${i})">✕ Remove</button>` : ''}
+      </div>
+      <div class="ms-grid">
+        <div><label class="set-label">Friends Needed</label><input class="set-input" type="number" min="1" id="ms-friends-${i}" value="${m.friends}" placeholder="10"></div>
+        <div><label class="set-label">TG Stars Reward</label><input class="set-input" type="number" min="0" id="ms-stars-${i}" value="${m.stars || 0}" placeholder="60"></div>
+        <div><label class="set-label">Bonus TON (optional)</label><input class="set-input" type="number" min="0" step="0.1" id="ms-ton-${i}" value="${m.bonusTon || 0}" placeholder="0"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.addMilestone = function() {
+  referralMilestonesAdmin.push({ friends: 100, stars: 1000, bonusTon: 0 });
+  renderMilestonesEditor();
+};
+window.removeMilestone = function(i) {
+  referralMilestonesAdmin.splice(i, 1);
+  renderMilestonesEditor();
+};
+
+window.saveSettings = async function() {
+  const msg = document.getElementById('settings-msg');
+  msg.textContent = 'Saving…';
+  // Read milestones
+  const ms = referralMilestonesAdmin.map((_, i) => ({
+    friends: parseInt(document.getElementById(`ms-friends-${i}`)?.value) || 0,
+    stars: parseInt(document.getElementById(`ms-stars-${i}`)?.value) || 0,
+    bonusTon: parseFloat(document.getElementById(`ms-ton-${i}`)?.value) || 0
+  }));
+  const refBonus = parseFloat(document.getElementById('ref-bonus-ton').value) || 0.05;
+  const yieldRate = parseFloat(document.getElementById('yield-rate').value) || 10;
+  try {
+    await setDoc(doc(db, 'settings', 'global'), {
+      referralBonus: refBonus,
+      yieldRate,
+      referralMilestones: ms,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    referralMilestonesAdmin = ms;
+    msg.textContent = '✅ Saved!';
+    setTimeout(() => msg.textContent = '', 2500);
+    showToast('✅ Settings saved!');
+  } catch(e) { msg.textContent = '❌ ' + e.message; }
+};
+
+// ── Player actions ──
+let modalAction = null;
+function openModal(title, body, action) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  modalAction = action;
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); modalAction = null; }
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+document.getElementById('modal-confirm').addEventListener('click', async () => { if (modalAction) await modalAction(); closeModal(); });
+document.getElementById('modal-bg').addEventListener('click', e => { if (e.target === document.getElementById('modal-bg')) closeModal(); });
+
+window.editBalance = function(uid, name, currentBal) {
+  openModal(`✏️ Edit Balance — @${name}`,
+    `<div class="modal-field"><label class="modal-label">Current: ${parseFloat(currentBal).toFixed(4)} TON</label><input class="modal-input" id="m-bal" type="number" step="0.0001" value="${parseFloat(currentBal).toFixed(4)}" placeholder="New balance"></div>`,
+    async () => {
+      const val = parseFloat(document.getElementById('m-bal').value);
+      if (isNaN(val) || val < 0) { showToast('❌ Invalid'); return; }
+      await updateDoc(doc(db, 'users', uid), { balance: val });
+      showToast(`✅ Balance set to ${val.toFixed(4)} TON`); await loadPlayers();
+    }
+  );
+};
+
+window.addDeposit = function(uid, name) {
+  openModal(`💰 Add Deposit — @${name}`,
+    `<div class="modal-field"><label class="modal-label">Deposit Amount (TON)</label><input class="modal-input" id="m-dep" type="number" step="0.01" min="0.5" placeholder="e.g. 10"></div>
+     <div style="font-size:11px;color:var(--sub);margin-top:6px;line-height:1.5;">This will add the amount to the user's balance AND totalDeposited. A deposit record will be created.</div>`,
+    async () => {
+      const amt = parseFloat(document.getElementById('m-dep').value);
+      if (isNaN(amt) || amt < 0.5) { showToast('❌ Min 0.5 TON'); return; }
+      const userSnap = await getDoc(doc(db, 'users', uid));
+      if (!userSnap.exists()) { showToast('❌ User not found'); return; }
+      const ud = userSnap.data();
+      await updateDoc(doc(db, 'users', uid), {
+        balance: parseFloat(((ud.balance || 0) + amt).toFixed(6)),
+        totalDeposited: parseFloat(((ud.totalDeposited || 0) + amt).toFixed(6)),
+        withdrawUnlocked: true
+      });
+      await addDoc(collection(db, 'deposits'), {
+        userId: uid,
+        userName: ud.userName || '',
+        displayName: ud.displayName || '',
+        amount: amt,
+        walletAddress: ud.walletAddress || '',
+        status: 'active',
+        weeksActive: 0,
+        earned: 0,
+        addedByAdmin: true,
+        createdAt: serverTimestamp()
+      });
+      showToast(`✅ Added ${amt} TON deposit for @${name}`); await loadPlayers();
+    }
+  );
+};
+
+window.toggleWithdraw = function(uid, name, currentlyUnlocked) {
+  const newVal = !currentlyUnlocked;
+  openModal(`${newVal ? '🔓 Unlock' : '🔒 Lock'} Withdraw — @${name}`,
+    `<div style="font-size:12px;color:var(--sub);line-height:1.6;">${newVal ? 'This will <strong style="color:var(--green);">unlock</strong>' : 'This will <strong style="color:var(--red);">lock</strong>'} withdrawals for <strong>@${name}</strong>.</div>`,
+    async () => {
+      await updateDoc(doc(db, 'users', uid), { withdrawUnlocked: newVal });
+      showToast(newVal ? '🔓 Unlocked!' : '🔒 Locked!'); await loadPlayers();
+    }
+  );
+};
+
+window.deletePlayer = function(uid, name) {
+  openModal(`🗑️ Delete Player — @${name}`,
+    `<div style="font-size:12px;color:var(--red);line-height:1.6;"><strong>⚠️ Warning:</strong> Permanently deletes @${name}. Cannot be undone!</div>`,
+    async () => {
+      await deleteDoc(doc(db, 'users', uid));
+      showToast(`🗑️ Deleted @${name}`);
+      allPlayers = allPlayers.filter(p => p.id !== uid);
+      renderPlayers(allPlayers); updateSummary();
+    }
+  );
+};
+
+// ── Add player ──
+let npWd = false;
+window.toggleNpWd = function() {
+  npWd = !npWd;
+  const btn = document.getElementById('np-wd-toggle');
+  if (npWd) { btn.textContent = '🔓 Unlocked'; btn.style.background = 'var(--green-light)'; btn.style.borderColor = 'rgba(16,185,129,0.3)'; btn.style.color = 'var(--green)'; }
+  else { btn.textContent = '🔒 Locked'; btn.style.background = 'var(--red-light)'; btn.style.borderColor = 'rgba(239,68,68,0.25)'; btn.style.color = 'var(--red)'; }
+};
+
+window.createNewPlayer = async function() {
+  const err = document.getElementById('np-error');
+  err.textContent = '';
+  const userId = document.getElementById('np-userid').value.trim();
+  const userName = document.getElementById('np-username').value.trim();
+  const displayName = document.getElementById('np-displayname').value.trim();
+  const balance = parseFloat(document.getElementById('np-balance').value) || 0;
+  const totalDeposited = parseFloat(document.getElementById('np-deposited').value) || 0;
+  const wallet = document.getElementById('np-wallet').value.trim();
+  if (!userId) { err.textContent = '❌ Telegram User ID is required'; return; }
+  if (!userName) { err.textContent = '❌ Username is required'; return; }
+  const code = userId.slice(-6).toUpperCase() + Math.random().toString(36).slice(-2).toUpperCase();
+  try {
+    await setDoc(doc(db, 'users', userId), {
+      userId, userName, displayName: displayName || userName,
+      balance, totalDeposited, totalEarned: 0,
+      walletAddress: wallet,
+      referralCode: code, referredBy: null,
+      referralCount: 0, referralEarned: 0,
+      withdrawUnlocked: npWd,
+      createdAt: serverTimestamp()
+    });
+    showToast('✅ Player @' + userName + ' created!');
+    ['np-userid','np-username','np-displayname','np-wallet'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('np-balance').value = '0';
+    document.getElementById('np-deposited').value = '0';
+    npWd = false; window.toggleNpWd(); window.toggleNpWd();
+    await loadPlayers();
+  } catch(e) { err.textContent = '❌ ' + e.message; }
+};
+
+// ── Tab switch ──
+window.switchAdminTab = function(name, btn) {
+  document.querySelectorAll('.atab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.atab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+};
+
+// ── Refresh buttons ──
+document.getElementById('refresh-players').addEventListener('click', loadPlayers);
+document.getElementById('refresh-deposits').addEventListener('click', loadDeposits);
+document.getElementById('refresh-withdrawals').addEventListener('click', loadWithdrawals);
+
+// ── Toast ──
+window.showToast = function(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+};
+</script>
+</body>
+</html>
