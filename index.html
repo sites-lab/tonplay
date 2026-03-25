@@ -9,8 +9,6 @@
 
 <!-- TON Connect UI SDK -->
 <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-<!-- TON core SDK (for proper BOC cell serialization) -->
-<script src="https://unpkg.com/@ton/ton@15/dist/ton.js"></script>
 
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
@@ -579,6 +577,7 @@ html,body{
 </div>
 
 <script type="module">
+import { beginCell } from 'https://esm.sh/@ton/core@0.56.3';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc,
@@ -824,27 +823,16 @@ async function sendTonTransaction(amount, comment, uid) {
   }
 }
 
-// ─── Build TON text-comment payload using official @ton/ton SDK ───
-// This produces a proper serialized BOC cell that all wallets (incl. Telegram Wallet) accept.
+// ─── Build TON text-comment payload ───
+// Uses @ton/core (imported as ES module) to produce a proper BOC cell.
+// This is the exact format required by all TON wallets including Telegram Wallet.
 function buildTonPayload(text) {
-  try {
-    const { beginCell } = ton;
-    return beginCell()
-      .storeUint(0, 32)          // op=0 means text comment
-      .storeStringTail(text)     // UTF-8 comment
-      .endCell()
-      .toBoc()
-      .toString('base64');
-  } catch(e) {
-    console.error('buildTonPayload error:', e);
-    // Fallback: raw bytes
-    const textBytes = new TextEncoder().encode(text);
-    const bytes = new Uint8Array(4 + textBytes.length);
-    bytes.set(textBytes, 4);
-    let binary = '';
-    bytes.forEach(b => binary += String.fromCharCode(b));
-    return btoa(binary);
-  }
+  return beginCell()
+    .storeUint(0, 32)        // op=0: simple transfer with text comment
+    .storeStringTail(text)   // UTF-8 comment text
+    .endCell()
+    .toBoc()
+    .toString('base64');
 }
 
 // ─── Poll TON API to detect payment ───
