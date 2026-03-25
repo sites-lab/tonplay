@@ -618,12 +618,16 @@ let connectedWalletAddr = null;
 // Watch wallet connection state
 tonConnectUI.onStatusChange(wallet => {
   if (wallet) {
-    connectedWalletAddr = wallet.account.address;
-    const friendly = toFriendlyAddress(connectedWalletAddr);
+    // TON Connect returns raw address — convert to user-friendly format
+    const raw = wallet.account.address;
+    // Use friendlyAddress from wallet if available, else format raw
+    const friendly = wallet.account.friendlyAddress || toFriendlyAddress(raw);
+    connectedWalletAddr = friendly || raw;
+    const short = connectedWalletAddr.slice(0,6)+'…'+connectedWalletAddr.slice(-4);
     document.getElementById('wallet-dot').classList.add('connected');
-    document.getElementById('wallet-status-label').textContent = 'Wallet connected';
-    document.getElementById('wallet-addr-display').textContent = friendly.slice(0,8)+'…'+friendly.slice(-6);
-    document.getElementById('info-wallet').textContent = friendly.slice(0,12)+'…';
+    document.getElementById('wallet-status-label').textContent = 'Wallet connected ✓';
+    document.getElementById('wallet-addr-display').textContent = short;
+    document.getElementById('info-wallet').textContent = connectedWalletAddr.slice(0,14)+'…';
     document.getElementById('btn-pay').disabled = false;
   } else {
     connectedWalletAddr = null;
@@ -668,19 +672,29 @@ window.handlePay = async function() {
   // Generate unique comment for this payment
   const uid = String(currentUser.id);
   const comment = generatePaymentComment(uid, amount);
+  const friendlyAddr = toFriendlyAddress(connectedWalletAddr);
+  const shortAddr = friendlyAddr.slice(0,6)+'…'+friendlyAddr.slice(-4);
 
   // Show confirmation modal
   openModal('💎 Confirm Payment',
     `<div style="text-align:center;padding:8px 0 16px;">
-      <div style="font-size:11px;color:var(--sub);margin-bottom:16px;">You are about to send:</div>
-      <div style="background:var(--ton-light);border-radius:16px;padding:18px;margin-bottom:14px;">
-        <div style="font-family:'DM Mono',monospace;font-size:28px;font-weight:700;color:var(--ton);">${amount.toFixed(2)}</div>
+      <div style="background:var(--ton-light);border-radius:16px;padding:18px;margin-bottom:12px;">
+        <div style="font-size:10px;color:var(--sub);margin-bottom:6px;font-weight:600;">AMOUNT TO SEND</div>
+        <div style="font-family:'DM Mono',monospace;font-size:32px;font-weight:700;color:var(--ton);">${amount.toFixed(2)}</div>
         <div style="font-size:14px;color:var(--ton2);font-weight:600;margin-top:2px;">TON</div>
       </div>
-      <div style="font-size:10px;color:var(--sub);margin-bottom:8px;">Your wallet will open to confirm the transaction.</div>
-      <div style="background:var(--card2);border-radius:10px;padding:10px 12px;text-align:left;">
-        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">PAYMENT REFERENCE</div>
-        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text);font-weight:600;">${comment}</div>
+      <div style="background:var(--card2);border-radius:10px;padding:10px 12px;text-align:left;margin-bottom:8px;">
+        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">FROM WALLET</div>
+        <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--ton2);font-weight:600;">${shortAddr}</div>
+      </div>
+      <div style="background:var(--card2);border-radius:10px;padding:10px 12px;text-align:left;margin-bottom:8px;">
+        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">TO VAULT</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text);font-weight:600;word-break:break-all;">${VAULT_ADDRESS.slice(0,10)}…${VAULT_ADDRESS.slice(-6)}</div>
+      </div>
+      <div style="background:linear-gradient(135deg,rgba(33,150,243,0.08),rgba(33,150,243,0.04));border:1.5px solid rgba(33,150,243,0.2);border-radius:10px;padding:10px 12px;text-align:left;">
+        <div style="font-size:9px;color:var(--ton);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">🔑 PAYMENT REFERENCE</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text);font-weight:700;letter-spacing:1px;">${comment}</div>
+        <div style="font-size:9px;color:var(--sub);margin-top:4px;">Auto-included in transaction — do not edit</div>
       </div>
     </div>`,
     async () => {
@@ -724,7 +738,7 @@ async function sendTonTransaction(amount, comment, uid) {
     btn.disabled = false;
 
     // Record pending payment in Firestore
-    const pendingRef = await addDoc(collection(db, 'pendingPayments'), {
+    const pendingRef = await addDoc(collection(db, 'depositNotifications'), {
       userId: uid,
       userName: currentUser.username || '',
       displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
@@ -847,13 +861,13 @@ async function checkTransactionOnChain(comment, expectedAmount) {
 async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
   try {
     // Mark pending payment as confirmed
-    await updateDoc(doc(db, 'pendingPayments', pendingDocId), {
+    await updateDoc(doc(db, 'depositNotifications', pendingDocId), {
       status: 'confirmed',
       confirmedAt: serverTimestamp()
     });
 
     // Create deposit record
-    const depRef = await addDoc(collection(db, 'deposits'), {
+    const depRef = await addDoc(collection(db, 'users/' + uid + '/deposits'), {
       userId: uid,
       userName: currentUser.username || '',
       displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
@@ -981,6 +995,7 @@ async function init() {
   loadDeposits();
   loadWithdrawals();
   loadInvitedFriends();
+  resumePendingDetection(); // 🔄 auto-resume any undetected payments
 
   const startCode = getStartParam();
   if (startCode && !userData.referredBy && startCode !== userData.referralCode) {
@@ -1143,7 +1158,7 @@ async function loadInvitedFriends() {
 let depositsData = [];
 async function loadDeposits() {
   try {
-    const snap = await getDocs(query(collection(db, 'deposits'), where('userId', '==', String(currentUser.id)), orderBy('createdAt', 'desc'), limit(20)));
+    const snap = await getDocs(query(collection(db, 'users/' + String(currentUser.id) + '/deposits'), orderBy('createdAt', 'desc'), limit(20)));
     depositsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderDeposits();
   } catch(e) {}
@@ -1170,7 +1185,7 @@ function renderDeposits() {
 
 async function loadWithdrawals() {
   try {
-    const snap = await getDocs(query(collection(db, 'withdrawals'), where('userId', '==', String(currentUser.id)), orderBy('createdAt', 'desc'), limit(20)));
+    const snap = await getDocs(query(collection(db, 'withdrawRequests'), where('userId', '==', String(currentUser.id)), orderBy('createdAt', 'desc'), limit(20)));
     const list  = document.getElementById('wd-history-list');
     const title = document.getElementById('wd-history-title');
     const docs  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -1199,7 +1214,7 @@ window.submitWithdraw = async function() {
     `<div style="font-size:13px;color:var(--sub);line-height:1.7;">Withdraw <strong style="color:var(--text);">${amount.toFixed(2)} TON</strong> to:<br><code style="font-size:10px;word-break:break-all;">${wallet}</code></div>`,
     async () => {
       try {
-        await addDoc(collection(db, 'withdrawals'), {
+        await addDoc(collection(db, 'withdrawRequests'), {
           userId: String(currentUser.id), userName: currentUser.username || '',
           displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
           amount, walletAddress: wallet, status: 'pending', createdAt: serverTimestamp()
@@ -1304,6 +1319,47 @@ window.showToast = function(msg) {
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2800);
 };
+
+// ─── On app open: resume detection for any payments the user made but closed before detecting ───
+async function resumePendingDetection() {
+  try {
+    const uid = String(currentUser.id);
+    const snap = await getDocs(query(
+      collection(db, 'depositNotifications'),
+      where('userId', '==', uid),
+      where('status', '==', 'pending'),
+      orderBy('createdAt', 'desc'),
+      limit(5)
+    ));
+    if (snap.empty) return;
+
+    // Show a subtle banner so user knows we're checking
+    showDetectionBanner('🔄 Checking for pending payments…');
+    switchTab('home', document.querySelector('.tab-btn.active'));
+
+    for (const docSnap of snap.docs) {
+      const pd = docSnap.data();
+      // Skip if older than 2 hours (probably abandoned)
+      const age = Date.now() - (pd.createdAt?.toMillis?.() || 0);
+      if (age > 2 * 60 * 60 * 1000) {
+        // Mark as expired
+        await updateDoc(doc(db, 'depositNotifications', docSnap.id), { status: 'expired' });
+        continue;
+      }
+      // Try to find this payment on-chain
+      const found = await checkTransactionOnChain(pd.comment, pd.amount);
+      if (found) {
+        await confirmPaymentInFirebase(pd.comment, pd.amount, uid, docSnap.id);
+        return; // stop after first confirmed
+      }
+    }
+    // If we get here, nothing found yet
+    hideDetectionBanner();
+  } catch(e) {
+    console.error('resumePendingDetection error:', e);
+    hideDetectionBanner();
+  }
+}
 
 init();
 </script>
