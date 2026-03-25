@@ -1,7 +1,7 @@
 {
-  "url": "https://tonplay-miniapp.netlify.app",
+  "url": "https://sites-lab.github.io/tonplay/",
   "name": "TonPlay",
-  "iconUrl": "https://tonplay-miniapp.netlify.app/icon.png",
-  "termsOfUseUrl": "https://tonplay-miniapp.netlify.app/terms",
-  "privacyPolicyUrl": "https://tonplay-miniapp.netlify.app/privacy"
+  "iconUrl": "https://sites-lab.github.io/tonplay/icon.png",
+  "termsOfUseUrl": "https://sites-lab.github.io/tonplay/terms",
+  "privacyPolicyUrl": "https://sites-lab.github.io/tonplay/privacy"
 }
