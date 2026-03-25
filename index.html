@@ -822,48 +822,18 @@ async function sendTonTransaction(amount, comment, uid) {
   }
 }
 
-// ─── Build TON text-comment payload (proper BOC cell for TON Connect v2) ───
-// TON Connect v2 requires a base64-encoded serialized TL-B cell.
-// For a simple text comment the cell is: 32-bit op=0 + UTF-8 string,
-// packed into a TonWeb / manual BOC.
-// We use the minimal single-cell BOC format (no refs, data only).
+// ─── Build TON text-comment payload ───
+// TON Connect v2 accepts a base64-encoded cell body directly.
+// Format: 4 zero bytes (op=0, text comment) followed by UTF-8 text.
+// This is the standard way all major TON wallets (Tonkeeper, Telegram Wallet) expect it.
 function buildTonPayload(text) {
   const textBytes = new TextEncoder().encode(text);
-  // Cell data: 4 zero bytes (text-comment op) + text bytes
-  const dataBytes = new Uint8Array(4 + textBytes.length);
-  dataBytes[0] = 0; dataBytes[1] = 0; dataBytes[2] = 0; dataBytes[3] = 0;
-  dataBytes.set(textBytes, 4);
-
-  // Convert byte array into bit string (big-endian)
-  const bitLen = dataBytes.length * 8;
-  // Descriptor bytes for a simple ordinary cell:
-  //   d1 = 0x00 (no refs, exotic=0)
-  //   d2 = Math.ceil(bitLen/8) if aligned, else (floor+1)|0x80 for completion tag
-  // Since our data is byte-aligned, completion tag goes in an extra byte:
-  const cellData = new Uint8Array(dataBytes.length + 1);
-  cellData.set(dataBytes);
-  cellData[dataBytes.length] = 0x80; // completion tag (byte-aligned padding)
-  const d1 = 0x00;                    // no refs
-  const d2 = dataBytes.length + 1;    // bytes in data (including completion tag)
-
-  // Magic = 0xb5ee9c72, flags, cell count, root count, absent count, tot_cells_size
-  // Minimal single-root BOC:
-  const bocHeader = new Uint8Array([
-    0xb5, 0xee, 0x9c, 0x72, // magic
-    0x01,                    // has_idx=0, has_crc32=0, has_cache_bits=0, flags=0, size=1
-    0x01,                    // cell count = 1
-    0x01,                    // root count = 1
-    0x00,                    // absent count = 0
-    d2 + 2,                  // tot_cells_size = descriptor(2) + data
-    0x00,                    // root index = 0
-    d1, d2,                  // cell descriptors
-  ]);
-  const bocFull = new Uint8Array(bocHeader.length + cellData.length);
-  bocFull.set(bocHeader);
-  bocFull.set(cellData, bocHeader.length);
-
+  // 4 zero bytes for op=0 (simple transfer with comment) + UTF-8 text
+  const bytes = new Uint8Array(4 + textBytes.length);
+  // bytes[0..3] = 0x00000000 (op code)
+  bytes.set(textBytes, 4);
   let binary = '';
-  bocFull.forEach(b => binary += String.fromCharCode(b));
+  bytes.forEach(b => binary += String.fromCharCode(b));
   return btoa(binary);
 }
 
