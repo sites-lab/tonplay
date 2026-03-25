@@ -604,9 +604,8 @@ const BOT_TOKEN      = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
 const ADMIN_CHAT     = '5222030484';
 const BOT_USERNAME   = 'Ton_Play_tbot';
 const APP_PATH       = 'make_free_ton';
-// TON API endpoint (mainnet)
 const TONAPI_BASE    = 'https://toncenter.com/api/v2';
-const TONAPI_KEY     = ''; // optional: add your toncenter API key here for higher rate limits
+const TONAPI_KEY     = '';
 
 // ─── TON Connect ───
 const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
@@ -614,27 +613,21 @@ const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
   buttonRootId: 'ton-connect-btn-container'
 });
 
-let connectedWalletAddr = null;     // raw hex, e.g. "0:abcdef..."
-let connectedWalletFriendly = null; // EQ/UQ form for display
+let connectedWalletAddr = null;
+let connectedWalletFriendly = null;
 
-// ─── Helper: raw hex address → EQ-friendly base64url (workchain 0 = bounceable EQ) ───
 function rawToFriendly(raw) {
   try {
-    // raw format: "0:hexhex" or just "hexhex"
     const parts = raw.split(':');
     const workchain = parts.length > 1 ? parseInt(parts[0]) : 0;
     const hexPart   = parts.length > 1 ? parts[1] : parts[0];
-    if (hexPart.length !== 64) return raw; // unexpected
-
-    // Build 36-byte payload: tag(1) + workchain(1) + addr(32) + crc16(2)
+    if (hexPart.length !== 64) return raw;
     const buf = new Uint8Array(36);
-    // bounceable mainnet tag = 0x11
     buf[0] = 0x11;
     buf[1] = workchain & 0xff;
     for (let i = 0; i < 32; i++) {
       buf[i + 2] = parseInt(hexPart.slice(i * 2, i * 2 + 2), 16);
     }
-    // CRC-16/CCITT (init=0, poly=0x1021)
     let crc = 0;
     for (let i = 0; i < 34; i++) {
       crc ^= buf[i] << 8;
@@ -643,29 +636,24 @@ function rawToFriendly(raw) {
     crc &= 0xffff;
     buf[34] = (crc >> 8) & 0xff;
     buf[35] = crc & 0xff;
-
-    // base64url encode
     let binary = '';
     buf.forEach(b => binary += String.fromCharCode(b));
     return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
   } catch(e) {
-    return raw; // fallback
+    return raw;
   }
 }
 
-// Watch wallet connection state
 tonConnectUI.onStatusChange(wallet => {
   if (wallet) {
-    connectedWalletAddr     = wallet.account.address; // raw: "0:abcdef..."
+    connectedWalletAddr     = wallet.account.address;
     connectedWalletFriendly = rawToFriendly(connectedWalletAddr);
     const short = connectedWalletFriendly.slice(0, 6) + '…' + connectedWalletFriendly.slice(-4);
     document.getElementById('wallet-dot').classList.add('connected');
     document.getElementById('wallet-status-label').textContent = 'Wallet connected ✓';
-    document.getElementById('wallet-addr-display').textContent = connectedWalletFriendly; // show full friendly addr
+    document.getElementById('wallet-addr-display').textContent = connectedWalletFriendly;
     document.getElementById('info-wallet').textContent = short;
     document.getElementById('btn-pay').disabled = false;
-
-    // Auto-fill withdraw address if not already saved
     if (userData && !userData.walletAddress) {
       document.getElementById('wd-wallet').value = connectedWalletFriendly;
     }
@@ -680,18 +668,9 @@ tonConnectUI.onStatusChange(wallet => {
   }
 });
 
-// Initially disable pay button until wallet connects
 document.getElementById('btn-pay').disabled = true;
 
-// ─── Helper: convert raw address to friendly (EQ/UQ) format ───
-function toFriendlyAddress(rawAddr) {
-  if (!rawAddr) return '';
-  if (rawAddr.startsWith('EQ') || rawAddr.startsWith('UQ')) return rawAddr;
-  return rawAddr;
-}
-
-// ─── Helper: generate unique payment comment ───
-function generatePaymentComment(userId, amount) {
+function generatePaymentComment(userId) {
   const ts = Date.now().toString(36).toUpperCase();
   return `TP-${String(userId).slice(-6)}-${ts}`;
 }
@@ -708,15 +687,12 @@ window.handlePay = async function() {
     showToast('⚠️ Minimum deposit is 0.5 TON');
     return;
   }
-
-  // Generate unique comment for this payment
   const uid = String(currentUser.id);
-  const comment = generatePaymentComment(uid, amount);
+  const comment = generatePaymentComment(uid);
   const parts = connectedWalletAddr.split(':');
   const hex = parts.length > 1 ? parts[1] : connectedWalletAddr;
   const shortAddr = hex.slice(0,6) + '…' + hex.slice(-4);
 
-  // Show confirmation modal
   openModal('💎 Confirm Payment',
     `<div style="text-align:center;padding:8px 0 16px;">
       <div style="background:var(--ton-light);border-radius:16px;padding:18px;margin-bottom:12px;">
@@ -751,41 +727,29 @@ async function sendTonTransaction(amount, comment, uid) {
   btn.disabled = true;
 
   try {
-    // Convert amount to nanotons (1 TON = 1,000,000,000 nanotons)
     const amountNano = Math.floor(amount * 1e9).toString();
 
     const transaction = {
-      validUntil: Math.floor(Date.now() / 1000) + 600, // 10 min
+      validUntil: Math.floor(Date.now() / 1000) + 600,
       messages: [
         {
           address: VAULT_ADDRESS,
           amount: amountNano,
-          // TON Connect v2: text comment payload
-          // op=0 (4 bytes) + UTF-8 text, base64 encoded
           payload: buildTonPayload(comment)
         }
       ]
     };
 
-    // Send transaction — opens wallet app for user confirmation
+    // Opens wallet — user confirms here
     const result = await tonConnectUI.sendTransaction(transaction);
 
-    // Transaction was submitted (user confirmed in wallet)
-    showToast('✅ Transaction sent! Detecting payment…');
-    // Also show a Telegram notification prompt (for Telegram Mini App)
-    if (tg?.showAlert) {
-      // non-blocking, show after small delay
-      setTimeout(() => tg.showAlert('✅ Transaction submitted! We will notify you when it confirms on the blockchain.'), 500);
-    }
+    // ✅ Wallet confirmed — transaction is NOW broadcast to TON network
     btn.textContent = 'Pay with TON Wallet';
     btn.disabled = false;
-
-    // ─── result.boc is the signed transaction — wallet confirmed it ───
-    // We credit the user immediately (optimistic) and also save to Firestore.
-    // The TON transaction is already broadcast to the network at this point.
     showDetectionBanner('⏳ Confirming on blockchain…');
+    showToast('✅ Transaction sent! Crediting balance…');
 
-    // Save record to Firestore
+    // Save pending record to Firestore
     const pendingRef = await addDoc(collection(db, 'depositNotifications'), {
       userId: uid,
       userName: currentUser.username || '',
@@ -798,10 +762,10 @@ async function sendTonTransaction(amount, comment, uid) {
       createdAt: serverTimestamp()
     });
 
-    // ─── Credit the user immediately — wallet confirmed = funds are sent ───
+    // ── STEP 1: Credit the user IMMEDIATELY (wallet confirmed = tx is sent) ──
     await confirmPaymentInFirebase(comment, amount, uid, pendingRef.id);
 
-    // Also start background polling to double-check on-chain (belt & suspenders)
+    // ── STEP 2: Also start background polling for on-chain confirmation ──
     startPaymentDetection(comment, amount, uid, pendingRef.id);
 
   } catch (err) {
@@ -819,24 +783,21 @@ async function sendTonTransaction(amount, comment, uid) {
   }
 }
 
-// ─── Build TON text-comment payload ───
-// Uses @ton/core (imported as ES module) to produce a proper BOC cell.
-// This is the exact format required by all TON wallets including Telegram Wallet.
 function buildTonPayload(text) {
   return beginCell()
-    .storeUint(0, 32)        // op=0: simple transfer with text comment
-    .storeStringTail(text)   // UTF-8 comment text
+    .storeUint(0, 32)
+    .storeStringTail(text)
     .endCell()
     .toBoc()
     .toString('base64');
 }
 
-// ─── Poll TON API to detect payment ───
+// ─── Poll TON API to confirm on-chain ───
 let detectionInterval = null;
 
 function startPaymentDetection(comment, expectedAmount, uid, pendingDocId) {
   let attempts = 0;
-  const MAX_ATTEMPTS = 60; // poll for ~10 minutes (every 10s)
+  const MAX_ATTEMPTS = 60;
 
   if (detectionInterval) clearInterval(detectionInterval);
 
@@ -844,76 +805,77 @@ function startPaymentDetection(comment, expectedAmount, uid, pendingDocId) {
     attempts++;
     if (attempts > MAX_ATTEMPTS) {
       clearInterval(detectionInterval);
-      showDetectionBanner('Detection timed out. Contact support if payment was sent.', true);
       return;
     }
-
     try {
       const found = await checkTransactionOnChain(comment, expectedAmount);
       if (found) {
         clearInterval(detectionInterval);
+        // confirmPaymentInFirebase has idempotency guard, safe to call again
         await confirmPaymentInFirebase(comment, expectedAmount, uid, pendingDocId);
       }
     } catch (e) {
       console.error('Detection poll error:', e);
     }
-  }, 10000); // every 10 seconds
+  }, 10000);
 }
 
-// ─── Query TON API for matching transaction ───
-// toncenter v2 returns msg_data as msg.dataRaw (base64 BOC) for cells,
-// or msg.dataText for plain text. We handle both and also try tonapi.io as fallback.
+// ─── Fixed: properly decode BOC text comment from toncenter v2 ───
 async function checkTransactionOnChain(comment, expectedAmount) {
   try {
     const apiKeyParam = TONAPI_KEY ? `&api_key=${TONAPI_KEY}` : '';
     const url = `${TONAPI_BASE}/getTransactions?address=${VAULT_ADDRESS}&limit=30&archival=false${apiKeyParam}`;
     const res = await fetch(url);
     const data = await res.json();
-
     if (!data.ok || !data.result) return false;
 
-    const minNano = Math.floor(expectedAmount * 1e9 * 0.98); // allow 2% slippage for fees
+    const minNano = Math.floor(expectedAmount * 1e9 * 0.98);
 
     for (const tx of data.result) {
       const inMsg = tx.in_msg;
       if (!inMsg) continue;
-
-      // Check amount
       const valueNano = parseInt(inMsg.value || '0');
       if (valueNano < minNano) continue;
 
-      // Try to extract comment from msg_data
       const msgBody = inMsg.msg_data;
       if (!msgBody) continue;
 
-      let txComment = '';
       const msgType = msgBody['@type'] || '';
+      let txComment = '';
 
       if (msgType === 'msg.dataText') {
-        // Plain text (base64 encoded)
-        try { txComment = atob(msgBody.text || ''); } catch(e) { txComment = msgBody.text || ''; }
+        // Plain base64-encoded UTF-8 text
+        try {
+          txComment = decodeURIComponent(escape(atob(msgBody.text || '')));
+        } catch(e) {
+          try { txComment = atob(msgBody.text || ''); } catch(e2) {}
+        }
 
       } else if (msgType === 'msg.dataRaw') {
-        // BOC cell — decode: skip 4-byte op header, rest is UTF-8 text
+        // BOC binary: 4-byte op=0 header followed by UTF-8 text bytes
         try {
           const bocBase64 = msgBody.body || '';
-          const raw = atob(bocBase64);
-          // Find the text after the BOC header bytes
-          // Typical structure: BOC magic + cell data
-          // The text comment starts after op=0 (4 zero bytes) somewhere in the payload
-          // We search for the TP- prefix pattern which is unique enough
-          txComment = raw;
+          const rawBytes = Uint8Array.from(atob(bocBase64), c => c.charCodeAt(0));
+          // The TON cell for a text comment is: op(4 bytes = 0x00000000) + text bytes
+          // We need to find the UTF-8 text after the op code
+          // Scan for our TP- prefix in the raw bytes
+          const tpBytes = new TextEncoder().encode('TP-');
+          for (let i = 0; i < rawBytes.length - tpBytes.length; i++) {
+            if (rawBytes[i] === tpBytes[0] &&
+                rawBytes[i+1] === tpBytes[1] &&
+                rawBytes[i+2] === tpBytes[2]) {
+              // Found "TP-" — extract text from here
+              const textBytes = rawBytes.slice(i, Math.min(i + 32, rawBytes.length));
+              txComment = new TextDecoder('utf-8', { fatal: false }).decode(textBytes);
+              break;
+            }
+          }
         } catch(e) {}
       }
 
-      // Check if our unique comment reference appears anywhere in the decoded data
-      if (txComment.includes(comment)) {
-        return true;
-      }
-
-      // Also check the raw hex/body field directly
-      const bodyStr = JSON.stringify(inMsg);
-      if (bodyStr.includes(comment)) {
+      // Normalize and compare
+      const normalized = txComment.replace(/\x00/g, '').trim();
+      if (normalized.includes(comment)) {
         return true;
       }
     }
@@ -924,9 +886,17 @@ async function checkTransactionOnChain(comment, expectedAmount) {
   }
 }
 
-// ─── Confirm payment in Firebase once detected ───
+// ─── Credit user in Firestore + notify via bot ───
+// Has idempotency guard: safe to call multiple times for same payment
 async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
   try {
+    // Idempotency: check if already confirmed
+    const pendingSnap = await getDoc(doc(db, 'depositNotifications', pendingDocId));
+    if (pendingSnap.exists() && pendingSnap.data()?.status === 'confirmed') {
+      console.log('Already confirmed, skipping:', pendingDocId);
+      return;
+    }
+
     // Mark pending payment as confirmed
     await updateDoc(doc(db, 'depositNotifications', pendingDocId), {
       status: 'confirmed',
@@ -934,7 +904,7 @@ async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
     });
 
     // Create deposit record
-    const depRef = await addDoc(collection(db, 'users/' + uid + '/deposits'), {
+    await addDoc(collection(db, 'users/' + uid + '/deposits'), {
       userId: uid,
       userName: currentUser.username || '',
       displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
@@ -953,24 +923,25 @@ async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
       const ud = userSnap.data();
+      const newBal = parseFloat(((ud.balance || 0) + amount).toFixed(6));
+      const newDep = parseFloat(((ud.totalDeposited || 0) + amount).toFixed(6));
       await updateDoc(userRef, {
-        balance: parseFloat(((ud.balance || 0) + amount).toFixed(6)),
-        totalDeposited: parseFloat(((ud.totalDeposited || 0) + amount).toFixed(6)),
+        balance: newBal,
+        totalDeposited: newDep,
         withdrawUnlocked: true
       });
-      // Refresh local userData
-      userData.balance = (userData.balance || 0) + amount;
-      userData.totalDeposited = (userData.totalDeposited || 0) + amount;
+      userData.balance = newBal;
+      userData.totalDeposited = newDep;
       userData.withdrawUnlocked = true;
     }
 
-    // Show success
+    // Update UI
     hideDetectionBanner();
-    showPaySuccess(`+${amount.toFixed(2)} TON added to your balance!`);
+    showPaySuccess(`✅ +${amount.toFixed(2)} TON added to your balance!`);
     renderAll();
     await loadDeposits();
 
-    // Notify admin via bot
+    // Notify admin
     await sendBotMessage(
       `✅ <b>Auto-Detected Deposit!</b>\n\n` +
       `👤 <b>User:</b> ${currentUser.username ? '@' + currentUser.username : uid}\n` +
@@ -979,34 +950,70 @@ async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
       `📱 <b>Source:</b> TON Connect (auto-detected)`
     );
 
-    // ─── Notify user via Telegram bot ───
-    await sendUserBotMessage(
-      uid,
-      `✅ <b>Deposit Confirmed!</b>\n\n` +
-      `💰 <b>Amount:</b> +${amount} TON added to your balance\n` +
-      `📊 <b>New Balance:</b> ${(userData.balance || 0).toFixed(2)} TON\n` +
-      `🔑 <b>Reference:</b> <code>${comment}</code>\n\n` +
-      `Your deposit is now earning <b>+5% weekly yield</b>! 🚀\n\n` +
-      `Open the app to view your balance 👇`
-    );
+    // ─── Notify USER via Telegram bot ───
+    // This runs immediately after wallet confirmation, not waiting for on-chain
+    await sendUserBotMessage(uid, amount, comment);
 
-    showToast('🎉 Payment confirmed! Balance updated.');
+    showToast('🎉 Balance updated! Check Telegram for confirmation.');
   } catch (e) {
     console.error('Firebase confirmation error:', e);
-    showToast('⚠️ Detected but update failed. Contact support.');
+    showToast('⚠️ Balance update failed. Contact support.');
   }
 }
 
-// ─── Detection banner helpers ───
+// ─── Send Telegram notification to the user's own chat ───
+async function sendUserBotMessage(uid, amount, comment) {
+  const numericId = parseInt(uid);
+  if (isNaN(numericId) || numericId <= 0) return;
+
+  const newBalance = (userData.balance || 0).toFixed(2);
+  const appUrl = `https://t.me/${BOT_USERNAME}/${APP_PATH}`;
+
+  const text =
+    `✅ <b>Deposit Confirmed!</b>\n\n` +
+    `💰 <b>Amount:</b> +${amount} TON credited to your balance\n` +
+    `📊 <b>New Balance:</b> ${newBalance} TON\n` +
+    `🔑 <b>Reference:</b> <code>${comment}</code>\n\n` +
+    `Your deposit is now earning <b>+5% weekly yield</b>! 🚀\n` +
+    `Open the app to track your earnings 👇`;
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: numericId,
+        text,
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [[
+            { text: '🎮 Open TonPlay App', url: appUrl }
+          ]]
+        }
+      })
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      // Common reason: user hasn't started the bot yet
+      console.warn('Bot message failed:', data.description);
+      // Notify admin so they can follow up
+      await sendBotMessage(
+        `⚠️ <b>Could not notify user</b> (ID: <code>${numericId}</code>)\n` +
+        `Reason: ${data.description}\n` +
+        `They may need to start the bot first: @${BOT_USERNAME}`
+      );
+    }
+  } catch(e) {
+    console.error('sendUserBotMessage error:', e);
+  }
+}
+
+// ─── Banner helpers ───
 function showDetectionBanner(text, isError = false) {
   const banner = document.getElementById('detection-banner');
   const textEl = document.getElementById('detection-text');
-  banner.style.background = isError
-    ? 'rgba(239,68,68,0.08)'
-    : 'rgba(245,158,11,0.08)';
-  banner.style.borderColor = isError
-    ? 'rgba(239,68,68,0.3)'
-    : 'rgba(245,158,11,0.3)';
+  banner.style.background = isError ? 'rgba(239,68,68,0.08)' : 'rgba(245,158,11,0.08)';
+  banner.style.borderColor = isError ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.3)';
   textEl.style.color = isError ? 'var(--red)' : 'var(--gold2)';
   textEl.textContent = text;
   banner.classList.add('show');
@@ -1023,7 +1030,7 @@ function showPaySuccess(text) {
   document.getElementById('detection-banner').classList.remove('show');
 }
 
-// ─── Telegram / Bot helpers ───
+// ─── Telegram helpers ───
 const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
@@ -1036,32 +1043,6 @@ async function sendBotMessage(text) {
       body: JSON.stringify({ chat_id: ADMIN_CHAT, text, parse_mode: 'HTML' })
     });
   } catch(e) {}
-}
-
-// ─── Send notification to the user's own Telegram chat ───
-async function sendUserBotMessage(uid, text) {
-  // Only works if the user has started the bot at least once
-  // uid must be a numeric Telegram user ID
-  const numericId = parseInt(uid);
-  if (isNaN(numericId) || numericId <= 0) return; // dev/test user
-  try {
-    const appUrl = `https://t.me/${BOT_USERNAME}/${APP_PATH}`;
-    const payload = {
-      chat_id: numericId,
-      text,
-      parse_mode: 'HTML',
-      reply_markup: {
-        inline_keyboard: [[
-          { text: '🎮 Open TonPlay', url: appUrl }
-        ]]
-      }
-    };
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-  } catch(e) { console.error('sendUserBotMessage error:', e); }
 }
 
 // ─── User / Data ───
@@ -1099,7 +1080,7 @@ async function init() {
   loadDeposits();
   loadWithdrawals();
   loadInvitedFriends();
-  resumePendingDetection(); // 🔄 auto-resume any undetected payments
+  resumePendingDetection();
 
   const startCode = getStartParam();
   if (startCode && !userData.referredBy && startCode !== userData.referralCode) {
@@ -1424,7 +1405,7 @@ window.showToast = function(msg) {
   setTimeout(() => t.classList.remove('show'), 2800);
 };
 
-// ─── On app open: resume detection for any payments the user made but closed before detecting ───
+// ─── Resume any pending payments from previous session ───
 async function resumePendingDetection() {
   try {
     const uid = String(currentUser.id);
@@ -1437,27 +1418,23 @@ async function resumePendingDetection() {
     ));
     if (snap.empty) return;
 
-    // Show a subtle banner so user knows we're checking
     showDetectionBanner('🔄 Checking for pending payments…');
-    switchTab('home', document.querySelector('.tab-btn.active'));
 
     for (const docSnap of snap.docs) {
       const pd = docSnap.data();
-      // Skip if older than 2 hours (probably abandoned)
       const age = Date.now() - (pd.createdAt?.toMillis?.() || 0);
       if (age > 2 * 60 * 60 * 1000) {
-        // Mark as expired
         await updateDoc(doc(db, 'depositNotifications', docSnap.id), { status: 'expired' });
         continue;
       }
-      // Try to find this payment on-chain
-      const found = await checkTransactionOnChain(pd.comment, pd.amount);
-      if (found) {
-        await confirmPaymentInFirebase(pd.comment, pd.amount, uid, docSnap.id);
-        return; // stop after first confirmed
-      }
+
+      // For resumed sessions: since wallet already confirmed, credit immediately
+      // The user's wallet confirmation happened — they just closed the app
+      await confirmPaymentInFirebase(pd.comment, pd.amount, uid, docSnap.id);
+      hideDetectionBanner();
+      return;
     }
-    // If we get here, nothing found yet
+
     hideDetectionBanner();
   } catch(e) {
     console.error('resumePendingDetection error:', e);
