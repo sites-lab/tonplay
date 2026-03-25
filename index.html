@@ -178,6 +178,26 @@ html,body{
 .preset-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surf);font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:var(--sub);cursor:pointer;}
 .preset-btn.selected{border-color:var(--ton);background:var(--ton-light);color:var(--ton);}
 
+/* ─── WEEKLY EARNINGS PREVIEW ─── */
+.earn-preview{background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.03));border:1.5px solid rgba(16,185,129,0.25);border-radius:14px;padding:12px 14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px;}
+.earn-preview-left{display:flex;align-items:center;gap:10px;}
+.earn-preview-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,var(--green),#059669);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px;}
+.earn-preview-label{font-size:10px;color:var(--sub);font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
+.earn-preview-val{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:var(--green);line-height:1.1;}
+.earn-preview-unit{font-size:10px;color:var(--sub);margin-top:1px;}
+
+/* ─── SPECIAL DEAL BANNER ─── */
+.special-deal{background:linear-gradient(135deg,#7C3AED,#6D28D9,#5B21B6);border-radius:18px;padding:16px;margin-bottom:10px;position:relative;overflow:hidden;box-shadow:0 6px 20px rgba(124,58,237,0.3);width:100%;}
+.special-deal::before{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,0.07);pointer-events:none;}
+.special-deal::after{content:'';position:absolute;bottom:-15px;left:10px;width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,0.05);pointer-events:none;}
+.deal-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.35);border-radius:20px;padding:3px 10px;font-size:9px;font-weight:800;color:#fff;letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;}
+.deal-title{font-size:15px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-.3px;}
+.deal-sub{font-size:11px;color:rgba(255,255,255,0.8);line-height:1.5;margin-bottom:12px;}
+.deal-stats{display:flex;gap:8px;}
+.deal-stat{flex:1;background:rgba(255,255,255,0.12);border-radius:10px;padding:9px 10px;text-align:center;}
+.deal-stat-val{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:#fff;line-height:1;}
+.deal-stat-lbl{font-size:9px;color:rgba(255,255,255,0.7);margin-top:3px;font-weight:600;letter-spacing:.3px;}
+
 /* ─── DEPOSIT ITEMS ─── */
 .deposit-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);}
 .deposit-item:last-child{border:none;}
@@ -203,15 +223,15 @@ html,body{
 .ir-r{font-family:'DM Mono',monospace;color:var(--text);font-weight:600;}
 
 /* ─── REFERRAL HERO ─── */
-.ref-hero{background:linear-gradient(135deg,#059669,#10B981);border-radius:20px;padding:18px 16px 20px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 6px 20px rgba(16,185,129,0.25);width:100%;display:block;}
-.ref-hero::before{content:'';position:absolute;top:-20px;right:-20px;width:90px;height:90px;border-radius:50%;background:rgba(255,255,255,0.08);pointer-events:none;}
-.ref-hero-title{font-size:16px;font-weight:800;color:#fff;margin-bottom:4px;}
-.ref-hero-sub{font-size:11px;color:rgba(255,255,255,0.8);margin-bottom:14px;line-height:1.5;}
-.ref-code-box{background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.3);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;width:100%;}
-.ref-code-label{font-size:10px;color:rgba(255,255,255,0.75);letter-spacing:1.2px;text-transform:uppercase;font-weight:700;}
-.ref-code-val{font-family:'DM Mono',monospace;font-size:24px;color:#fff;font-weight:700;letter-spacing:4px;word-break:break-all;line-height:1.3;}
-.ref-link-box{background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:10px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.9);word-break:break-all;line-height:1.5;width:100%;}
-.ref-copy-btn{background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.5);border-radius:10px;padding:12px 16px;font-size:13px;font-weight:800;color:#fff;cursor:pointer;width:100%;text-align:center;}
+.ref-hero{background:linear-gradient(135deg,#059669,#10B981);border-radius:16px;padding:12px 14px;margin-bottom:10px;position:relative;overflow:hidden;box-shadow:0 4px 14px rgba(16,185,129,0.22);width:100%;display:block;}
+.ref-hero::before{content:'';position:absolute;top:-16px;right:-16px;width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,0.08);pointer-events:none;}
+.ref-hero-title{font-size:13px;font-weight:800;color:#fff;margin-bottom:2px;}
+.ref-hero-sub{font-size:10px;color:rgba(255,255,255,0.8);margin-bottom:10px;line-height:1.4;}
+.ref-code-box{background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.3);border-radius:11px;padding:10px 12px;display:flex;flex-direction:column;gap:7px;width:100%;}
+.ref-code-label{font-size:9px;color:rgba(255,255,255,0.75);letter-spacing:1px;text-transform:uppercase;font-weight:700;}
+.ref-code-val{font-family:'DM Mono',monospace;font-size:18px;color:#fff;font-weight:700;letter-spacing:3px;word-break:break-all;line-height:1.2;}
+.ref-link-box{background:rgba(255,255,255,0.15);border:1.5px solid rgba(255,255,255,0.3);border-radius:8px;padding:7px 10px;font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.9);word-break:break-all;line-height:1.5;width:100%;}
+.ref-copy-btn{background:rgba(255,255,255,0.25);border:2px solid rgba(255,255,255,0.5);border-radius:9px;padding:9px 14px;font-size:12px;font-weight:800;color:#fff;cursor:pointer;width:100%;text-align:center;}
 .ref-copy-btn:active{transform:scale(0.97);background:rgba(255,255,255,0.35);}
 
 /* ─── REF STATS ─── */
@@ -221,28 +241,41 @@ html,body{
 .ref-stat-lbl{font-size:10px;color:var(--sub);font-weight:600;}
 
 /* ─── MILESTONES ─── */
-.milestone-card{background:var(--surf);border:1.5px solid var(--border);border-radius:16px;padding:14px 16px;margin-bottom:8px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow);position:relative;overflow:hidden;width:100%;}
-.milestone-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,var(--gold),var(--gold2));border-radius:16px 0 0 16px;}
-.milestone-card.done-ms::before{background:linear-gradient(180deg,var(--green),#059669);}
-.milestone-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--gold-light),rgba(245,158,11,0.15));border:1.5px solid rgba(245,158,11,0.25);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
-.milestone-icon.done{background:linear-gradient(135deg,var(--green-light),rgba(16,185,129,0.15));border-color:rgba(16,185,129,0.3);}
-.milestone-info{flex:1;min-width:0;}
-.milestone-title{font-size:12px;font-weight:800;color:var(--text);}
-.milestone-reward{font-size:11px;font-weight:700;color:var(--gold2);margin-top:2px;}
-.milestone-card.done-ms .milestone-reward{color:var(--green);}
-.milestone-sub{font-size:10px;color:var(--sub);margin-top:4px;}
-.milestone-prog{flex-shrink:0;text-align:right;min-width:38px;}
-.mp-pct{font-size:13px;font-weight:800;color:var(--ton);}
-.mp-done-badge{font-size:18px;}
-.milestone-bar{height:5px;background:var(--border);border-radius:3px;margin-top:6px;overflow:hidden;}
-.milestone-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),#F59E0B);border-radius:3px;transition:width .6s;}
-.milestone-card.done-ms .milestone-bar-fill{background:linear-gradient(90deg,var(--green),#34D399);}
-.milestone-card.done-ms{border-color:rgba(16,185,129,0.35);background:linear-gradient(135deg,rgba(16,185,129,0.06),rgba(16,185,129,0.02));}
-.milestone-card.done-ms .milestone-title{color:#065F46;}
-.milestone-card.next-ms{border-color:rgba(33,150,243,0.35);background:linear-gradient(135deg,rgba(33,150,243,0.05),rgba(33,150,243,0.01));}
-.milestone-card.next-ms::before{background:linear-gradient(180deg,var(--ton),var(--ton2));}
-.milestone-card.next-ms .mp-pct{color:var(--ton);}
-.milestone-card.next-ms .milestone-bar-fill{background:linear-gradient(90deg,var(--ton),#42A5F5);}
+.milestones-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.milestone-card{
+  background:var(--surf);border:1.5px solid var(--border);border-radius:16px;
+  padding:13px 12px 12px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  display:flex;flex-direction:column;gap:0;
+}
+.milestone-card.done-ms{border-color:rgba(16,185,129,0.4);background:linear-gradient(145deg,rgba(16,185,129,0.07),rgba(16,185,129,0.02));}
+.milestone-card.next-ms{border-color:rgba(33,150,243,0.4);background:linear-gradient(145deg,rgba(33,150,243,0.07),rgba(33,150,243,0.02));}
+.milestone-card.locked-ms{opacity:.7;}
+/* top accent line */
+.milestone-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:16px 16px 0 0;}
+.milestone-card.done-ms::before{background:linear-gradient(90deg,var(--green),#34D399);}
+.milestone-card.next-ms::before{background:linear-gradient(90deg,var(--ton),#42A5F5);}
+/* star icon row */
+.ms-star-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.ms-star-icon{font-size:22px;line-height:1;}
+.ms-status-chip{font-size:9px;font-weight:800;padding:2px 7px;border-radius:20px;letter-spacing:.3px;}
+.ms-status-chip.done{background:var(--green-light);color:var(--green);border:1px solid rgba(16,185,129,0.3);}
+.ms-status-chip.next{background:var(--ton-light);color:var(--ton);border:1px solid rgba(33,150,243,0.25);}
+.ms-status-chip.locked{background:var(--card2);color:var(--muted);border:1px solid var(--border);}
+/* content */
+.ms-friends{font-size:18px;font-weight:900;color:var(--text);line-height:1;margin-bottom:1px;}
+.ms-friends-lbl{font-size:9px;color:var(--sub);font-weight:600;letter-spacing:.3px;text-transform:uppercase;margin-bottom:6px;}
+.ms-reward{display:flex;align-items:center;gap:4px;background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(245,158,11,0.06));border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:5px 8px;margin-bottom:8px;}
+.milestone-card.done-ms .ms-reward{background:linear-gradient(135deg,rgba(16,185,129,0.1),rgba(16,185,129,0.04));border-color:rgba(16,185,129,0.25);}
+.ms-reward-star{font-size:13px;}
+.ms-reward-val{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--gold2);}
+.milestone-card.done-ms .ms-reward-val{color:var(--green);}
+.ms-ton-bonus{font-size:10px;font-weight:700;color:var(--ton2);margin-left:2px;}
+/* progress */
+.ms-bar{height:4px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:4px;}
+.ms-bar-fill{height:100%;background:linear-gradient(90deg,var(--gold),#FBBF24);border-radius:3px;transition:width .6s;}
+.milestone-card.done-ms .ms-bar-fill{background:linear-gradient(90deg,var(--green),#34D399);}
+.milestone-card.next-ms .ms-bar-fill{background:linear-gradient(90deg,var(--ton),#42A5F5);}
+.ms-prog-lbl{font-size:9px;color:var(--sub);font-weight:600;}
 
 /* ─── REF ENTER CODE ─── */
 .ref-enter-card{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;width:100%;}
@@ -398,6 +431,20 @@ html,body{
       <div class="yield-badge"><div class="yield-dot"></div>+5% Weekly Yield on every deposit</div>
     </div>
 
+    <!-- ══ SPECIAL DEAL ══ -->
+    <div class="special-deal">
+      <div style="position:relative;z-index:1;">
+        <div class="deal-badge">⚡ Special Deal</div>
+        <div class="deal-title">🚀 Deposit 50+ TON → Get 10% Weekly!</div>
+        <div class="deal-sub">Double your yield! Deposit 50 TON or more and earn <strong style="color:#fff;">10% every week</strong> instead of the standard 5%.</div>
+        <div class="deal-stats">
+          <div class="deal-stat"><div class="deal-stat-val">5%</div><div class="deal-stat-lbl">Standard</div></div>
+          <div class="deal-stat" style="background:rgba(255,255,255,0.22);border:1.5px solid rgba(255,255,255,0.3);"><div class="deal-stat-val" style="color:#FCD34D;">10%</div><div class="deal-stat-lbl" style="color:rgba(255,255,255,0.9);">50+ TON ✨</div></div>
+          <div class="deal-stat"><div class="deal-stat-val">+5 TON</div><div class="deal-stat-lbl">Wk 1 bonus</div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══ TON CONNECT WALLET BANNER ══ -->
     <div class="wallet-banner" id="wallet-banner">
       <div class="wallet-banner-info">
@@ -425,6 +472,19 @@ html,body{
         <button class="preset-btn" onclick="setAmount(25,this)">25</button>
         <button class="preset-btn" onclick="setAmount(50,this)">50</button>
         <button class="preset-btn" onclick="setAmount(100,this)">100</button>
+      </div>
+
+      <!-- Weekly earnings preview -->
+      <div class="earn-preview" id="earn-preview" style="display:none;">
+        <div class="earn-preview-left">
+          <div class="earn-preview-icon">📈</div>
+          <div>
+            <div class="earn-preview-label">After 1 week you'll earn</div>
+            <div class="earn-preview-val" id="earn-preview-val">+0.00</div>
+            <div class="earn-preview-unit" id="earn-preview-unit">TON (5% yield)</div>
+          </div>
+        </div>
+        <div id="earn-preview-rate-badge" style="background:var(--green-light);border:1.5px solid rgba(16,185,129,0.3);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:800;color:var(--green);flex-shrink:0;">+5%</div>
       </div>
 
       <!-- PAY button (TON Connect flow) -->
@@ -676,9 +736,8 @@ window.handlePay = async function() {
   }
   const uid = String(currentUser.id);
   const comment = generatePaymentComment(uid);
-  const parts = connectedWalletAddr.split(':');
-  const hex = parts.length > 1 ? parts[1] : connectedWalletAddr;
-  const shortAddr = hex.slice(0,6) + '…' + hex.slice(-4);
+  // Use the friendly address (EQ.../UQ...) for display, not the raw hex
+  const shortAddr = connectedWalletFriendly.slice(0, 6) + '…' + connectedWalletFriendly.slice(-4);
 
   openModal('💎 Confirm Payment',
     `<div style="text-align:center;padding:8px 0 16px;">
@@ -1170,30 +1229,36 @@ function renderMilestones() {
   const count = userData?.referralCount || 0;
   if (!ms.length) { list.innerHTML = '<div class="empty-state"><p>No milestones yet.</p></div>'; return; }
   const nextIdx = ms.findIndex(m => count < m.friends);
-  const icons   = ['🥉', '🥈', '🥇', '💎', '👑', '🏆'];
-  list.innerHTML = ms.map((m, i) => {
+  list.innerHTML = '<div class="milestones-grid">' + ms.map((m, i) => {
     const done   = count >= m.friends;
     const isNext = i === nextIdx;
     const pct    = Math.min(100, Math.round((count / m.friends) * 100));
-    const icon   = done ? '✅' : (icons[i] || '🎯');
-    const cls    = done ? 'done-ms' : (isNext ? 'next-ms' : '');
+    const cls    = done ? 'done-ms' : (isNext ? 'next-ms' : 'locked-ms');
     const rem    = Math.max(0, m.friends - count);
-    const sub    = done
-      ? `<span style="color:var(--green);font-weight:700;">✓ Completed!</span>`
-      : isNext ? `<span style="color:var(--ton);font-weight:700;">🎯 ${rem} more to go</span>`
-               : `${count}/${m.friends} friends`;
-    const reward = [m.stars ? `⭐ ${m.stars} Stars` : '', m.bonusTon ? `💰 ${m.bonusTon} TON` : ''].filter(Boolean).join(' + ');
+    // Status chip
+    const chipCls  = done ? 'done' : (isNext ? 'next' : 'locked');
+    const chipText = done ? '✓ Done' : (isNext ? 'Up next' : 'Locked');
+    // Progress label
+    const progLbl  = done ? 'Completed!' : (isNext ? `${rem} more to go` : `${count}/${m.friends}`);
+    // Reward
+    const starsVal = m.stars ? `${m.stars}` : '0';
+    const bonusTon = m.bonusTon ? `<span class="ms-ton-bonus">+${m.bonusTon} TON</span>` : '';
     return `<div class="milestone-card ${cls}">
-      <div class="milestone-icon ${done?'done':''}">${icon}</div>
-      <div class="milestone-info">
-        <div class="milestone-title">${m.friends} Friends Milestone</div>
-        <div class="milestone-reward">${reward}</div>
-        <div class="milestone-sub">${sub}</div>
-        <div class="milestone-bar"><div class="milestone-bar-fill" style="width:${pct}%"></div></div>
+      <div class="ms-star-row">
+        <span class="ms-star-icon">⭐</span>
+        <span class="ms-status-chip ${chipCls}">${chipText}</span>
       </div>
-      <div class="milestone-prog">${done ? '<span class="mp-done-badge">🏅</span>' : '<span class="mp-pct">'+pct+'%</span>'}</div>
+      <div class="ms-friends">${m.friends}</div>
+      <div class="ms-friends-lbl">Friends needed</div>
+      <div class="ms-reward">
+        <span class="ms-reward-star">⭐</span>
+        <span class="ms-reward-val">${starsVal} Stars</span>
+        ${bonusTon}
+      </div>
+      <div class="ms-bar"><div class="ms-bar-fill" style="width:${pct}%"></div></div>
+      <div class="ms-prog-lbl">${progLbl}</div>
     </div>`;
-  }).join('');
+  }).join('') + '</div>';
 }
 
 async function loadInvitedFriends() {
@@ -1356,10 +1421,36 @@ window.submitRefCode = async function() {
   await applyRefCode(document.getElementById('ref-code-input').value.trim().toUpperCase(), false);
 };
 
+function updateEarnPreview() {
+  const amount = parseFloat(document.getElementById('deposit-amount').value);
+  const preview = document.getElementById('earn-preview');
+  if (!amount || amount < 0.5) { preview.style.display = 'none'; return; }
+  const is50Deal = amount >= 50;
+  const rate = is50Deal ? 0.10 : 0.05;
+  const earned = amount * rate;
+  document.getElementById('earn-preview-val').textContent = '+' + earned.toFixed(2);
+  document.getElementById('earn-preview-unit').textContent = 'TON (' + (is50Deal ? '10%' : '5%') + ' yield)';
+  document.getElementById('earn-preview-rate-badge').textContent = is50Deal ? '+10% ✨' : '+5%';
+  document.getElementById('earn-preview-rate-badge').style.background = is50Deal ? 'linear-gradient(135deg,rgba(124,58,237,0.15),rgba(124,58,237,0.08))' : 'var(--green-light)';
+  document.getElementById('earn-preview-rate-badge').style.borderColor = is50Deal ? 'rgba(124,58,237,0.3)' : 'rgba(16,185,129,0.3)';
+  document.getElementById('earn-preview-rate-badge').style.color = is50Deal ? '#7C3AED' : 'var(--green)';
+  document.getElementById('earn-preview').style.borderColor = is50Deal ? 'rgba(124,58,237,0.3)' : 'rgba(16,185,129,0.25)';
+  document.getElementById('earn-preview').style.background = is50Deal
+    ? 'linear-gradient(135deg,rgba(124,58,237,0.08),rgba(124,58,237,0.03))'
+    : 'linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.03))';
+  document.getElementById('earn-preview-val').style.color = is50Deal ? '#7C3AED' : 'var(--green)';
+  document.getElementById('earn-preview-icon').textContent = is50Deal ? '🚀' : '📈';
+  preview.style.display = 'flex';
+}
+
+// Live update as user types
+document.getElementById('deposit-amount').addEventListener('input', updateEarnPreview);
+
 window.setAmount = function(val, btn) {
   document.getElementById('deposit-amount').value = val;
   document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
   btn.classList.add('selected');
+  updateEarnPreview();
 };
 
 window.switchTab = function(name, btn) {
