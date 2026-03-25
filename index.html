@@ -613,24 +613,64 @@ const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
   buttonRootId: 'ton-connect-btn-container'
 });
 
-let connectedWalletAddr = null;
+let connectedWalletAddr = null;     // raw hex, e.g. "0:abcdef..."
+let connectedWalletFriendly = null; // EQ/UQ form for display
+
+// ─── Helper: raw hex address → EQ-friendly base64url (workchain 0 = bounceable EQ) ───
+function rawToFriendly(raw) {
+  try {
+    // raw format: "0:hexhex" or just "hexhex"
+    const parts = raw.split(':');
+    const workchain = parts.length > 1 ? parseInt(parts[0]) : 0;
+    const hexPart   = parts.length > 1 ? parts[1] : parts[0];
+    if (hexPart.length !== 64) return raw; // unexpected
+
+    // Build 36-byte payload: tag(1) + workchain(1) + addr(32) + crc16(2)
+    const buf = new Uint8Array(36);
+    // bounceable mainnet tag = 0x11
+    buf[0] = 0x11;
+    buf[1] = workchain & 0xff;
+    for (let i = 0; i < 32; i++) {
+      buf[i + 2] = parseInt(hexPart.slice(i * 2, i * 2 + 2), 16);
+    }
+    // CRC-16/CCITT (init=0, poly=0x1021)
+    let crc = 0;
+    for (let i = 0; i < 34; i++) {
+      crc ^= buf[i] << 8;
+      for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+    }
+    crc &= 0xffff;
+    buf[34] = (crc >> 8) & 0xff;
+    buf[35] = crc & 0xff;
+
+    // base64url encode
+    let binary = '';
+    buf.forEach(b => binary += String.fromCharCode(b));
+    return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  } catch(e) {
+    return raw; // fallback
+  }
+}
 
 // Watch wallet connection state
 tonConnectUI.onStatusChange(wallet => {
   if (wallet) {
-    // TON Connect v2: address is raw like 0:f1e7abc...
-    // We store raw for transactions, display a clean short version
-    connectedWalletAddr = wallet.account.address;
-    const parts = connectedWalletAddr.split(':');
-    const hex = parts.length > 1 ? parts[1] : connectedWalletAddr;
-    const short = hex.slice(0,6) + '…' + hex.slice(-4);
+    connectedWalletAddr     = wallet.account.address; // raw: "0:abcdef..."
+    connectedWalletFriendly = rawToFriendly(connectedWalletAddr);
+    const short = connectedWalletFriendly.slice(0, 6) + '…' + connectedWalletFriendly.slice(-4);
     document.getElementById('wallet-dot').classList.add('connected');
     document.getElementById('wallet-status-label').textContent = 'Wallet connected ✓';
-    document.getElementById('wallet-addr-display').textContent = short;
+    document.getElementById('wallet-addr-display').textContent = connectedWalletFriendly; // show full friendly addr
     document.getElementById('info-wallet').textContent = short;
     document.getElementById('btn-pay').disabled = false;
+
+    // Auto-fill withdraw address if not already saved
+    if (userData && !userData.walletAddress) {
+      document.getElementById('wd-wallet').value = connectedWalletFriendly;
+    }
   } else {
-    connectedWalletAddr = null;
+    connectedWalletAddr     = null;
+    connectedWalletFriendly = null;
     document.getElementById('wallet-dot').classList.remove('connected');
     document.getElementById('wallet-status-label').textContent = 'Wallet not connected';
     document.getElementById('wallet-addr-display').textContent = 'Connect to pay in 1 click';
@@ -731,6 +771,11 @@ async function sendTonTransaction(amount, comment, uid) {
 
     // Transaction was submitted (user confirmed in wallet)
     showToast('✅ Transaction sent! Detecting payment…');
+    // Also show a Telegram notification prompt (for Telegram Mini App)
+    if (tg?.showAlert) {
+      // non-blocking, show after small delay
+      setTimeout(() => tg.showAlert('✅ Transaction submitted! We will notify you when it confirms on the blockchain.'), 500);
+    }
     btn.textContent = 'Pay with TON Wallet';
     btn.disabled = false;
 
@@ -742,9 +787,19 @@ async function sendTonTransaction(amount, comment, uid) {
       amount,
       comment,
       boc: result.boc || '',
+      walletFriendly: connectedWalletFriendly || '',
       status: 'pending',
       createdAt: serverTimestamp()
     });
+
+    // ─── Notify user via Telegram bot that we received the request ───
+    await sendUserBotMessage(
+      uid,
+      `⏳ <b>Payment Detected!</b>\n\n` +
+      `💰 <b>Amount:</b> ${amount} TON\n` +
+      `🔑 <b>Reference:</b> <code>${comment}</code>\n\n` +
+      `We're waiting for blockchain confirmation. Your balance will update automatically once confirmed (usually 1–2 min). ✅`
+    );
 
     // Show detection banner
     showDetectionBanner('Waiting for blockchain confirmation…');
@@ -767,18 +822,48 @@ async function sendTonTransaction(amount, comment, uid) {
   }
 }
 
-// ─── Build TON text-comment payload ───
-// TON Connect v2 expects the payload as a base64-encoded BOC (Bag of Cells)
-// For a simple text comment: op=0x00000000 (4 bytes) + UTF-8 string
+// ─── Build TON text-comment payload (proper BOC cell for TON Connect v2) ───
+// TON Connect v2 requires a base64-encoded serialized TL-B cell.
+// For a simple text comment the cell is: 32-bit op=0 + UTF-8 string,
+// packed into a TonWeb / manual BOC.
+// We use the minimal single-cell BOC format (no refs, data only).
 function buildTonPayload(text) {
   const textBytes = new TextEncoder().encode(text);
-  // 4 zero bytes (op code for text comment) + text
-  const buf = new Uint8Array(4 + textBytes.length);
-  buf[0] = 0; buf[1] = 0; buf[2] = 0; buf[3] = 0;
-  buf.set(textBytes, 4);
-  // Convert to base64
+  // Cell data: 4 zero bytes (text-comment op) + text bytes
+  const dataBytes = new Uint8Array(4 + textBytes.length);
+  dataBytes[0] = 0; dataBytes[1] = 0; dataBytes[2] = 0; dataBytes[3] = 0;
+  dataBytes.set(textBytes, 4);
+
+  // Convert byte array into bit string (big-endian)
+  const bitLen = dataBytes.length * 8;
+  // Descriptor bytes for a simple ordinary cell:
+  //   d1 = 0x00 (no refs, exotic=0)
+  //   d2 = Math.ceil(bitLen/8) if aligned, else (floor+1)|0x80 for completion tag
+  // Since our data is byte-aligned, completion tag goes in an extra byte:
+  const cellData = new Uint8Array(dataBytes.length + 1);
+  cellData.set(dataBytes);
+  cellData[dataBytes.length] = 0x80; // completion tag (byte-aligned padding)
+  const d1 = 0x00;                    // no refs
+  const d2 = dataBytes.length + 1;    // bytes in data (including completion tag)
+
+  // Magic = 0xb5ee9c72, flags, cell count, root count, absent count, tot_cells_size
+  // Minimal single-root BOC:
+  const bocHeader = new Uint8Array([
+    0xb5, 0xee, 0x9c, 0x72, // magic
+    0x01,                    // has_idx=0, has_crc32=0, has_cache_bits=0, flags=0, size=1
+    0x01,                    // cell count = 1
+    0x01,                    // root count = 1
+    0x00,                    // absent count = 0
+    d2 + 2,                  // tot_cells_size = descriptor(2) + data
+    0x00,                    // root index = 0
+    d1, d2,                  // cell descriptors
+  ]);
+  const bocFull = new Uint8Array(bocHeader.length + cellData.length);
+  bocFull.set(bocHeader);
+  bocFull.set(cellData, bocHeader.length);
+
   let binary = '';
-  buf.forEach(b => binary += String.fromCharCode(b));
+  bocFull.forEach(b => binary += String.fromCharCode(b));
   return btoa(binary);
 }
 
@@ -870,7 +955,7 @@ async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
       displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
       amount,
       comment,
-      walletAddress: connectedWalletAddr || '',
+      walletAddress: connectedWalletFriendly || connectedWalletAddr || '',
       status: 'active',
       weeksActive: 0,
       earned: 0,
@@ -907,6 +992,17 @@ async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
       `💰 <b>Amount:</b> ${amount} TON\n` +
       `🔑 <b>Comment:</b> <code>${comment}</code>\n` +
       `📱 <b>Source:</b> TON Connect (auto-detected)`
+    );
+
+    // ─── Notify user via Telegram bot ───
+    await sendUserBotMessage(
+      uid,
+      `✅ <b>Deposit Confirmed!</b>\n\n` +
+      `💰 <b>Amount:</b> +${amount} TON added to your balance\n` +
+      `📊 <b>New Balance:</b> ${(userData.balance || 0).toFixed(2)} TON\n` +
+      `🔑 <b>Reference:</b> <code>${comment}</code>\n\n` +
+      `Your deposit is now earning <b>+5% weekly yield</b>! 🚀\n\n` +
+      `Open the app to view your balance 👇`
     );
 
     showToast('🎉 Payment confirmed! Balance updated.');
@@ -955,6 +1051,32 @@ async function sendBotMessage(text) {
       body: JSON.stringify({ chat_id: ADMIN_CHAT, text, parse_mode: 'HTML' })
     });
   } catch(e) {}
+}
+
+// ─── Send notification to the user's own Telegram chat ───
+async function sendUserBotMessage(uid, text) {
+  // Only works if the user has started the bot at least once
+  // uid must be a numeric Telegram user ID
+  const numericId = parseInt(uid);
+  if (isNaN(numericId) || numericId <= 0) return; // dev/test user
+  try {
+    const appUrl = `https://t.me/${BOT_USERNAME}/${APP_PATH}`;
+    const payload = {
+      chat_id: numericId,
+      text,
+      parse_mode: 'HTML',
+      reply_markup: {
+        inline_keyboard: [[
+          { text: '🎮 Open TonPlay', url: appUrl }
+        ]]
+      }
+    };
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch(e) { console.error('sendUserBotMessage error:', e); }
 }
 
 // ─── User / Data ───
