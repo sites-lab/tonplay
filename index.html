@@ -408,6 +408,337 @@ html,body{
 .notice{background:var(--ton-light);border:1.5px solid rgba(33,150,243,0.2);border-radius:12px;padding:12px 14px;margin-bottom:10px;font-size:11px;color:var(--ton2);line-height:1.6;width:100%;}
 .notice strong{font-weight:700;}
 </style>
+
+<!-- ─── i18n translations ─── -->
+<script>
+// Language detection: RU for Russian, Ukrainian, Belarusian, Kazakh locales — English for everything else
+const RU_LOCALES = ['ru','uk','be','kk'];
+function detectLang() {
+  const langs = navigator.languages || [navigator.language || navigator.userLanguage || 'en'];
+  for (const l of langs) {
+    const code = l.toLowerCase().split('-')[0];
+    if (RU_LOCALES.includes(code)) return 'ru';
+  }
+  return 'en';
+}
+const LANG = detectLang();
+
+const T = {
+  en: {
+    // Header
+    stars_chip: '⭐',
+    ton_unit: 'TON',
+    // User line
+    loading: 'Loading...',
+    // Tabs
+    tab_home: 'HOME',
+    tab_referral: 'REFERRAL',
+    tab_withdraw: 'WITHDRAW',
+    tab_info: 'INFO',
+    // Hero card
+    total_balance: 'Total Balance',
+    hero_sub_start: 'Start depositing to earn weekly rewards',
+    hero_sub_active: 'Next yield in ~7 days',
+    total_deposited: 'TOTAL DEPOSITED',
+    total_earned: 'TOTAL EARNED',
+    // Projection
+    proj_label: '📅 After 7 Days You\'ll Have',
+    proj_desc: 'Projected balance\nincluding yield',
+    proj_badge_5: '+5% weekly yield',
+    proj_badge_10: '+10% ✨ 50 TON deal',
+    // Yield badge
+    yield_badge: '+5% Weekly Yield on every deposit',
+    // Special deal
+    deal_badge: '⚡ Special Deal',
+    deal_title: '🚀 Deposit 50+ TON → Get 10% Weekly!',
+    deal_sub: 'Double your yield! Deposit 50 TON or more and earn <strong style="color:#fff;">10% every week</strong> instead of the standard 5%.',
+    deal_standard: 'Standard',
+    deal_50ton: '50+ TON ✨',
+    deal_wk1: 'Wk 1 bonus',
+    // Wallet banner
+    wallet_not_connected: 'Wallet not connected',
+    wallet_connect_hint: 'Connect to pay in 1 click',
+    wallet_connected: 'Wallet connected ✓',
+    // Deposit form
+    make_deposit: 'Make a Deposit',
+    amount_label: 'Amount (min 0.5 TON)',
+    amount_placeholder: '0.5',
+    // Earn preview
+    earn_after: 'After 1 week you\'ll earn',
+    earn_unit_5: 'TON (5% yield)',
+    earn_unit_10: 'TON (10% yield)',
+    // Pay button
+    pay_btn: 'Pay with TON Wallet',
+    pay_opening: 'Opening wallet…',
+    // Detection / status
+    detecting: '⏳ Confirming on blockchain…',
+    pay_confirmed: '✅ Payment confirmed!\nYour balance has been updated.',
+    // Active deposits
+    active_deposits: 'Active Deposits',
+    deposit_active: 'Active',
+    deposit_pending: 'Pending',
+    deposit_week: 'Week',
+    // Referral tab
+    ref_hero_title: '🎁 Invite Friends, Earn ⭐ Stars',
+    ref_hero_sub: 'Share your unique link. Every friend who joins earns you Telegram Stars!',
+    ref_code_label: '🔑 Your Referral Code',
+    ref_link_label: '🔗 Your Invite Link',
+    ref_copy_btn: '📋 Copy Invite Link',
+    friends_invited: 'Friends Invited',
+    stars_earned: 'Stars Earned',
+    share_btn: 'Share Invite Link via Telegram',
+    reward_milestones: '⭐ Reward Milestones',
+    enter_ref_code: 'Enter a Referral Code',
+    ref_input_placeholder: 'Enter code (e.g. ABC123)',
+    apply_code_btn: '✓ Apply Code',
+    invited_friends: '👥 Invited Friends',
+    milestone_done: '✓ Claimed',
+    milestone_next: '🔥 Up Next',
+    milestone_locked: '🔒 Locked',
+    milestone_complete: '✓ Completed!',
+    milestone_more: (n) => `${n} more friend${n!==1?'s':''} to go`,
+    milestone_friends_lbl: 'friends',
+    milestone_stars_lbl: 'Stars',
+    joined_badge: '✓ Joined',
+    ref_used_prefix: '✓ Code applied: ',
+    // Withdraw tab
+    wd_title: '💸 Withdraw TON',
+    wd_avail: 'Available Balance',
+    wd_form_title: 'Request Withdrawal',
+    wd_form_sub: 'Enter your TON wallet address and the amount you wish to withdraw. Our team will process it shortly.',
+    wd_wallet_label: 'Your TON Wallet Address',
+    wd_wallet_placeholder: 'EQ... or UQ... your TON wallet address',
+    wd_amount_label: 'Amount (TON)',
+    wd_amount_placeholder: 'Amount to withdraw',
+    wd_submit_btn: 'Submit Withdrawal Request',
+    wd_history: 'Withdrawal History',
+    wd_status_done: '✅ Done',
+    wd_status_pending: '⏳ Pending',
+    // Info tab
+    how_it_works: '📈 How TonPlay Works',
+    weekly_return: 'Weekly Return',
+    min_deposit: 'Min Deposit',
+    payout_schedule: 'Payout Schedule',
+    payout_value: 'Weekly (7 days)',
+    compounding: 'Compounding',
+    yes: 'Yes',
+    weekly_yield_tile: 'Weekly Yield',
+    annual_est: 'Annual Est.',
+    my_deposits: 'My Deposits',
+    weeks_active: 'Weeks Active',
+    example_returns: 'Example Returns',
+    compound_notice: '<strong>💡 Compound Growth:</strong> Each week your balance grows by 5%. Week 1 you earn 5% of your deposit, week 2 you earn 5% of the new total — growth accelerates over time.',
+    my_account: 'My Account',
+    tg_id_lbl: 'Telegram ID',
+    username_lbl: 'Username',
+    ref_code_info: 'Referral Code',
+    ton_wallet_lbl: 'TON Wallet',
+    not_connected: 'Not connected',
+    withdrawals_lbl: 'Withdrawals',
+    withdrawals_open: 'Open',
+    stars_lbl: 'Stars',
+    ref_notice: '<strong>🎁 Referral System:</strong> Every player gets a unique referral code. Share your link — when a friend joins and uses your code, you earn Stars!',
+    // Modal / toast
+    cancel_btn: 'Cancel',
+    confirm_btn: 'Confirm',
+    // Toasts
+    connect_wallet_first: '⚠️ Connect your wallet first',
+    min_deposit_warn: '⚠️ Minimum deposit is 0.5 TON',
+    link_copied: '✅ Invite link copied!',
+    no_ref_code: '⚠️ No referral code yet',
+    enter_ref_warn: '⚠️ Enter a referral code',
+    already_used_warn: '⚠️ You already used a code',
+    own_code_warn: '⚠️ Cannot use your own code',
+    invalid_code: '❌ Invalid referral code',
+    code_applied: '✅ Code applied! Welcome 🎉',
+    enter_amount_warn: '⚠️ Enter a valid amount',
+    enter_wallet_warn: '⚠️ Enter your TON wallet address',
+    wallet_format_warn: '⚠️ Address must start with EQ or UQ',
+    insufficient: '⚠️ Insufficient balance',
+    wd_submitted: '✅ Withdrawal request submitted!',
+    balance_updated: '🎉 Balance updated! Check Telegram for confirmation.',
+    tx_sent: '✅ Transaction sent! Crediting balance…',
+    tx_cancelled: '❌ Transaction cancelled',
+    wallet_disconnected: '⚠️ Wallet disconnected. Please reconnect.',
+    tx_failed: '❌ Transaction failed: ',
+    // Payment modal
+    confirm_payment: '💎 Confirm Payment',
+    amount_to_send: 'AMOUNT TO SEND',
+    from_wallet: 'FROM WALLET',
+    to_vault: 'TO VAULT',
+    payment_ref: '🔑 PAYMENT REFERENCE',
+    payment_ref_sub: 'Auto-included in transaction — do not edit',
+    // Withdraw modal
+    confirm_withdrawal: '💸 Confirm Withdrawal',
+    // Bot messages (user notification)
+    bot_deposit_confirmed: '✅ <b>Deposit Confirmed!</b>',
+    bot_amount_credited: '💰 <b>Amount:</b>',
+    bot_new_balance: '📊 <b>New Balance:</b>',
+    bot_reference: '🔑 <b>Reference:</b>',
+    bot_yield_msg: 'Your deposit is now earning <b>+5% weekly yield</b>! 🚀\nOpen the app to track your earnings 👇',
+    bot_open_app: '🎮 Open TonPlay App',
+  },
+  ru: {
+    // Header
+    stars_chip: '⭐',
+    ton_unit: 'TON',
+    // User line
+    loading: 'Загрузка...',
+    // Tabs
+    tab_home: 'ГЛАВНАЯ',
+    tab_referral: 'РЕФЕРАЛЫ',
+    tab_withdraw: 'ВЫВОД',
+    tab_info: 'INFO',
+    // Hero card
+    total_balance: 'Общий баланс',
+    hero_sub_start: 'Сделайте депозит, чтобы получать еженедельные награды',
+    hero_sub_active: 'Следующая выплата через ~7 дней',
+    total_deposited: 'ВНЕСЕНО ВСЕГО',
+    total_earned: 'ЗАРАБОТАНО ВСЕГО',
+    // Projection
+    proj_label: '📅 Через 7 дней у вас будет',
+    proj_desc: 'Прогноз баланса\nвключая доходность',
+    proj_badge_5: '+5% еженедельно',
+    proj_badge_10: '+10% ✨ сделка 50 TON',
+    // Yield badge
+    yield_badge: '+5% еженедельной доходности на каждый депозит',
+    // Special deal
+    deal_badge: '⚡ Спецпредложение',
+    deal_title: '🚀 Депозит от 50 TON → 10% каждую неделю!',
+    deal_sub: 'Удвойте доходность! Внесите от 50 TON и зарабатывайте <strong style="color:#fff;">10% каждую неделю</strong> вместо стандартных 5%.',
+    deal_standard: 'Стандарт',
+    deal_50ton: 'от 50 TON ✨',
+    deal_wk1: 'Бонус нед. 1',
+    // Wallet banner
+    wallet_not_connected: 'Кошелёк не подключён',
+    wallet_connect_hint: 'Подключите для оплаты в 1 клик',
+    wallet_connected: 'Кошелёк подключён ✓',
+    // Deposit form
+    make_deposit: 'Сделать депозит',
+    amount_label: 'Сумма (мин. 0.5 TON)',
+    amount_placeholder: '0.5',
+    // Earn preview
+    earn_after: 'Через 1 неделю вы заработаете',
+    earn_unit_5: 'TON (доходность 5%)',
+    earn_unit_10: 'TON (доходность 10%)',
+    // Pay button
+    pay_btn: 'Оплатить через TON Wallet',
+    pay_opening: 'Открываем кошелёк…',
+    // Detection / status
+    detecting: '⏳ Подтверждение в блокчейне…',
+    pay_confirmed: '✅ Платёж подтверждён!\nВаш баланс обновлён.',
+    // Active deposits
+    active_deposits: 'Активные депозиты',
+    deposit_active: 'Активный',
+    deposit_pending: 'В обработке',
+    deposit_week: 'Неделя',
+    // Referral tab
+    ref_hero_title: '🎁 Приглашай друзей — получай ⭐ звёзды',
+    ref_hero_sub: 'Поделитесь уникальной ссылкой. Каждый вступивший друг приносит вам Telegram-звёзды!',
+    ref_code_label: '🔑 Ваш реферальный код',
+    ref_link_label: '🔗 Ваша пригласительная ссылка',
+    ref_copy_btn: '📋 Скопировать ссылку',
+    friends_invited: 'Приглашено друзей',
+    stars_earned: 'Заработано звёзд',
+    share_btn: 'Поделиться ссылкой в Telegram',
+    reward_milestones: '⭐ Достижения за рефералов',
+    enter_ref_code: 'Введите реферальный код',
+    ref_input_placeholder: 'Введите код (напр. ABC123)',
+    apply_code_btn: '✓ Применить код',
+    invited_friends: '👥 Приглашённые друзья',
+    milestone_done: '✓ Получено',
+    milestone_next: '🔥 Следующий',
+    milestone_locked: '🔒 Закрыто',
+    milestone_complete: '✓ Выполнено!',
+    milestone_more: (n) => `ещё ${n} друг${n===1?'':n<5?'а':'ей'}`,
+    milestone_friends_lbl: 'друзей',
+    milestone_stars_lbl: 'Звёзд',
+    joined_badge: '✓ Вступил',
+    ref_used_prefix: '✓ Код применён: ',
+    // Withdraw tab
+    wd_title: '💸 Вывод TON',
+    wd_avail: 'Доступный баланс',
+    wd_form_title: 'Запрос на вывод',
+    wd_form_sub: 'Укажите адрес TON-кошелька и сумму для вывода. Наша команда обработает запрос в ближайшее время.',
+    wd_wallet_label: 'Ваш адрес TON-кошелька',
+    wd_wallet_placeholder: 'EQ... или UQ... ваш адрес TON-кошелька',
+    wd_amount_label: 'Сумма (TON)',
+    wd_amount_placeholder: 'Сумма для вывода',
+    wd_submit_btn: 'Отправить запрос на вывод',
+    wd_history: 'История выводов',
+    wd_status_done: '✅ Выполнено',
+    wd_status_pending: '⏳ В обработке',
+    // Info tab
+    how_it_works: '📈 Как работает TonPlay',
+    weekly_return: 'Еженедельная доходность',
+    min_deposit: 'Мин. депозит',
+    payout_schedule: 'График выплат',
+    payout_value: 'Еженедельно (7 дней)',
+    compounding: 'Реинвестирование',
+    yes: 'Да',
+    weekly_yield_tile: 'Доходность/нед.',
+    annual_est: 'Годовая оценка',
+    my_deposits: 'Мои депозиты',
+    weeks_active: 'Недель активно',
+    example_returns: 'Примеры доходности',
+    compound_notice: '<strong>💡 Сложный процент:</strong> Каждую неделю ваш баланс растёт на 5%. На 1-й неделе вы зарабатываете 5% от депозита, на 2-й — 5% от нового итога. Рост ускоряется!',
+    my_account: 'Мой аккаунт',
+    tg_id_lbl: 'Telegram ID',
+    username_lbl: 'Имя пользователя',
+    ref_code_info: 'Реферальный код',
+    ton_wallet_lbl: 'TON-кошелёк',
+    not_connected: 'Не подключён',
+    withdrawals_lbl: 'Выводы',
+    withdrawals_open: 'Открыто',
+    stars_lbl: 'Звёзды',
+    ref_notice: '<strong>🎁 Реферальная система:</strong> Каждый игрок получает уникальный код. Поделитесь ссылкой — когда друг вступит и введёт ваш код, вы получите звёзды!',
+    // Modal / toast
+    cancel_btn: 'Отмена',
+    confirm_btn: 'Подтвердить',
+    // Toasts
+    connect_wallet_first: '⚠️ Сначала подключите кошелёк',
+    min_deposit_warn: '⚠️ Минимальный депозит — 0.5 TON',
+    link_copied: '✅ Пригласительная ссылка скопирована!',
+    no_ref_code: '⚠️ Реферальный код ещё не создан',
+    enter_ref_warn: '⚠️ Введите реферальный код',
+    already_used_warn: '⚠️ Вы уже использовали код',
+    own_code_warn: '⚠️ Нельзя использовать собственный код',
+    invalid_code: '❌ Неверный реферальный код',
+    code_applied: '✅ Код применён! Добро пожаловать 🎉',
+    enter_amount_warn: '⚠️ Введите корректную сумму',
+    enter_wallet_warn: '⚠️ Введите адрес TON-кошелька',
+    wallet_format_warn: '⚠️ Адрес должен начинаться с EQ или UQ',
+    insufficient: '⚠️ Недостаточно средств',
+    wd_submitted: '✅ Запрос на вывод отправлен!',
+    balance_updated: '🎉 Баланс обновлён! Проверьте Telegram для подтверждения.',
+    tx_sent: '✅ Транзакция отправлена! Зачисляем баланс…',
+    tx_cancelled: '❌ Транзакция отменена',
+    wallet_disconnected: '⚠️ Кошелёк отключён. Переподключите его.',
+    tx_failed: '❌ Ошибка транзакции: ',
+    // Payment modal
+    confirm_payment: '💎 Подтвердите платёж',
+    amount_to_send: 'СУММА К ОТПРАВКЕ',
+    from_wallet: 'С КОШЕЛЬКА',
+    to_vault: 'НА ХРАНИЛИЩЕ',
+    payment_ref: '🔑 МЕТКА ПЛАТЕЖА',
+    payment_ref_sub: 'Включается в транзакцию автоматически — не редактируйте',
+    // Withdraw modal
+    confirm_withdrawal: '💸 Подтвердите вывод',
+    // Bot messages (user notification)
+    bot_deposit_confirmed: '✅ <b>Депозит подтверждён!</b>',
+    bot_amount_credited: '💰 <b>Сумма:</b>',
+    bot_new_balance: '📊 <b>Новый баланс:</b>',
+    bot_reference: '🔑 <b>Метка:</b>',
+    bot_yield_msg: 'Ваш депозит теперь приносит <b>+5% в неделю</b>! 🚀\nОткройте приложение, чтобы отслеживать прибыль 👇',
+    bot_open_app: '🎮 Открыть TonPlay',
+  }
+};
+
+const t = T[LANG];
+window.t = t;
+window.LANG = LANG;
+</script>
+
 </head>
 <body>
 
@@ -451,25 +782,25 @@ html,body{
   </div>
 
   <!-- User line -->
-  <div class="user-line" id="user-line">Loading...</div>
+  <div class="user-line" id="user-line" data-i18n="loading">Loading...</div>
 
   <!-- Tab Bar -->
   <div class="tab-bar">
     <button class="tab-btn active" onclick="switchTab('home',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-      HOME
+      <span data-i18n="tab_home">HOME</span>
     </button>
     <button class="tab-btn ref-tab" onclick="switchTab('referral',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-      REFERRAL
+      <span data-i18n="tab_referral">REFERRAL</span>
     </button>
     <button class="tab-btn wd-tab" onclick="switchTab('withdraw',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-      WITHDRAW
+      <span data-i18n="tab_withdraw">WITHDRAW</span>
     </button>
     <button class="tab-btn" onclick="switchTab('info',this)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      INFO
+      <span data-i18n="tab_info">INFO</span>
     </button>
   </div>
 
@@ -478,21 +809,21 @@ html,body{
 
     <div class="hero-card">
       <div style="position:relative;z-index:1;">
-        <div class="hero-label">Total Balance</div>
+        <div class="hero-label" data-i18n="total_balance">Total Balance</div>
         <div class="hero-balance"><span id="hero-balance">0.00</span> <span class="hero-balance-unit">TON</span></div>
         <div class="hero-sub" id="hero-sub">Start depositing to earn weekly rewards</div>
         <div class="hero-stats">
-        <div class="hero-stat"><div class="hero-stat-val" id="hero-deposited">0.00</div><div class="hero-stat-lbl">TOTAL DEPOSITED</div></div>
-        <div class="hero-stat"><div class="hero-stat-val" id="hero-earned">+0.00</div><div class="hero-stat-lbl">TOTAL EARNED</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="hero-deposited">0.00</div><div class="hero-stat-lbl" data-i18n="total_deposited">TOTAL DEPOSITED</div></div>
+        <div class="hero-stat"><div class="hero-stat-val" id="hero-earned">+0.00</div><div class="hero-stat-lbl" data-i18n="total_earned">TOTAL EARNED</div></div>
         </div>
 
         <!-- 7-day projection box -->
         <div class="hero-projection" id="hero-projection">
-          <div class="hero-projection-label">📅 After 7 Days You'll Have</div>
+          <div class="hero-projection-label" data-i18n="proj_label">📅 After 7 Days You'll Have</div>
           <div class="hero-projection-row">
             <div class="hero-projection-left">
               <div class="hero-projection-icon">💰</div>
-              <div class="hero-projection-desc">Projected balance<br>including yield</div>
+              <div class="hero-projection-desc" data-i18n-html="proj_desc">Projected balance<br>including yield</div>
             </div>
             <div style="text-align:right;">
               <div class="hero-projection-val" id="hero-proj-val">0.00</div>
@@ -505,19 +836,19 @@ html,body{
     </div>
 
     <div style="text-align:center;margin-bottom:10px;">
-      <div class="yield-badge"><div class="yield-dot"></div>+5% Weekly Yield on every deposit</div>
+      <div class="yield-badge"><div class="yield-dot"></div><span data-i18n="yield_badge">+5% Weekly Yield on every deposit</span></div>
     </div>
 
     <!-- ══ SPECIAL DEAL ══ -->
     <div class="special-deal">
       <div style="position:relative;z-index:1;">
-        <div class="deal-badge">⚡ Special Deal</div>
-        <div class="deal-title">🚀 Deposit 50+ TON → Get 10% Weekly!</div>
-        <div class="deal-sub">Double your yield! Deposit 50 TON or more and earn <strong style="color:#fff;">10% every week</strong> instead of the standard 5%.</div>
+        <div class="deal-badge" data-i18n="deal_badge">⚡ Special Deal</div>
+        <div class="deal-title" data-i18n="deal_title">🚀 Deposit 50+ TON → Get 10% Weekly!</div>
+        <div class="deal-sub" data-i18n-html="deal_sub">Double your yield! Deposit 50 TON or more and earn <strong style="color:#fff;">10% every week</strong> instead of the standard 5%.</div>
         <div class="deal-stats">
-          <div class="deal-stat"><div class="deal-stat-val">5%</div><div class="deal-stat-lbl">Standard</div></div>
-          <div class="deal-stat" style="background:rgba(255,255,255,0.22);border:1.5px solid rgba(255,255,255,0.3);"><div class="deal-stat-val" style="color:#FCD34D;">10%</div><div class="deal-stat-lbl" style="color:rgba(255,255,255,0.9);">50+ TON ✨</div></div>
-          <div class="deal-stat"><div class="deal-stat-val">+5 TON</div><div class="deal-stat-lbl">Wk 1 bonus</div></div>
+          <div class="deal-stat"><div class="deal-stat-val">5%</div><div class="deal-stat-lbl" data-i18n="deal_standard">Standard</div></div>
+          <div class="deal-stat" style="background:rgba(255,255,255,0.22);border:1.5px solid rgba(255,255,255,0.3);"><div class="deal-stat-val" style="color:#FCD34D;">10%</div><div class="deal-stat-lbl" style="color:rgba(255,255,255,0.9);" data-i18n="deal_50ton">50+ TON ✨</div></div>
+          <div class="deal-stat"><div class="deal-stat-val">+5 TON</div><div class="deal-stat-lbl" data-i18n="deal_wk1">Wk 1 bonus</div></div>
         </div>
       </div>
     </div>
@@ -527,8 +858,8 @@ html,body{
       <div class="wallet-banner-info">
         <div class="wallet-banner-dot" id="wallet-dot"></div>
         <div class="wallet-banner-text">
-          <div class="wallet-banner-label" id="wallet-status-label">Wallet not connected</div>
-          <div class="wallet-banner-addr" id="wallet-addr-display">Connect to pay in 1 click</div>
+          <div class="wallet-banner-label" id="wallet-status-label" data-i18n="wallet_not_connected">Wallet not connected</div>
+          <div class="wallet-banner-addr" id="wallet-addr-display" data-i18n="wallet_connect_hint">Connect to pay in 1 click</div>
         </div>
       </div>
       <div id="ton-connect-btn-container"></div>
@@ -536,8 +867,8 @@ html,body{
 
     <!-- ══ DEPOSIT FORM ══ -->
     <div class="deposit-form">
-      <div class="sec-title">Make a Deposit</div>
-      <label class="form-label">Amount (min 0.5 TON)</label>
+      <div class="sec-title" data-i18n="make_deposit">Make a Deposit</div>
+      <label class="form-label" data-i18n="amount_label">Amount (min 0.5 TON)</label>
       <div class="amount-input-wrap">
         <input class="amount-input" id="deposit-amount" type="number" min="0.5" step="0.1" placeholder="0.5">
         <span class="ton-label">TON</span>
@@ -556,7 +887,7 @@ html,body{
         <div class="earn-preview-left">
           <div class="earn-preview-icon">📈</div>
           <div>
-            <div class="earn-preview-label">After 1 week you'll earn</div>
+            <div class="earn-preview-label" data-i18n="earn_after">After 1 week you'll earn</div>
             <div class="earn-preview-val" id="earn-preview-val">+0.00</div>
             <div class="earn-preview-unit" id="earn-preview-unit">TON (5% yield)</div>
           </div>
@@ -569,13 +900,13 @@ html,body{
         <div class="btn-pay-icon">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
         </div>
-        Pay with TON Wallet
+        <span data-i18n="pay_btn">Pay with TON Wallet</span>
       </button>
 
       <!-- Detection status banners -->
       <div class="detection-banner" id="detection-banner">
         <span style="font-size:18px;">⏳</span>
-        <div class="detection-banner-text" id="detection-text">Waiting for blockchain confirmation…<br>Your balance will update automatically.</div>
+        <div class="detection-banner-text" id="detection-text" data-i18n="detecting">Waiting for blockchain confirmation…</div>
       </div>
       <div class="pay-status" id="pay-status">
         <span class="pay-status-icon">✅</span>
@@ -583,7 +914,7 @@ html,body{
       </div>
     </div>
 
-    <div class="sec-title" id="deposits-title" style="display:none;">Active Deposits</div>
+    <div class="sec-title" id="deposits-title" style="display:none;" data-i18n="active_deposits">Active Deposits</div>
     <div class="card" id="deposits-list" style="display:none;"></div>
   </div>
 
@@ -591,96 +922,96 @@ html,body{
   <div class="tab-content" id="tab-referral">
     <div class="ref-hero">
       <div style="position:relative;z-index:1;">
-        <div class="ref-hero-title">🎁 Invite Friends, Earn ⭐ Stars</div>
-        <div class="ref-hero-sub">Share your unique link. Every friend who joins earns you Telegram Stars!</div>
+        <div class="ref-hero-title" data-i18n="ref_hero_title">🎁 Invite Friends, Earn ⭐ Stars</div>
+        <div class="ref-hero-sub" data-i18n="ref_hero_sub">Share your unique link. Every friend who joins earns you Telegram Stars!</div>
         <div class="ref-code-box">
-          <div class="ref-code-label">🔑 Your Referral Code</div>
+          <div class="ref-code-label" data-i18n="ref_code_label">🔑 Your Referral Code</div>
           <div class="ref-code-val" id="ref-code-val">—</div>
-          <div class="ref-code-label">🔗 Your Invite Link</div>
+          <div class="ref-code-label" data-i18n="ref_link_label">🔗 Your Invite Link</div>
           <div class="ref-link-box" id="ref-link-display">—</div>
-          <button class="ref-copy-btn" onclick="copyRefLink()">📋 Copy Invite Link</button>
+          <button class="ref-copy-btn" onclick="copyRefLink()" data-i18n="ref_copy_btn">📋 Copy Invite Link</button>
         </div>
       </div>
     </div>
     <div class="ref-stats-grid">
-      <div class="ref-stat"><div class="ref-stat-val" id="ref-count">0</div><div class="ref-stat-lbl">Friends Invited</div></div>
-      <div class="ref-stat"><div class="ref-stat-val" style="color:var(--ton);font-size:16px;" id="ref-earned">0 ⭐</div><div class="ref-stat-lbl">Stars Earned</div></div>
+      <div class="ref-stat"><div class="ref-stat-val" id="ref-count">0</div><div class="ref-stat-lbl" data-i18n="friends_invited">Friends Invited</div></div>
+      <div class="ref-stat"><div class="ref-stat-val" style="color:var(--ton);font-size:16px;" id="ref-earned">0 ⭐</div><div class="ref-stat-lbl" data-i18n="stars_earned">Stars Earned</div></div>
     </div>
     <button class="btn-share" onclick="shareRefLink()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-      Share Invite Link via Telegram
+      <span data-i18n="share_btn">Share Invite Link via Telegram</span>
     </button>
-    <div class="sec-title">⭐ Reward Milestones</div>
+    <div class="sec-title" data-i18n="reward_milestones">⭐ Reward Milestones</div>
     <div id="milestones-list"><div class="empty-state"><div class="spinner"></div></div></div>
     <div class="ref-enter-card">
-      <div class="sec-title">Enter a Referral Code</div>
+      <div class="sec-title" data-i18n="enter_ref_code">Enter a Referral Code</div>
       <div id="ref-used-display"></div>
-      <input class="ref-input" id="ref-code-input" type="text" maxlength="10" placeholder="Enter code (e.g. ABC123)">
-      <button class="btn-green" id="ref-submit-btn" onclick="submitRefCode()">✓ Apply Code</button>
+      <input class="ref-input" id="ref-code-input" type="text" maxlength="10" data-i18n-placeholder="ref_input_placeholder" placeholder="Enter code (e.g. ABC123)">
+      <button class="btn-green" id="ref-submit-btn" onclick="submitRefCode()" data-i18n="apply_code_btn">✓ Apply Code</button>
     </div>
-    <div class="sec-title" id="invited-title" style="display:none;margin-top:4px;">👥 Invited Friends</div>
+    <div class="sec-title" id="invited-title" style="display:none;margin-top:4px;" data-i18n="invited_friends">👥 Invited Friends</div>
     <div class="card" id="invited-list" style="display:none;"></div>
   </div>
 
   <!-- ════════════════ WITHDRAW TAB ════════════════ -->
   <div class="tab-content" id="tab-withdraw">
     <div class="wd-hero">
-      <div class="wd-hero-title">💸 Withdraw TON</div>
-      <div class="wd-hero-sub">Available Balance</div>
+      <div class="wd-hero-title" data-i18n="wd_title">💸 Withdraw TON</div>
+      <div class="wd-hero-sub" data-i18n="wd_avail">Available Balance</div>
       <div class="wd-hero-bal"><span id="wd-balance">0.00</span> TON</div>
     </div>
     <div class="wd-form-card">
-      <div class="wd-form-title">Request Withdrawal</div>
-      <div class="wd-form-sub">Enter your TON wallet address and the amount you wish to withdraw. Our team will process it shortly.</div>
-      <label class="form-label" style="margin-top:8px;">Your TON Wallet Address</label>
-      <input class="wd-input" id="wd-wallet-input" type="text" placeholder="EQ... or UQ... your TON wallet address" spellcheck="false" autocomplete="off" style="margin-bottom:10px;">
-      <label class="form-label">Amount (TON)</label>
-      <input class="wd-input" id="wd-amount" type="number" min="0.1" step="0.1" placeholder="Amount to withdraw">
+      <div class="wd-form-title" data-i18n="wd_form_title">Request Withdrawal</div>
+      <div class="wd-form-sub" data-i18n="wd_form_sub">Enter your TON wallet address and the amount you wish to withdraw. Our team will process it shortly.</div>
+      <label class="form-label" style="margin-top:8px;" data-i18n="wd_wallet_label">Your TON Wallet Address</label>
+      <input class="wd-input" id="wd-wallet-input" type="text" data-i18n-placeholder="wd_wallet_placeholder" placeholder="EQ... or UQ... your TON wallet address" spellcheck="false" autocomplete="off" style="margin-bottom:10px;">
+      <label class="form-label" data-i18n="wd_amount_label">Amount (TON)</label>
+      <input class="wd-input" id="wd-amount" type="number" min="0.1" step="0.1" data-i18n-placeholder="wd_amount_placeholder" placeholder="Amount to withdraw">
       <button class="btn-gold" onclick="submitWithdraw()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-        Submit Withdrawal Request
+        <span data-i18n="wd_submit_btn">Submit Withdrawal Request</span>
       </button>
     </div>
-    <div class="sec-title" id="wd-history-title" style="display:none;">Withdrawal History</div>
+    <div class="sec-title" id="wd-history-title" style="display:none;" data-i18n="wd_history">Withdrawal History</div>
     <div class="card" id="wd-history-list"></div>
   </div>
 
   <!-- ════════════════ INFO TAB ════════════════ -->
   <div class="tab-content" id="tab-info">
     <div class="info-box">
-      <div class="info-box-title">📈 How TonPlay Works</div>
-      <div class="info-row"><span class="ir-l">Weekly Return</span><span class="ir-r" style="color:var(--green);">+5% per week</span></div>
-      <div class="info-row"><span class="ir-l">Min Deposit</span><span class="ir-r">0.5 TON</span></div>
-      <div class="info-row"><span class="ir-l">Payout Schedule</span><span class="ir-r">Weekly (7 days)</span></div>
-      <div class="info-row"><span class="ir-l">Compounding</span><span class="ir-r" style="color:var(--ton);">Yes</span></div>
+      <div class="info-box-title" data-i18n="how_it_works">📈 How TonPlay Works</div>
+      <div class="info-row"><span class="ir-l" data-i18n="weekly_return">Weekly Return</span><span class="ir-r" style="color:var(--green);">+5% per week</span></div>
+      <div class="info-row"><span class="ir-l" data-i18n="min_deposit">Min Deposit</span><span class="ir-r">0.5 TON</span></div>
+      <div class="info-row"><span class="ir-l" data-i18n="payout_schedule">Payout Schedule</span><span class="ir-r" data-i18n="payout_value">Weekly (7 days)</span></div>
+      <div class="info-row"><span class="ir-l" data-i18n="compounding">Compounding</span><span class="ir-r" style="color:var(--ton);" data-i18n="yes">Yes</span></div>
     </div>
     <div class="info-grid">
-      <div class="info-tile"><div class="info-tile-val">5%</div><div class="info-tile-lbl">Weekly Yield</div></div>
-      <div class="info-tile"><div class="info-tile-val">26%</div><div class="info-tile-lbl">Annual Est.</div></div>
-      <div class="info-tile"><div class="info-tile-val" id="info-deposits">0</div><div class="info-tile-lbl">My Deposits</div></div>
-      <div class="info-tile"><div class="info-tile-val" id="info-weeks">0</div><div class="info-tile-lbl">Weeks Active</div></div>
+      <div class="info-tile"><div class="info-tile-val">5%</div><div class="info-tile-lbl" data-i18n="weekly_yield_tile">Weekly Yield</div></div>
+      <div class="info-tile"><div class="info-tile-val">26%</div><div class="info-tile-lbl" data-i18n="annual_est">Annual Est.</div></div>
+      <div class="info-tile"><div class="info-tile-val" id="info-deposits">0</div><div class="info-tile-lbl" data-i18n="my_deposits">My Deposits</div></div>
+      <div class="info-tile"><div class="info-tile-val" id="info-weeks">0</div><div class="info-tile-lbl" data-i18n="weeks_active">Weeks Active</div></div>
     </div>
     <div class="card">
       <div class="card-pad">
-        <div class="sec-title">Example Returns</div>
+        <div class="sec-title" data-i18n="example_returns">Example Returns</div>
         <div class="info-row"><span class="ir-l">1 TON · 1 week</span><span class="ir-r" style="color:var(--green);">1.05 TON</span></div>
         <div class="info-row"><span class="ir-l">10 TON · 2 weeks</span><span class="ir-r" style="color:var(--green);">11.03 TON</span></div>
         <div class="info-row"><span class="ir-l">100 TON · 4 weeks</span><span class="ir-r" style="color:var(--green);">121.55 TON</span></div>
       </div>
     </div>
-    <div class="notice"><strong>💡 Compound Growth:</strong> Each week your balance grows by 5%. Week 1 you earn 5% of your deposit, week 2 you earn 5% of the new total — growth accelerates over time.</div>
+    <div class="notice" data-i18n-html="compound_notice"><strong>💡 Compound Growth:</strong> Each week your balance grows by 5%. Week 1 you earn 5% of your deposit, week 2 you earn 5% of the new total — growth accelerates over time.</div>
     <div class="card">
       <div class="card-pad">
-        <div class="sec-title">My Account</div>
-        <div class="info-row"><span class="ir-l">Telegram ID</span><span class="ir-r" id="info-tgid">—</span></div>
-        <div class="info-row"><span class="ir-l">Username</span><span class="ir-r" id="info-username">—</span></div>
-        <div class="info-row"><span class="ir-l">Referral Code</span><span class="ir-r" id="info-ref-code" style="color:var(--green);font-weight:700;">—</span></div>
-        <div class="info-row"><span class="ir-l">TON Wallet</span><span class="ir-r" id="info-wallet" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;">Not connected</span></div>
-        <div class="info-row"><span class="ir-l">Withdrawals</span><span class="ir-r" id="info-wd-status">—</span></div>
-        <div class="info-row"><span class="ir-l">Stars</span><span class="ir-r" id="info-stars">0 ⭐</span></div>
+        <div class="sec-title" data-i18n="my_account">My Account</div>
+        <div class="info-row"><span class="ir-l" data-i18n="tg_id_lbl">Telegram ID</span><span class="ir-r" id="info-tgid">—</span></div>
+        <div class="info-row"><span class="ir-l" data-i18n="username_lbl">Username</span><span class="ir-r" id="info-username">—</span></div>
+        <div class="info-row"><span class="ir-l" data-i18n="ref_code_info">Referral Code</span><span class="ir-r" id="info-ref-code" style="color:var(--green);font-weight:700;">—</span></div>
+        <div class="info-row"><span class="ir-l" data-i18n="ton_wallet_lbl">TON Wallet</span><span class="ir-r" id="info-wallet" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" data-i18n-default="not_connected">Not connected</span></div>
+        <div class="info-row"><span class="ir-l" data-i18n="withdrawals_lbl">Withdrawals</span><span class="ir-r" id="info-wd-status">—</span></div>
+        <div class="info-row"><span class="ir-l" data-i18n="stars_lbl">Stars</span><span class="ir-r" id="info-stars">0 ⭐</span></div>
       </div>
     </div>
-    <div class="notice" style="background:var(--green-light);border-color:rgba(16,185,129,0.3);">
+    <div class="notice" style="background:var(--green-light);border-color:rgba(16,185,129,0.3);" data-i18n-html="ref_notice">
       <strong>🎁 Referral System:</strong> Every player gets a unique referral code. Share your link — when a friend joins and uses your code, you earn Stars!
     </div>
   </div>
@@ -694,13 +1025,34 @@ html,body{
     <div class="modal-title" id="modal-title"></div>
     <div id="modal-body"></div>
     <div class="modal-btns">
-      <button class="btn-modal cancel" id="modal-cancel">Cancel</button>
-      <button class="btn-modal confirm" id="modal-confirm">Confirm</button>
+      <button class="btn-modal cancel" id="modal-cancel" data-i18n="cancel_btn">Cancel</button>
+      <button class="btn-modal confirm" id="modal-confirm" data-i18n="confirm_btn">Confirm</button>
     </div>
   </div>
 </div>
 
 <script type="module">
+// ─── Apply i18n translations to DOM ───
+(function applyI18n() {
+  const t = window.t;
+  if (!t) return;
+  // text content
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key] !== undefined && typeof t[key] === 'string') el.textContent = t[key];
+  });
+  // innerHTML (allows HTML tags)
+  document.querySelectorAll('[data-i18n-html]').forEach(el => {
+    const key = el.getAttribute('data-i18n-html');
+    if (t[key] !== undefined) el.innerHTML = t[key].replace('\n', '<br>');
+  });
+  // placeholder attributes
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (t[key] !== undefined) el.placeholder = t[key];
+  });
+})();
+
 import { beginCell } from 'https://esm.sh/@ton/core@0.56.3';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -774,7 +1126,7 @@ tonConnectUI.onStatusChange(wallet => {
     connectedWalletFriendly = rawToFriendly(connectedWalletAddr);
     const short = connectedWalletFriendly.slice(0, 6) + '…' + connectedWalletFriendly.slice(-4);
     document.getElementById('wallet-dot').classList.add('connected');
-    document.getElementById('wallet-status-label').textContent = 'Wallet connected ✓';
+    document.getElementById('wallet-status-label').textContent = t.wallet_connected;
     document.getElementById('wallet-addr-display').textContent = connectedWalletFriendly;
     document.getElementById('info-wallet').textContent = short;
     document.getElementById('btn-pay').disabled = false;
@@ -785,9 +1137,9 @@ tonConnectUI.onStatusChange(wallet => {
     connectedWalletAddr     = null;
     connectedWalletFriendly = null;
     document.getElementById('wallet-dot').classList.remove('connected');
-    document.getElementById('wallet-status-label').textContent = 'Wallet not connected';
-    document.getElementById('wallet-addr-display').textContent = 'Connect to pay in 1 click';
-    document.getElementById('info-wallet').textContent = 'Not connected';
+    document.getElementById('wallet-status-label').textContent = t.wallet_not_connected;
+    document.getElementById('wallet-addr-display').textContent = t.wallet_connect_hint;
+    document.getElementById('info-wallet').textContent = t.not_connected;
     document.getElementById('btn-pay').disabled = true;
   }
 });
@@ -802,13 +1154,13 @@ function generatePaymentComment(userId) {
 // ─── Handle Pay button click ───
 window.handlePay = async function() {
   if (!connectedWalletAddr) {
-    showToast('⚠️ Connect your wallet first');
+    showToast(t.connect_wallet_first);
     return;
   }
   const amountStr = document.getElementById('deposit-amount').value;
   const amount = parseFloat(amountStr);
   if (isNaN(amount) || amount < 0.5) {
-    showToast('⚠️ Minimum deposit is 0.5 TON');
+    showToast(t.min_deposit_warn);
     return;
   }
   const uid = String(currentUser.id);
@@ -816,25 +1168,25 @@ window.handlePay = async function() {
   // Use the friendly address (EQ.../UQ...) for display, not the raw hex
   const shortAddr = connectedWalletFriendly.slice(0, 6) + '…' + connectedWalletFriendly.slice(-4);
 
-  openModal('💎 Confirm Payment',
+  openModal(t.confirm_payment,
     `<div style="text-align:center;padding:8px 0 16px;">
       <div style="background:var(--ton-light);border-radius:16px;padding:18px;margin-bottom:12px;">
-        <div style="font-size:10px;color:var(--sub);margin-bottom:6px;font-weight:600;">AMOUNT TO SEND</div>
+        <div style="font-size:10px;color:var(--sub);margin-bottom:6px;font-weight:600;">${t.amount_to_send}</div>
         <div style="font-family:'DM Mono',monospace;font-size:32px;font-weight:700;color:var(--ton);">${amount.toFixed(2)}</div>
         <div style="font-size:14px;color:var(--ton2);font-weight:600;margin-top:2px;">TON</div>
       </div>
       <div style="background:var(--card2);border-radius:10px;padding:10px 12px;text-align:left;margin-bottom:8px;">
-        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">FROM WALLET</div>
+        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">${t.from_wallet}</div>
         <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--ton2);font-weight:600;">${shortAddr}</div>
       </div>
       <div style="background:var(--card2);border-radius:10px;padding:10px 12px;text-align:left;margin-bottom:8px;">
-        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">TO VAULT</div>
+        <div style="font-size:9px;color:var(--muted);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">${t.to_vault}</div>
         <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text);font-weight:600;word-break:break-all;">${VAULT_ADDRESS.slice(0,10)}…${VAULT_ADDRESS.slice(-6)}</div>
       </div>
       <div style="background:linear-gradient(135deg,rgba(33,150,243,0.08),rgba(33,150,243,0.04));border:1.5px solid rgba(33,150,243,0.2);border-radius:10px;padding:10px 12px;text-align:left;">
-        <div style="font-size:9px;color:var(--ton);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">🔑 PAYMENT REFERENCE</div>
+        <div style="font-size:9px;color:var(--ton);font-weight:700;letter-spacing:.5px;margin-bottom:4px;">${t.payment_ref}</div>
         <div style="font-family:'DM Mono',monospace;font-size:13px;color:var(--text);font-weight:700;letter-spacing:1px;">${comment}</div>
-        <div style="font-size:9px;color:var(--sub);margin-top:4px;">Auto-included in transaction — do not edit</div>
+        <div style="font-size:9px;color:var(--sub);margin-top:4px;">${t.payment_ref_sub}</div>
       </div>
     </div>`,
     async () => {
@@ -846,8 +1198,9 @@ window.handlePay = async function() {
 // ─── Send TON Transaction via TON Connect ───
 async function sendTonTransaction(amount, comment, uid) {
   const btn = document.getElementById('btn-pay');
-  btn.textContent = 'Opening wallet…';
-  btn.disabled = true;
+  const paySpan = btn.querySelector('span[data-i18n]');
+  if (paySpan) paySpan.textContent = t.pay_opening;
+    btn.disabled = true;
 
   try {
     const amountNano = Math.floor(amount * 1e9).toString();
@@ -867,10 +1220,11 @@ async function sendTonTransaction(amount, comment, uid) {
     const result = await tonConnectUI.sendTransaction(transaction);
 
     // ✅ Wallet confirmed — transaction is NOW broadcast to TON network
-    btn.textContent = 'Pay with TON Wallet';
+    const paySpan2 = btn.querySelector('span[data-i18n]');
+    if (paySpan2) paySpan2.textContent = t.pay_btn;
     btn.disabled = false;
-    showDetectionBanner('⏳ Confirming on blockchain…');
-    showToast('✅ Transaction sent! Crediting balance…');
+    showDetectionBanner(t.detecting);
+    showToast(t.tx_sent);
 
     // Save pending record to Firestore
     const pendingRef = await addDoc(collection(db, 'depositNotifications'), {
@@ -892,15 +1246,16 @@ async function sendTonTransaction(amount, comment, uid) {
     startPaymentDetection(comment, amount, uid, pendingRef.id);
 
   } catch (err) {
-    btn.textContent = 'Pay with TON Wallet';
+    const paySpan3 = btn.querySelector('span[data-i18n]');
+    if (paySpan3) paySpan3.textContent = t.pay_btn;
     btn.disabled = false;
 
     if (err?.message?.includes('User rejects')) {
-      showToast('❌ Transaction cancelled');
+      showToast(t.tx_cancelled);
     } else if (err?.message?.includes('Wallet is not connected')) {
-      showToast('⚠️ Wallet disconnected. Please reconnect.');
+      showToast(t.wallet_disconnected);
     } else {
-      showToast('❌ Transaction failed: ' + (err?.message || 'Unknown error'));
+      showToast(t.tx_failed + (err?.message || 'Unknown error'));
     }
     console.error('TON transaction error:', err);
   }
@@ -1077,7 +1432,7 @@ async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
     // This runs immediately after wallet confirmation, not waiting for on-chain
     await sendUserBotMessage(uid, amount, comment);
 
-    showToast('🎉 Balance updated! Check Telegram for confirmation.');
+    showToast(t.balance_updated);
   } catch (e) {
     console.error('Firebase confirmation error:', e);
     showToast('⚠️ Balance update failed. Contact support.');
@@ -1092,13 +1447,13 @@ async function sendUserBotMessage(uid, amount, comment) {
   const newBalance = (userData.balance || 0).toFixed(2);
   const appUrl = `https://t.me/${BOT_USERNAME}/${APP_PATH}`;
 
+  const msgT = window.t;
   const text =
-    `✅ <b>Deposit Confirmed!</b>\n\n` +
-    `💰 <b>Amount:</b> +${amount} TON credited to your balance\n` +
-    `📊 <b>New Balance:</b> ${newBalance} TON\n` +
-    `🔑 <b>Reference:</b> <code>${comment}</code>\n\n` +
-    `Your deposit is now earning <b>+5% weekly yield</b>! 🚀\n` +
-    `Open the app to track your earnings 👇`;
+    `${msgT.bot_deposit_confirmed}\n\n` +
+    `${msgT.bot_amount_credited} +${amount} TON\n` +
+    `${msgT.bot_new_balance} ${newBalance} TON\n` +
+    `${msgT.bot_reference} <code>${comment}</code>\n\n` +
+    `${msgT.bot_yield_msg}`;
 
   try {
     const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -1110,7 +1465,7 @@ async function sendUserBotMessage(uid, amount, comment) {
         parse_mode: 'HTML',
         reply_markup: {
           inline_keyboard: [[
-            { text: '🎮 Open TonPlay App', url: appUrl }
+            { text: msgT.bot_open_app, url: appUrl }
           ]]
         }
       })
@@ -1267,7 +1622,7 @@ function renderAll() {
   document.getElementById('hero-balance').textContent   = bal.toFixed(2);
   document.getElementById('hero-deposited').textContent = dep.toFixed(2);
   document.getElementById('hero-earned').textContent    = '+' + earned.toFixed(2);
-  document.getElementById('hero-sub').textContent       = dep > 0 ? 'Next yield in ~7 days' : 'Start depositing to earn weekly rewards';
+  document.getElementById('hero-sub').textContent       = dep > 0 ? t.hero_sub_active : t.hero_sub_start;
   document.getElementById('wd-balance').textContent     = bal.toFixed(2);
   document.getElementById('header-stars').textContent   = stars;
   document.getElementById('info-stars').textContent     = stars + ' ⭐';
@@ -1288,11 +1643,11 @@ function renderAll() {
   document.getElementById('info-tgid').textContent    = userData.userId || '—';
   document.getElementById('info-username').textContent = userData.userName ? '@' + userData.userName : '—';
   document.getElementById('info-ref-code').textContent = refCode || '—';
-  document.getElementById('info-wd-status').textContent = 'Open';
+  document.getElementById('info-wd-status').textContent = t.withdrawals_open;
 
   const refUsed = document.getElementById('ref-used-display');
   if (userData.referredBy) {
-    refUsed.innerHTML = `<div class="ref-used-badge">✓ Code applied: ${userData.referredBy}</div>`;
+    refUsed.innerHTML = `<div class="ref-used-badge">${t.ref_used_prefix}${userData.referredBy}</div>`;
     document.getElementById('ref-code-input').disabled = true;
     document.getElementById('ref-submit-btn').disabled = true;
   }
@@ -1306,11 +1661,11 @@ function renderAll() {
     document.getElementById('hero-proj-val').textContent = projTotal.toFixed(2);
     const badge = document.getElementById('hero-proj-badge');
     if (dep >= 50) {
-      badge.textContent = '+10% ✨ 50 TON deal';
+      badge.textContent = t.proj_badge_10;
       badge.style.background = 'rgba(124,58,237,0.35)';
       badge.style.border = '1px solid rgba(255,255,255,0.4)';
     } else {
-      badge.textContent = '+5% weekly yield';
+      badge.textContent = t.proj_badge_5;
       badge.style.background = 'rgba(255,255,255,0.22)';
       badge.style.border = '1px solid rgba(255,255,255,0.35)';
     }
@@ -1520,8 +1875,8 @@ function renderMilestones() {
     const cls    = done ? 'done-ms' : (isNext ? 'next-ms' : 'locked-ms');
     const rem    = Math.max(0, m.friends - count);
     const chipCls  = done ? 'done' : (isNext ? 'next' : 'locked');
-    const chipText = done ? '✓ Claimed' : (isNext ? '🔥 Up Next' : '🔒 Locked');
-    const progLbl  = done ? '✓ Completed!' : (isNext ? `${rem} more friend${rem!==1?'s':''} to go` : `${count} / ${m.friends}`);
+    const chipText = done ? t.milestone_done : (isNext ? t.milestone_next : t.milestone_locked);
+    const progLbl  = done ? t.milestone_complete : (isNext ? t.milestone_more(rem) : `${count} / ${m.friends}`);
     const starsVal = m.stars ? `${m.stars}` : '0';
     const bonusTon = m.bonusTon ? `<span class="ms-ton-bonus">+${m.bonusTon} TON</span>` : '';
     const starIcon = starSVGs[Math.min(i, starSVGs.length - 1)];
@@ -1534,11 +1889,11 @@ function renderMilestones() {
       <div class="ms-body">
         <div class="ms-friends-row">
           <span class="ms-friends">${m.friends}</span>
-          <span class="ms-friends-lbl">friends</span>
+          <span class="ms-friends-lbl">${t.milestone_friends_lbl}</span>
         </div>
         <div class="ms-reward">
           <span class="ms-reward-emoji">${rewardEmoji}</span>
-          <span class="ms-reward-val">${starsVal} Stars${bonusTon ? ' · ' : ''}</span>
+          <span class="ms-reward-val">${starsVal} ${t.milestone_stars_lbl}${bonusTon ? ' · ' : ''}</span>
           ${bonusTon}
         </div>
         <div class="ms-bar-wrap">
@@ -1570,7 +1925,7 @@ async function loadInvitedFriends() {
           <div style="font-size:13px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</div>
           <div style="font-size:10px;color:var(--sub);">${un}${dt?' · Joined '+dt:''}</div>
         </div>
-        <div style="background:var(--green-light);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">✓ Joined</div>
+        <div style="background:var(--green-light);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">${t.joined_badge}</div>
       </div>`;
     }).join('');
   } catch(e) {}
@@ -1593,11 +1948,12 @@ function renderDeposits() {
   list.innerHTML = depositsData.map(d => {
     const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
     const autoTag = d.autoDetected ? ' · <span style="color:var(--ton);font-size:9px;font-weight:700;">⚡ AUTO</span>' : '';
+    const depStatusLabel = d.status==='active' ? `<span style="color:var(--green);">${t.deposit_active}</span>` : (t.deposit_pending);
     return `<div class="deposit-item">
       <div class="di-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ton)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
       <div class="di-info"><div class="di-amount">${(d.amount||0).toFixed(2)} TON</div>
-        <div class="di-date">${dt} · ${d.status==='active'?'<span style="color:var(--green);">Active</span>':d.status||'Pending'}${autoTag}</div></div>
-      <div class="di-right"><div class="di-yield">+${(d.earned||0).toFixed(2)} TON</div><div class="di-weeks">Week ${d.weeksActive||0}</div></div>
+        <div class="di-date">${dt} · ${depStatusLabel}${autoTag}</div></div>
+      <div class="di-right"><div class="di-yield">+${(d.earned||0).toFixed(2)} TON</div><div class="di-weeks">${t.deposit_week} ${d.weeksActive||0}</div></div>
     </div>`;
   }).join('');
   document.getElementById('info-deposits').textContent = depositsData.length;
@@ -1616,7 +1972,7 @@ async function loadWithdrawals() {
       const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
       return `<div class="wd-req-item">
         <div class="wri-top"><div class="wri-amount">${(d.amount||0).toFixed(2)} TON</div>
-          <div class="wri-status ${d.status==='done'?'done':'pending'}">${d.status==='done'?'✅ Done':'⏳ Pending'}</div></div>
+          <div class="wri-status ${d.status==='done'?'done':'pending'}">${d.status==='done'?t.wd_status_done:t.wd_status_pending}</div></div>
         <div class="wri-addr">${d.walletAddress || '—'}</div>
         <div class="wri-date">${dt}</div>
       </div>`;
@@ -1628,11 +1984,11 @@ window.submitWithdraw = async function() {
   const amount = parseFloat(document.getElementById('wd-amount').value);
   const wallet = document.getElementById('wd-wallet-input').value.trim();
   const bal    = userData?.balance || 0;
-  if (isNaN(amount) || amount <= 0) { showToast('⚠️ Enter a valid amount'); return; }
-  if (!wallet) { showToast('⚠️ Enter your TON wallet address'); return; }
-  if (!wallet.startsWith('EQ') && !wallet.startsWith('UQ')) { showToast('⚠️ Address must start with EQ or UQ'); return; }
-  if (amount > bal) { showToast('⚠️ Insufficient balance'); return; }
-  openModal('💸 Confirm Withdrawal',
+  if (isNaN(amount) || amount <= 0) { showToast(t.enter_amount_warn); return; }
+  if (!wallet) { showToast(t.enter_wallet_warn); return; }
+  if (!wallet.startsWith('EQ') && !wallet.startsWith('UQ')) { showToast(t.wallet_format_warn); return; }
+  if (amount > bal) { showToast(t.insufficient); return; }
+  openModal(t.confirm_withdrawal,
     `<div style="font-size:13px;color:var(--sub);line-height:1.7;">Withdraw <strong style="color:var(--text);">${amount.toFixed(2)} TON</strong> to:<br><code style="font-size:10px;word-break:break-all;">${wallet}</code></div>`,
     async () => {
       try {
@@ -1654,7 +2010,7 @@ window.submitWithdraw = async function() {
           `📋 <i>(tap address above to copy)</i>\n` +
           `📅 <b>Time:</b> ${new Date().toLocaleString()}`
         );
-        showToast('✅ Withdrawal request submitted!');
+        showToast(t.wd_submitted);
         document.getElementById('wd-amount').value = '';
         document.getElementById('wd-wallet-input').value = '';
         await loadWithdrawals();
@@ -1666,40 +2022,40 @@ window.submitWithdraw = async function() {
 
 window.copyRefLink = function() {
   const code = userData?.referralCode || '';
-  if (!code) { showToast('⚠️ No referral code yet'); return; }
+  if (!code) { showToast(t.no_ref_code); return; }
   navigator.clipboard?.writeText(buildRefLink(code)).catch(() => {});
-  showToast('✅ Invite link copied!');
+  showToast(t.link_copied);
 };
 
 window.shareRefLink = function() {
   const code = userData?.referralCode || '';
-  if (!code) { showToast('⚠️ No referral code yet'); return; }
+  if (!code) { showToast(t.no_ref_code); return; }
   const link = buildRefLink(code);
-  const text = `💎 Join TonPlay — earn +5% every week on your TON!\nUse my invite link:`;
+  const shareText = LANG === 'ru' ? '💎 Присоединяйся к TonPlay — зарабатывай +5% каждую неделю!\nМоя ссылка:' : '💎 Join TonPlay — earn +5% every week on your TON!\nUse my invite link:';
   if (tg?.openTelegramLink) {
-    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(text)}`);
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`);
   } else {
     navigator.clipboard?.writeText(link).catch(() => {});
-    showToast('✅ Link copied!');
+    showToast(t.link_copied);
   }
 };
 
 async function applyRefCode(code, silent = false) {
-  if (!code) { if (!silent) showToast('⚠️ Enter a referral code'); return; }
-  if (userData.referredBy) { if (!silent) showToast('⚠️ You already used a code'); return; }
-  if (code === userData.referralCode) { if (!silent) showToast('⚠️ Cannot use your own code'); return; }
+  if (!code) { if (!silent) showToast(t.enter_ref_warn); return; }
+  if (userData.referredBy) { if (!silent) showToast(t.already_used_warn); return; }
+  if (code === userData.referralCode) { if (!silent) showToast(t.own_code_warn); return; }
   try {
     const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', code), limit(1)));
-    if (snap.empty) { if (!silent) showToast('❌ Invalid referral code'); return; }
+    if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
     const refDoc  = snap.docs[0];
-    if (refDoc.id === String(currentUser.id)) { if (!silent) showToast('⚠️ Cannot use your own code'); return; }
+    if (refDoc.id === String(currentUser.id)) { if (!silent) showToast(t.own_code_warn); return; }
     const refData = refDoc.data();
     const uid     = String(currentUser.id);
     await updateDoc(doc(db, 'users', uid), { referredBy: code });
     userData.referredBy = code;
     const newCount = (refData.referralCount || 0) + 1;
     await updateDoc(doc(db, 'users', refDoc.id), { referralCount: newCount });
-    showToast('✅ Code applied! Welcome 🎉');
+    showToast(t.code_applied);
     renderAll();
     const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
     const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
@@ -1719,7 +2075,7 @@ function updateEarnPreview() {
   const rate = is50Deal ? 0.10 : 0.05;
   const earned = amount * rate;
   document.getElementById('earn-preview-val').textContent = '+' + earned.toFixed(2);
-  document.getElementById('earn-preview-unit').textContent = 'TON (' + (is50Deal ? '10%' : '5%') + ' yield)';
+  document.getElementById('earn-preview-unit').textContent = is50Deal ? t.earn_unit_10 : t.earn_unit_5;
   document.getElementById('earn-preview-rate-badge').textContent = is50Deal ? '+10% ✨' : '+5%';
   document.getElementById('earn-preview-rate-badge').style.background = is50Deal ? 'linear-gradient(135deg,rgba(124,58,237,0.15),rgba(124,58,237,0.08))' : 'var(--green-light)';
   document.getElementById('earn-preview-rate-badge').style.borderColor = is50Deal ? 'rgba(124,58,237,0.3)' : 'rgba(16,185,129,0.3)';
@@ -1782,7 +2138,7 @@ async function resumePendingDetection() {
     ));
     if (snap.empty) return;
 
-    showDetectionBanner('🔄 Checking for pending payments…');
+    showDetectionBanner(t.detecting);
 
     for (const docSnap of snap.docs) {
       const pd = docSnap.data();
