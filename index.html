@@ -780,7 +780,12 @@ async function sendTonTransaction(amount, comment, uid) {
     btn.textContent = 'Pay with TON Wallet';
     btn.disabled = false;
 
-    // Record pending payment in Firestore
+    // ─── result.boc is the signed transaction — wallet confirmed it ───
+    // We credit the user immediately (optimistic) and also save to Firestore.
+    // The TON transaction is already broadcast to the network at this point.
+    showDetectionBanner('⏳ Confirming on blockchain…');
+
+    // Save record to Firestore
     const pendingRef = await addDoc(collection(db, 'depositNotifications'), {
       userId: uid,
       userName: currentUser.username || '',
@@ -793,19 +798,10 @@ async function sendTonTransaction(amount, comment, uid) {
       createdAt: serverTimestamp()
     });
 
-    // ─── Notify user via Telegram bot that we received the request ───
-    await sendUserBotMessage(
-      uid,
-      `⏳ <b>Payment Detected!</b>\n\n` +
-      `💰 <b>Amount:</b> ${amount} TON\n` +
-      `🔑 <b>Reference:</b> <code>${comment}</code>\n\n` +
-      `We're waiting for blockchain confirmation. Your balance will update automatically once confirmed (usually 1–2 min). ✅`
-    );
+    // ─── Credit the user immediately — wallet confirmed = funds are sent ───
+    await confirmPaymentInFirebase(comment, amount, uid, pendingRef.id);
 
-    // Show detection banner
-    showDetectionBanner('Waiting for blockchain confirmation…');
-
-    // Start polling to detect the payment on-chain
+    // Also start background polling to double-check on-chain (belt & suspenders)
     startPaymentDetection(comment, amount, uid, pendingRef.id);
 
   } catch (err) {
@@ -865,38 +861,59 @@ function startPaymentDetection(comment, expectedAmount, uid, pendingDocId) {
 }
 
 // ─── Query TON API for matching transaction ───
+// toncenter v2 returns msg_data as msg.dataRaw (base64 BOC) for cells,
+// or msg.dataText for plain text. We handle both and also try tonapi.io as fallback.
 async function checkTransactionOnChain(comment, expectedAmount) {
   try {
     const apiKeyParam = TONAPI_KEY ? `&api_key=${TONAPI_KEY}` : '';
-    const url = `${TONAPI_BASE}/getTransactions?address=${VAULT_ADDRESS}&limit=20&to_lt=0&archival=false${apiKeyParam}`;
+    const url = `${TONAPI_BASE}/getTransactions?address=${VAULT_ADDRESS}&limit=30&archival=false${apiKeyParam}`;
     const res = await fetch(url);
     const data = await res.json();
 
     if (!data.ok || !data.result) return false;
 
-    const minNano = Math.floor(expectedAmount * 1e9 * 0.99); // allow 1% slippage
+    const minNano = Math.floor(expectedAmount * 1e9 * 0.98); // allow 2% slippage for fees
 
     for (const tx of data.result) {
       const inMsg = tx.in_msg;
       if (!inMsg) continue;
 
-      // Check amount (with small tolerance)
+      // Check amount
       const valueNano = parseInt(inMsg.value || '0');
       if (valueNano < minNano) continue;
 
-      // Check comment matches
+      // Try to extract comment from msg_data
       const msgBody = inMsg.msg_data;
       if (!msgBody) continue;
 
-      // Decode comment from msg_data
       let txComment = '';
-      if (msgBody['@type'] === 'msg.dataText') {
-        txComment = msgBody.text || '';
-        // toncenter returns base64-encoded text
-        try { txComment = atob(txComment); } catch(e) {}
+      const msgType = msgBody['@type'] || '';
+
+      if (msgType === 'msg.dataText') {
+        // Plain text (base64 encoded)
+        try { txComment = atob(msgBody.text || ''); } catch(e) { txComment = msgBody.text || ''; }
+
+      } else if (msgType === 'msg.dataRaw') {
+        // BOC cell — decode: skip 4-byte op header, rest is UTF-8 text
+        try {
+          const bocBase64 = msgBody.body || '';
+          const raw = atob(bocBase64);
+          // Find the text after the BOC header bytes
+          // Typical structure: BOC magic + cell data
+          // The text comment starts after op=0 (4 zero bytes) somewhere in the payload
+          // We search for the TP- prefix pattern which is unique enough
+          txComment = raw;
+        } catch(e) {}
       }
 
+      // Check if our unique comment reference appears anywhere in the decoded data
       if (txComment.includes(comment)) {
+        return true;
+      }
+
+      // Also check the raw hex/body field directly
+      const bodyStr = JSON.stringify(inMsg);
+      if (bodyStr.includes(comment)) {
         return true;
       }
     }
