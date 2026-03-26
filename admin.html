@@ -152,7 +152,9 @@ tr:hover td{background:rgba(33,150,243,0.02);}
 .set-label{font-size:10px;color:var(--sub);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px;display:block;}
 .set-input{width:100%;padding:10px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .2s;}
 .set-input:focus{border-color:var(--ton);}
-.ms-card{background:var(--card2);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;}
+.ms-card{background:var(--card2);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;transition:border-color .15s,box-shadow .15s;}
+.ms-card:hover{border-color:rgba(33,150,243,0.3);}
+.ms-card.drag-over{border-color:var(--ton);box-shadow:0 0 0 2px rgba(33,150,243,0.15);background:var(--ton-light);}
 .ms-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end;}
 .btn-save{padding:11px 24px;background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(33,150,243,0.2);transition:all .15s;}
 .btn-save:hover{transform:translateY(-1px);}
@@ -167,6 +169,26 @@ tr:hover td{background:rgba(33,150,243,0.02);}
 
 /* Wallet badge */
 .wallet-cell{font-family:'DM Mono',monospace;font-size:10px;color:var(--ton);max-width:150px;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+
+/* Leaderboard */
+.leaderboard{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+@media(max-width:600px){.leaderboard{grid-template-columns:1fr;}}
+.lb-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.lb-card.gold-card{border-color:rgba(245,158,11,0.4);background:linear-gradient(135deg,#fffbeb,#fff);}
+.lb-card.blue-card{border-color:rgba(33,150,243,0.35);background:linear-gradient(135deg,#eff8ff,#fff);}
+.lb-card.green-card{border-color:rgba(16,185,129,0.35);background:linear-gradient(135deg,#f0fdf9,#fff);}
+.lb-crown{font-size:22px;margin-bottom:6px;display:block;}
+.lb-title{font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--sub);margin-bottom:8px;}
+.lb-name{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
+.lb-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:600;line-height:1.1;}
+.lb-val.gold-txt{color:var(--gold2);}
+.lb-val.blue-txt{color:var(--ton);}
+.lb-val.green-txt{color:var(--green);}
+.lb-sub{font-size:10px;color:var(--sub);margin-top:2px;}
+
+/* DM modal textarea */
+.dm-textarea{width:100%;min-height:100px;padding:10px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;transition:border-color .2s;}
+.dm-textarea:focus{border-color:var(--ton);}
 </style>
 </head>
 <body>
@@ -214,10 +236,37 @@ tr:hover td{background:rgba(33,150,243,0.02);}
       <button class="atab" data-tab="withdrawals" onclick="switchAdminTab('withdrawals',this)">💸 Withdrawals</button>
       <button class="atab" data-tab="settings" onclick="switchAdminTab('settings',this)">⚙️ Settings</button>
       <button class="atab" data-tab="addplayer" onclick="switchAdminTab('addplayer',this)">➕ Add Player</button>
+      <button class="atab" data-tab="broadcast" onclick="switchAdminTab('broadcast',this)">📢 Broadcast</button>
     </div>
 
     <!-- PLAYERS -->
     <div class="atab-content active" id="tab-players">
+
+      <!-- Leaderboard -->
+      <div class="leaderboard" id="leaderboard-row">
+        <div class="lb-card gold-card">
+          <span class="lb-crown">👑</span>
+          <div class="lb-title">Top Referrer</div>
+          <div class="lb-name" id="lb-ref-name">—</div>
+          <div class="lb-val gold-txt" id="lb-ref-val">0</div>
+          <div class="lb-sub">referrals</div>
+        </div>
+        <div class="lb-card blue-card">
+          <span class="lb-crown">💎</span>
+          <div class="lb-title">Highest Balance</div>
+          <div class="lb-name" id="lb-bal-name">—</div>
+          <div class="lb-val blue-txt" id="lb-bal-val">0</div>
+          <div class="lb-sub">TON balance</div>
+        </div>
+        <div class="lb-card green-card">
+          <span class="lb-crown">🚀</span>
+          <div class="lb-title">Most Deposited</div>
+          <div class="lb-name" id="lb-dep-name">—</div>
+          <div class="lb-val green-txt" id="lb-dep-val">0</div>
+          <div class="lb-sub">TON deposited</div>
+        </div>
+      </div>
+
       <div class="panel">
         <div class="panel-head"><div class="panel-title">Players</div></div>
         <div class="search-bar">
@@ -291,6 +340,58 @@ tr:hover td{background:rgba(33,150,243,0.02);}
             <button class="btn-save" onclick="saveSettings()">💾 Save All Settings</button>
             <div class="status-msg" id="settings-msg"></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="atab-content" id="tab-broadcast">
+      <div class="panel" style="max-width:620px;">
+        <div class="panel-head"><div class="panel-title">📢 Broadcast to All Users</div></div>
+        <div style="padding:20px;">
+          <div style="font-size:11px;color:var(--sub);margin-bottom:16px;line-height:1.6;">Send a message (with optional photo) to all users who have a Telegram ID saved in Firestore.</div>
+
+          <div style="margin-bottom:14px;">
+            <label class="set-label">📷 Photo (optional)</label>
+            <input type="file" id="bc-photo" accept="image/*" style="display:none;" onchange="handleBcPhoto(this)">
+            <div id="bc-photo-preview" onclick="document.getElementById('bc-photo').click()" style="width:100%;height:120px;background:var(--card2);border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--sub);overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--ton)'" onmouseout="this.style.borderColor='var(--border)'">
+              <span id="bc-photo-label">🖼️ Click to select a photo</span>
+              <img id="bc-photo-img" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:6px;">
+              <button class="btn-act red" id="bc-remove-photo" style="display:none;" onclick="removeBcPhoto()">✕ Remove photo</button>
+            </div>
+          </div>
+
+          <div style="margin-bottom:14px;">
+            <label class="set-label">🇬🇧 English Message *</label>
+            <textarea id="bc-text-en" placeholder="Write English message here…\nHTML supported: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;" style="width:100%;min-height:90px;padding:11px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;transition:border-color .2s;" onfocus="this.style.borderColor='var(--ton)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+          </div>
+
+          <div style="margin-bottom:14px;">
+            <label class="set-label">🇷🇺 Russian Message</label>
+            <textarea id="bc-text-ru" placeholder="Напишите сообщение на русском…\nПоддерживается HTML: &lt;b&gt;жирный&lt;/b&gt;, &lt;i&gt;курсив&lt;/i&gt;" style="width:100%;min-height:90px;padding:11px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;transition:border-color .2s;" onfocus="this.style.borderColor='var(--ton)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <div style="font-size:10px;color:var(--sub);margin-top:4px;">If left empty, English message will be sent to all users regardless of language.</div>
+          </div>
+
+          <div style="background:var(--gold-light);border:1.5px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:11px;color:var(--gold2);line-height:1.6;">
+            ⚠️ This will send the message to <strong id="bc-user-count">…</strong> users. Only users who have ever started the bot will receive it.
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <button class="btn-save" id="bc-send-btn" onclick="sendBroadcast()">📢 Send Broadcast</button>
+            <button class="btn-act blue" onclick="loadBroadcastCount()">🔄 Refresh count</button>
+          </div>
+
+          <div id="bc-progress" style="margin-top:14px;display:none;">
+            <div style="font-size:12px;font-weight:700;margin-bottom:6px;" id="bc-progress-label">Sending…</div>
+            <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden;">
+              <div id="bc-progress-bar" style="height:100%;background:linear-gradient(90deg,var(--ton),var(--ton2));border-radius:20px;width:0%;transition:width .3s;"></div>
+            </div>
+            <div style="font-size:10px;color:var(--sub);margin-top:5px;" id="bc-progress-detail"></div>
+          </div>
+
+          <div id="bc-result" style="margin-top:12px;font-size:12px;min-height:16px;"></div>
         </div>
       </div>
     </div>
@@ -414,8 +515,25 @@ async function loadPlayers() {
     const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(200)));
     allPlayers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderPlayers(allPlayers);
+    renderLeaderboard(allPlayers);
     updateSummary();
   } catch(e) { document.getElementById('players-tbody').innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:14px;">${e.message}</td></tr>`; }
+}
+
+function renderLeaderboard(list) {
+  if (!list.length) return;
+  // Top referrer
+  const topRef = [...list].sort((a,b) => (b.referralCount||0) - (a.referralCount||0))[0];
+  document.getElementById('lb-ref-name').textContent = topRef.displayName || ('@' + (topRef.userName || topRef.id));
+  document.getElementById('lb-ref-val').textContent = topRef.referralCount || 0;
+  // Highest balance
+  const topBal = [...list].sort((a,b) => (b.balance||0) - (a.balance||0))[0];
+  document.getElementById('lb-bal-name').textContent = topBal.displayName || ('@' + (topBal.userName || topBal.id));
+  document.getElementById('lb-bal-val').textContent = (topBal.balance||0).toFixed(2);
+  // Most deposited
+  const topDep = [...list].sort((a,b) => (b.totalDeposited||0) - (a.totalDeposited||0))[0];
+  document.getElementById('lb-dep-name').textContent = topDep.displayName || ('@' + (topDep.userName || topDep.id));
+  document.getElementById('lb-dep-val').textContent = (topDep.totalDeposited||0).toFixed(2);
 }
 
 function renderPlayers(list) {
@@ -439,6 +557,7 @@ function renderPlayers(list) {
         <button class="btn-act blue" onclick="editBalance('${p.id}','${p.userName||p.id}',${p.balance||0})">✏️ Balance</button>
         <button class="btn-act green" onclick="addDeposit('${p.id}','${p.userName||p.id}')">💰 Add Deposit</button>
         <button class="btn-act ${p.withdrawUnlocked?'red':'green'}" onclick="toggleWithdraw('${p.id}','${p.userName||p.id}',${!!p.withdrawUnlocked})">${p.withdrawUnlocked?'🔒 Lock':'🔓 Unlock'}</button>
+        <button class="btn-act purple" onclick="openDM('${p.id}','${p.userName||p.id}')">📨 DM</button>
         <button class="btn-act red" onclick="deletePlayer('${p.id}','${p.userName||p.id}')">🗑️</button>
       </div></td>
     </tr>`;
@@ -592,13 +711,37 @@ async function loadSettings() {
   renderMilestonesEditor();
 }
 
+function syncMilestonesFromDOM() {
+  // Read current input values back into the array before any re-render
+  referralMilestonesAdmin = referralMilestonesAdmin.map((_, i) => ({
+    friends:  parseInt(document.getElementById(`ms-friends-${i}`)?.value)  || 0,
+    stars:    parseInt(document.getElementById(`ms-stars-${i}`)?.value)    || 0,
+    bonusTon: parseFloat(document.getElementById(`ms-ton-${i}`)?.value)    || 0
+  }));
+}
+
 function renderMilestonesEditor() {
   const c = document.getElementById('ref-milestones-editor');
+  const total = referralMilestonesAdmin.length;
   c.innerHTML = referralMilestonesAdmin.map((m, i) => `
-    <div class="ms-card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-        <div style="font-size:10px;font-weight:800;color:var(--gold2);letter-spacing:.4px;">MILESTONE ${i + 1}</div>
-        ${referralMilestonesAdmin.length > 1 ? `<button class="btn-act red" style="padding:3px 8px;font-size:10px;" onclick="removeMilestone(${i})">✕ Remove</button>` : ''}
+    <div class="ms-card" id="ms-card-${i}" draggable="true"
+      ondragstart="msDragStart(event,${i})"
+      ondragover="msDragOver(event)"
+      ondrop="msDrop(event,${i})"
+      ondragend="msDragEnd()"
+      style="cursor:grab;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <!-- drag handle -->
+          <div title="Drag to reorder" style="color:var(--muted);font-size:16px;line-height:1;cursor:grab;user-select:none;">⠿</div>
+          <div style="font-size:10px;font-weight:800;color:var(--gold2);letter-spacing:.4px;">MILESTONE ${i + 1}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <!-- up/down buttons -->
+          <button class="btn-act blue" style="padding:3px 8px;font-size:11px;" ${i === 0 ? 'disabled style="opacity:.35;padding:3px 8px;font-size:11px;"' : ''} onclick="moveMilestone(${i},-1)">▲</button>
+          <button class="btn-act blue" style="padding:3px 8px;font-size:11px;" ${i === total-1 ? 'disabled style="opacity:.35;padding:3px 8px;font-size:11px;"' : ''} onclick="moveMilestone(${i},1)">▼</button>
+          ${total > 1 ? `<button class="btn-act red" style="padding:3px 8px;font-size:10px;" onclick="removeMilestone(${i})">✕</button>` : ''}
+        </div>
       </div>
       <div class="ms-grid">
         <div><label class="set-label">Friends Needed</label><input class="set-input" type="number" min="1" id="ms-friends-${i}" value="${m.friends}" placeholder="10"></div>
@@ -609,11 +752,59 @@ function renderMilestonesEditor() {
   `).join('');
 }
 
-window.addMilestone = function() {
-  referralMilestonesAdmin.push({ friends: 100, stars: 1000, bonusTon: 0 });
+// ── Drag-and-drop reorder ──
+let msDragIdx = null;
+
+window.msDragStart = function(e, i) {
+  syncMilestonesFromDOM();
+  msDragIdx = i;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => document.getElementById(`ms-card-${i}`)?.style && (document.getElementById(`ms-card-${i}`).style.opacity = '0.45'), 0);
+};
+window.msDragOver = function(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  // highlight drop target
+  const card = e.currentTarget;
+  document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over'));
+  if (card) card.classList.add('drag-over');
+};
+window.msDrop = function(e, targetIdx) {
+  e.preventDefault();
+  document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over'));
+  if (msDragIdx === null || msDragIdx === targetIdx) return;
+  const moved = referralMilestonesAdmin.splice(msDragIdx, 1)[0];
+  referralMilestonesAdmin.splice(targetIdx, 0, moved);
+  msDragIdx = null;
   renderMilestonesEditor();
 };
+window.msDragEnd = function() {
+  document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over'));
+  msDragIdx = null;
+  renderMilestonesEditor();
+};
+
+// ── Arrow button reorder ──
+window.moveMilestone = function(i, dir) {
+  syncMilestonesFromDOM();
+  const j = i + dir;
+  if (j < 0 || j >= referralMilestonesAdmin.length) return;
+  [referralMilestonesAdmin[i], referralMilestonesAdmin[j]] = [referralMilestonesAdmin[j], referralMilestonesAdmin[i]];
+  renderMilestonesEditor();
+};
+
+window.addMilestone = function() {
+  syncMilestonesFromDOM();
+  referralMilestonesAdmin.push({ friends: 0, stars: 0, bonusTon: 0 });
+  renderMilestonesEditor();
+  // Scroll to the new card
+  setTimeout(() => {
+    const last = document.getElementById(`ms-card-${referralMilestonesAdmin.length - 1}`);
+    last?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 50);
+};
 window.removeMilestone = function(i) {
+  syncMilestonesFromDOM();
   referralMilestonesAdmin.splice(i, 1);
   renderMilestonesEditor();
 };
@@ -621,12 +812,9 @@ window.removeMilestone = function(i) {
 window.saveSettings = async function() {
   const msg = document.getElementById('settings-msg');
   msg.textContent = 'Saving…';
-  // Read milestones
-  const ms = referralMilestonesAdmin.map((_, i) => ({
-    friends: parseInt(document.getElementById(`ms-friends-${i}`)?.value) || 0,
-    stars: parseInt(document.getElementById(`ms-stars-${i}`)?.value) || 0,
-    bonusTon: parseFloat(document.getElementById(`ms-ton-${i}`)?.value) || 0
-  }));
+  // Sync inputs → array, then save in the current admin-defined order (no auto-sort)
+  syncMilestonesFromDOM();
+  const ms = referralMilestonesAdmin;
   const refBonus = parseFloat(document.getElementById('ref-bonus-ton').value) || 0.05;
   const yieldRate = parseFloat(document.getElementById('yield-rate').value) || 10;
   try {
@@ -775,6 +963,157 @@ window.switchAdminTab = function(name, btn) {
 document.getElementById('refresh-players').addEventListener('click', loadPlayers);
 document.getElementById('refresh-deposits').addEventListener('click', loadDeposits);
 document.getElementById('refresh-withdrawals').addEventListener('click', loadWithdrawals);
+
+// ── DM (direct message to single user) ──
+window.openDM = function(uid, userName) {
+  openModal(`📨 Send DM — @${userName}`,
+    `<div class="modal-field">
+      <label class="modal-label">Message (HTML supported)</label>
+      <textarea class="dm-textarea" id="dm-text" placeholder="Write your message…
+<b>bold</b>, <i>italic</i>, <a href='...'>link</a>"></textarea>
+    </div>
+    <div style="font-size:10px;color:var(--sub);margin-top:-6px;">Sends directly to this user's Telegram chat.</div>`,
+    async () => {
+      const text = document.getElementById('dm-text')?.value?.trim();
+      if (!text) { showToast('❌ Message is empty'); return; }
+      const BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: uid, text, parse_mode: 'HTML' })
+        });
+        const json = await res.json();
+        if (json.ok) {
+          showToast(`✅ Message sent to @${userName}!`);
+        } else {
+          showToast(`❌ Failed: ${json.description}`);
+        }
+      } catch(e) { showToast('❌ ' + e.message); }
+    }
+  );
+};
+
+// ── Broadcast ──
+let bcPhotoBase64 = null;
+let bcPhotoMime = null;
+let allUserIds = [];
+
+async function loadBroadcastCount() {
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    allUserIds = snap.docs.map(d => ({
+      id: d.data().userId || d.id,
+      lang: d.data().lang || 'en'
+    })).filter(u => u.id);
+    document.getElementById('bc-user-count').textContent = allUserIds.length + ' users';
+  } catch(e) { document.getElementById('bc-user-count').textContent = '? (error)'; }
+}
+
+window.handleBcPhoto = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    bcPhotoMime = file.type;
+    bcPhotoBase64 = dataUrl.split(',')[1];
+    document.getElementById('bc-photo-label').style.display = 'none';
+    const img = document.getElementById('bc-photo-img');
+    img.src = dataUrl; img.style.display = 'block';
+    document.getElementById('bc-remove-photo').style.display = '';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.removeBcPhoto = function() {
+  bcPhotoBase64 = null; bcPhotoMime = null;
+  document.getElementById('bc-photo').value = '';
+  document.getElementById('bc-photo-img').style.display = 'none';
+  document.getElementById('bc-photo-label').style.display = '';
+  document.getElementById('bc-remove-photo').style.display = 'none';
+};
+
+window.sendBroadcast = async function() {
+  const textEn = document.getElementById('bc-text-en').value.trim();
+  const textRu = document.getElementById('bc-text-ru').value.trim();
+  if (!textEn) { showToast('❌ English message is required'); return; }
+  if (!allUserIds.length) { showToast('❌ No users loaded — click Refresh count first'); return; }
+
+  const ruCount = allUserIds.filter(u => u.lang === 'ru').length;
+  const enCount = allUserIds.length - ruCount;
+  const hasRu = !!textRu;
+  const confirmMsg = hasRu
+    ? `Send to ${allUserIds.length} users?\n🇬🇧 English → ${enCount} users\n🇷🇺 Russian → ${ruCount} users`
+    : `Send English message to all ${allUserIds.length} users? (No Russian message entered)`;
+  if (!confirm(confirmMsg)) return;
+
+  const btn = document.getElementById('bc-send-btn');
+  btn.disabled = true; btn.textContent = '⏳ Sending…';
+  const progress = document.getElementById('bc-progress');
+  const progressBar = document.getElementById('bc-progress-bar');
+  const progressLabel = document.getElementById('bc-progress-label');
+  const progressDetail = document.getElementById('bc-progress-detail');
+  const result = document.getElementById('bc-result');
+  progress.style.display = 'block'; result.textContent = '';
+
+  const BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
+  let sent = 0, failed = 0;
+
+  for (let i = 0; i < allUserIds.length; i++) {
+    const user = allUserIds[i];
+    const chatId = user.id;
+    // Pick message based on user language; fallback to English if no RU text
+    const text = (hasRu && user.lang === 'ru') ? textRu : textEn;
+    const pct = Math.round(((i + 1) / allUserIds.length) * 100);
+    progressBar.style.width = pct + '%';
+    progressLabel.textContent = `Sending… ${i + 1} / ${allUserIds.length} (${user.lang === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'})`;
+    progressDetail.textContent = `✅ ${sent} sent · ❌ ${failed} failed`;
+
+    try {
+      let res;
+      if (bcPhotoBase64 && bcPhotoMime) {
+        // Convert base64 → Blob for FormData
+        const byteChars = atob(bcPhotoBase64);
+        const byteArr = new Uint8Array(byteChars.length);
+        for (let b = 0; b < byteChars.length; b++) byteArr[b] = byteChars.charCodeAt(b);
+        const blob = new Blob([byteArr], { type: bcPhotoMime });
+        const fd = new FormData();
+        fd.append('chat_id', chatId);
+        fd.append('photo', blob, 'photo.jpg');
+        fd.append('caption', text);
+        fd.append('parse_mode', 'HTML');
+        res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd });
+      } else {
+        res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
+        });
+      }
+      const json = await res.json();
+      if (json.ok) sent++; else failed++;
+    } catch(e) { failed++; }
+
+    // Small delay to avoid Telegram rate limit (30 msg/sec)
+    if ((i + 1) % 25 === 0) await new Promise(r => setTimeout(r, 1100));
+  }
+
+  progressLabel.textContent = '✅ Done!';
+  progressBar.style.width = '100%';
+  const ruSent = allUserIds.filter(u => u.lang === 'ru').length;
+  const langNote = hasRu ? ` <span style="font-size:10px;color:var(--sub);">(${allUserIds.length - ruSent} 🇬🇧 + ${ruSent} 🇷🇺)</span>` : '';
+  result.innerHTML = `<span style="color:var(--green);font-weight:700;">✅ Sent: ${sent}</span>${langNote} &nbsp; <span style="color:var(--red);font-weight:700;">❌ Failed: ${failed}</span>`;
+  btn.disabled = false; btn.textContent = '📢 Send Broadcast';
+  showToast(`✅ Broadcast done! ${sent} sent, ${failed} failed`);
+};
+
+// Auto-load count when broadcast tab opens
+const _origSwitchAdminTab = window.switchAdminTab;
+window.switchAdminTab = function(name, btn) {
+  _origSwitchAdminTab(name, btn);
+  if (name === 'broadcast' && !allUserIds.length) loadBroadcastCount();
+};
 
 // ── Toast ──
 window.showToast = function(msg) {

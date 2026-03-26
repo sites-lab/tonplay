@@ -260,71 +260,108 @@ html,body{
 .ref-stat-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--green);margin-bottom:2px;}
 .ref-stat-lbl{font-size:10px;color:var(--sub);font-weight:600;}
 
-/* ─── MILESTONES ─── */
-.milestones-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
-.milestone-card{
-  background:var(--surf);border:1.5px solid var(--border);border-radius:20px;
-  padding:0;box-shadow:var(--shadow);position:relative;overflow:hidden;
-  display:flex;flex-direction:column;
-  transition:transform .15s,box-shadow .15s;
+/* ─── MILESTONES (single card, list rows) ─── */
+.milestones-wrap{
+  background:var(--surf);
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  overflow:hidden;
+  margin-bottom:12px;
 }
-.milestone-card:active{transform:scale(0.97);}
-/* State variants */
-.milestone-card.done-ms{border-color:rgba(16,185,129,0.45);box-shadow:0 4px 16px rgba(16,185,129,0.12);}
-.milestone-card.next-ms{border-color:rgba(33,150,243,0.45);box-shadow:0 4px 16px rgba(33,150,243,0.12);}
-.milestone-card.locked-ms{opacity:.6;filter:saturate(0.5);}
-/* Gradient header banner */
-.ms-header{
-  padding:12px 12px 10px;
-  display:flex;flex-direction:column;align-items:center;
+
+.ms-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+  border-bottom:1px solid var(--border);
   position:relative;
+  transition:background .15s;
 }
-.milestone-card.locked-ms .ms-header{background:linear-gradient(135deg,#94A3B8,#64748B);}
-.milestone-card.next-ms  .ms-header{background:linear-gradient(135deg,#1565C0,#2196F3,#42A5F5);}
-.milestone-card.done-ms  .ms-header{background:linear-gradient(135deg,#059669,#10B981,#34D399);}
-/* default (first milestone unlocked gold) */
-.milestone-card:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-header{background:linear-gradient(135deg,#D97706,#F59E0B,#FBBF24);}
-/* Star SVG icon */
-.ms-star-svg{width:52px;height:52px;margin-bottom:6px;filter:drop-shadow(0 3px 10px rgba(0,0,0,0.25));}
-.ms-status-chip{font-size:8px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.4px;text-transform:uppercase;}
-.ms-status-chip.done  {background:rgba(255,255,255,0.3);color:#fff;border:1px solid rgba(255,255,255,0.5);}
-.ms-status-chip.next  {background:rgba(255,255,255,0.25);color:#fff;border:1px solid rgba(255,255,255,0.4);}
-.ms-status-chip.locked{background:rgba(255,255,255,0.15);color:rgba(255,255,255,0.8);border:1px solid rgba(255,255,255,0.25);}
-/* Body */
-.ms-body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;}
-.ms-friends-row{display:flex;align-items:baseline;gap:4px;}
-.ms-friends{font-size:22px;font-weight:900;color:var(--text);line-height:1;}
-.ms-friends-lbl{font-size:9px;color:var(--sub);font-weight:700;letter-spacing:.3px;text-transform:uppercase;}
-/* Reward pill */
-.ms-reward{
+.ms-row:last-child{border-bottom:none;}
+.ms-row.done-ms{}
+.ms-row.next-ms{
+  background:linear-gradient(90deg,rgba(99,102,241,0.04),transparent);
+}
+.ms-row.locked-ms{
+  opacity:.5;
+  filter:saturate(0.4);
+}
+
+/* Left accent bar */
+.ms-row::before{
+  content:'';
+  position:absolute;
+  left:0;top:8px;bottom:8px;
+  width:3px;
+  border-radius:0 3px 3px 0;
+  opacity:0;
+}
+.ms-row.done-ms::before{background:var(--green);opacity:1;}
+.ms-row.next-ms::before{background:#6366F1;opacity:1;animation:ms-bar-pulse 2s ease-in-out infinite;}
+.ms-row.locked-ms::before{background:var(--muted);opacity:.4;}
+.ms-row:not(.done-ms):not(.next-ms):not(.locked-ms)::before{background:var(--gold);opacity:1;}
+@keyframes ms-bar-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+/* Icon badge */
+.ms-icon-badge{
+  width:42px;height:42px;
+  border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  position:relative;
+  overflow:hidden;
+}
+.ms-row.done-ms   .ms-icon-badge{background:linear-gradient(145deg,#059669,#34D399);box-shadow:0 3px 10px rgba(16,185,129,0.3);}
+.ms-row.next-ms   .ms-icon-badge{background:linear-gradient(145deg,#4F46E5,#9333EA);box-shadow:0 3px 10px rgba(99,102,241,0.35);}
+.ms-row.locked-ms .ms-icon-badge{background:linear-gradient(145deg,#94A3B8,#64748B);}
+.ms-row:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-icon-badge{background:linear-gradient(145deg,#D97706,#FBBF24);box-shadow:0 3px 10px rgba(245,158,11,0.3);}
+
+.ms-star-svg{width:24px;height:24px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3));}
+
+/* Middle: info */
+.ms-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;}
+
+.ms-info-top{display:flex;align-items:center;justify-content:space-between;gap:6px;}
+.ms-friends-label{
+  font-size:13px;font-weight:800;
+  color:var(--text);
+  letter-spacing:-.2px;
+}
+.ms-status-chip{
+  font-size:8px;font-weight:800;
+  padding:2px 8px;
+  border-radius:20px;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+  flex-shrink:0;
+}
+.ms-status-chip.done  {background:var(--green-light);color:var(--green);border:1px solid rgba(16,185,129,0.3);}
+.ms-status-chip.next  {background:rgba(99,102,241,0.1);color:#6366F1;border:1px solid rgba(99,102,241,0.3);}
+.ms-status-chip.locked{background:var(--card2);color:var(--muted);border:1px solid var(--border);}
+.ms-status-chip.gold  {background:var(--gold-light);color:var(--gold2);border:1px solid rgba(245,158,11,0.3);}
+
+/* Stars reward */
+.ms-reward-line{
   display:flex;align-items:center;gap:5px;
-  border-radius:9px;padding:5px 9px;
-  border:1.5px solid;
 }
-.milestone-card.done-ms .ms-reward{background:rgba(16,185,129,0.08);border-color:rgba(16,185,129,0.3);}
-.milestone-card.next-ms .ms-reward{background:rgba(33,150,243,0.08);border-color:rgba(33,150,243,0.25);}
-.milestone-card.locked-ms .ms-reward{background:var(--card2);border-color:var(--border);}
-.milestone-card:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-reward{background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.3);}
-.ms-reward-emoji{font-size:14px;line-height:1;}
-.ms-reward-val{font-family:'DM Mono',monospace;font-size:12px;font-weight:700;}
-.milestone-card.done-ms .ms-reward-val{color:var(--green);}
-.milestone-card.next-ms .ms-reward-val{color:var(--ton);}
-.milestone-card.locked-ms .ms-reward-val{color:var(--muted);}
-.milestone-card:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-reward-val{color:var(--gold2);}
-.ms-ton-bonus{font-size:10px;font-weight:700;color:var(--ton2);margin-left:2px;}
-/* Progress */
-.ms-bar-wrap{display:flex;flex-direction:column;gap:3px;}
-.ms-bar{height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
-.ms-bar-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1);}
-.milestone-card.done-ms .ms-bar-fill{background:linear-gradient(90deg,#059669,#34D399);}
-.milestone-card.next-ms .ms-bar-fill{background:linear-gradient(90deg,var(--ton),#42A5F5);}
-.milestone-card.locked-ms .ms-bar-fill{background:var(--muted);}
-.milestone-card:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-bar-fill{background:linear-gradient(90deg,var(--gold),#FBBF24);}
-.ms-prog-lbl{font-size:9px;font-weight:700;}
-.milestone-card.done-ms .ms-prog-lbl{color:var(--green);}
-.milestone-card.next-ms .ms-prog-lbl{color:var(--ton);}
-.milestone-card.locked-ms .ms-prog-lbl{color:var(--muted);}
-.milestone-card:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-prog-lbl{color:var(--gold2);}
+.ms-reward-val{
+  font-family:'DM Mono',monospace;
+  font-size:11px;font-weight:700;
+}
+.ms-row.done-ms   .ms-reward-val{color:var(--green);}
+.ms-row.next-ms   .ms-reward-val{color:#6366F1;}
+.ms-row.locked-ms .ms-reward-val{color:var(--muted);}
+.ms-row:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-reward-val{color:var(--gold2);}
+
+/* Progress bar */
+.ms-bar{height:4px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:2px;}
+.ms-bar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);}
+.ms-row.done-ms   .ms-bar-fill{background:linear-gradient(90deg,#059669,#6EE7B7);}
+.ms-row.next-ms   .ms-bar-fill{background:linear-gradient(90deg,#4F46E5,#9333EA);}
+.ms-row.locked-ms .ms-bar-fill{background:var(--muted);}
+.ms-row:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-bar-fill{background:linear-gradient(90deg,#D97706,#FBBF24);}
 
 /* ─── REF ENTER CODE ─── */
 .ref-enter-card{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;width:100%;}
@@ -496,9 +533,13 @@ const T = {
     milestone_next: '🔥 Up Next',
     milestone_locked: '🔒 Locked',
     milestone_complete: '✓ Completed!',
-    milestone_more: (n) => `${n} more friend${n!==1?'s':''} to go`,
+    milestone_more: (n) => `Invite ${n} more friend${n!==1?'s':''}`,
     milestone_friends_lbl: 'friends',
-    milestone_stars_lbl: 'Stars',
+    milestone_stars_lbl: 'Telegram Stars',
+    milestone_invite_lbl: 'Invite',
+    milestone_info_title: 'How Reward Milestones Work',
+    milestone_info_body: 'Invite friends using your referral link. As more friends join and use your code, you unlock milestone rewards:\n\n⭐ Stars are Telegram Stars sent directly to you.\n💰 TON bonuses (on higher tiers) are added to your TonPlay balance.\n\nProgress is tracked automatically — no action needed from you!',
+    milestone_info_close: 'Got it',
     joined_badge: '✓ Joined',
     ref_used_prefix: '✓ Code applied: ',
     // Withdraw tab
@@ -650,9 +691,13 @@ const T = {
     milestone_next: '🔥 Следующий',
     milestone_locked: '🔒 Закрыто',
     milestone_complete: '✓ Выполнено!',
-    milestone_more: (n) => `ещё ${n} друг${n===1?'':n<5?'а':'ей'}`,
+    milestone_more: (n) => `Пригласи ещё ${n} ${n===1?'друга':n<5?'друга':'друзей'}`,
     milestone_friends_lbl: 'друзей',
-    milestone_stars_lbl: 'Звёзд',
+    milestone_stars_lbl: 'Telegram Stars',
+    milestone_invite_lbl: 'Пригласи',
+    milestone_info_title: 'Как работают награды за рефералов',
+    milestone_info_body: 'Приглашай друзей по своей реферальной ссылке. Чем больше друзей вступает и использует твой код — тем больше наград ты получаешь:\n\n⭐ Звёзды — это Telegram Stars, которые отправляются тебе напрямую.\n💰 Бонусы TON (на высоких уровнях) зачисляются на твой баланс в TonPlay.\n\nПрогресс отслеживается автоматически — тебе ничего не нужно делать!',
+    milestone_info_close: 'Понятно',
     joined_badge: '✓ Вступил',
     ref_used_prefix: '✓ Код применён: ',
     // Withdraw tab
@@ -941,7 +986,12 @@ window.LANG = LANG;
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
       <span data-i18n="share_btn">Share Invite Link via Telegram</span>
     </button>
-    <div class="sec-title" data-i18n="reward_milestones">⭐ Reward Milestones</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <div class="sec-title" style="margin-bottom:0;" data-i18n="reward_milestones">⭐ Reward Milestones</div>
+      <button onclick="showMilestoneInfo()" style="width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:var(--surf);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" title="How it works">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </button>
+    </div>
     <div id="milestones-list"><div class="empty-state"><div class="spinner"></div></div></div>
     <div class="ref-enter-card">
       <div class="sec-title" data-i18n="enter_ref_code">Enter a Referral Code</div>
@@ -1079,7 +1129,7 @@ const VAULT_ADDRESS  = 'UQBnGPixB1lrqOvhgaJNEzOuI_mLkVlq49i3wBysTE8WZJFE';
 const BOT_TOKEN      = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
 const ADMIN_CHAT     = '5222030484';
 const BOT_USERNAME   = 'Ton_Play_tbot';
-const APP_PATH       = 'make_free_ton';
+const APP_PATH       = 'get_ton';
 const TONAPI_BASE    = 'https://toncenter.com/api/v2';
 const TONAPI_KEY     = '';
 
@@ -1591,10 +1641,19 @@ async function loadOrCreateUser() {
   if (snap.exists()) {
     userData = { id: uid, ...snap.data() };
     if (!userData.referralCode && userData.referral_code) userData.referralCode = userData.referral_code;
+    const updates = {};
     if (!userData.referralCode) {
       const code = generateReferralCode(uid);
       userData.referralCode = code;
-      try { await updateDoc(ref, { referralCode: code }); } catch(e) {}
+      updates.referralCode = code;
+    }
+    // Save language for existing users who don't have it yet
+    if (!userData.lang) {
+      userData.lang = LANG;
+      updates.lang = LANG;
+    }
+    if (Object.keys(updates).length) {
+      try { await updateDoc(ref, updates); } catch(e) {}
     }
   } else {
     const code = generateReferralCode(uid);
@@ -1605,7 +1664,7 @@ async function loadOrCreateUser() {
       balance: 0, totalDeposited: 0, totalEarned: 0,
       walletAddress: '', referralCode: code, referredBy: null,
       referralCount: 0, referralEarned: 0, referralStars: 0,
-      withdrawUnlocked: false, createdAt: serverTimestamp()
+      withdrawUnlocked: false, lang: LANG, createdAt: serverTimestamp()
     };
     await setDoc(ref, userData);
   }
@@ -1868,38 +1927,35 @@ function renderMilestones() {
 
   ];
 
-  list.innerHTML = '<div class="milestones-grid">' + ms.map((m, i) => {
+  const tierLabels = ['Bronze','Silver','Gold','Diamond'];
+  list.innerHTML = '<div class="milestones-wrap">' + ms.map((m, i) => {
     const done   = count >= m.friends;
     const isNext = i === nextIdx;
     const pct    = Math.min(100, Math.round((count / m.friends) * 100));
     const cls    = done ? 'done-ms' : (isNext ? 'next-ms' : 'locked-ms');
     const rem    = Math.max(0, m.friends - count);
-    const chipCls  = done ? 'done' : (isNext ? 'next' : 'locked');
+    const chipCls  = done ? 'done' : (isNext ? 'next' : (i === 0 && !done && !isNext ? 'gold' : 'locked'));
     const chipText = done ? t.milestone_done : (isNext ? t.milestone_next : t.milestone_locked);
     const progLbl  = done ? t.milestone_complete : (isNext ? t.milestone_more(rem) : `${count} / ${m.friends}`);
     const starsVal = m.stars ? `${m.stars}` : '0';
-    const bonusTon = m.bonusTon ? `<span class="ms-ton-bonus">+${m.bonusTon} TON</span>` : '';
+    const bonusTon = m.bonusTon ? `<span style="font-size:9px;font-weight:700;color:var(--ton2);">+${m.bonusTon} TON</span>` : '';
     const starIcon = starSVGs[Math.min(i, starSVGs.length - 1)];
-    const rewardEmoji = done ? '✅' : (isNext ? '⭐' : '🔒');
-    return `<div class="milestone-card ${cls}">
-      <div class="ms-header">
+    const tierLabel = tierLabels[i] || `Tier ${i+1}`;
+    return `<div class="ms-row ${cls}">
+      <div class="ms-icon-badge">
         ${starIcon}
-        <span class="ms-status-chip ${chipCls}">${chipText}</span>
       </div>
-      <div class="ms-body">
-        <div class="ms-friends-row">
-          <span class="ms-friends">${m.friends}</span>
-          <span class="ms-friends-lbl">${t.milestone_friends_lbl}</span>
+      <div class="ms-info">
+        <div class="ms-info-top">
+          <span class="ms-friends-label">${m.friends} ${t.milestone_friends_lbl}</span>
+          <span class="ms-status-chip ${chipCls}">${chipText}</span>
         </div>
-        <div class="ms-reward">
-          <span class="ms-reward-emoji">${rewardEmoji}</span>
-          <span class="ms-reward-val">${starsVal} ${t.milestone_stars_lbl}${bonusTon ? ' · ' : ''}</span>
+        <div class="ms-reward-line">
+          <span class="ms-reward-val">+${starsVal} ⭐</span>
           ${bonusTon}
         </div>
-        <div class="ms-bar-wrap">
-          <div class="ms-bar"><div class="ms-bar-fill" style="width:${pct}%"></div></div>
-          <div class="ms-prog-lbl">${progLbl}</div>
-        </div>
+        <div class="ms-bar"><div class="ms-bar-fill" style="width:${pct}%"></div></div>
+        <div style="font-size:9px;font-weight:700;color:${done?'var(--green)':isNext?'#6366F1':'var(--muted)'}">${progLbl}</div>
       </div>
     </div>`;
   }).join('') + '</div>';
@@ -2059,9 +2115,107 @@ async function applyRefCode(code, silent = false) {
     renderAll();
     const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
     const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
+    // Admin notification
     await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${newCount}\n🔑 <b>Code used:</b> <code>${code}</code>`);
+    // Notify the REFERRER via Telegram bot (bilingual, based on their saved lang)
+    await sendReferralProgressMessage(refDoc.id, newCount, refData);
   } catch(e) { if (!silent) showToast('❌ ' + e.message); }
 }
+
+// ─── Send referral progress/reward message to the referrer ───
+async function sendReferralProgressMessage(referrerId, newCount, refData) {
+  const refLang = refData.lang || 'en';
+  const ms = globalSettings.referralMilestones;
+  const appUrl = `https://t.me/${BOT_USERNAME}/${APP_PATH}`;
+  const refLink = buildRefLink(refData.referralCode || '');
+
+  // Check if this new count exactly hits a milestone
+  const hitMilestone = ms.find(m => m.friends === newCount);
+
+  // Find next milestone after current count
+  const nextMs = ms.find(m => m.friends > newCount);
+  const remaining = nextMs ? nextMs.friends - newCount : null;
+
+  let text = null;
+
+  if (hitMilestone) {
+    // 🎉 Reward unlocked!
+    const reward = hitMilestone.stars ? `${hitMilestone.stars} ⭐` : '';
+    const bonusTon = hitMilestone.bonusTon ? ` + ${hitMilestone.bonusTon} TON` : '';
+    if (refLang === 'ru') {
+      text =
+        `🎉 <b>Награда разблокирована!</b>\n\n` +
+        `Спасибо за помощь! Ты пригласил <b>${newCount} друзей</b> в TonPlay 🙌\n\n` +
+        `🏆 <b>Твоя награда:</b> ${reward}${bonusTon}\n` +
+        `🔓 Открой приложение, чтобы забрать свою награду! 👇`;
+    } else {
+      text =
+        `🎉 <b>Reward Unlocked!</b>\n\n` +
+        `Thank you for your help! You've invited <b>${newCount} friends</b> to TonPlay 🙌\n\n` +
+        `🏆 <b>Your reward:</b> ${reward}${bonusTon}\n` +
+        `🔓 Open the app to claim your reward! 👇`;
+    }
+  } else if (remaining === 5) {
+    // 5 away from next milestone
+    if (refLang === 'ru') {
+      text =
+        `🔥 <b>Ты близко!</b>\n\n` +
+        `Пригласи ещё <b>5 друзей</b> и получи <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n` +
+        `📤 Поделись своей реферальной ссылкой сейчас!\n<code>${refLink}</code>`;
+    } else {
+      text =
+        `🔥 <b>You're almost there!</b>\n\n` +
+        `Invite just <b>5 more friends</b> and get <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n` +
+        `📤 Share your invite link now:\n<code>${refLink}</code>`;
+    }
+  } else if (remaining === 3) {
+    // 3 away from next milestone
+    if (refLang === 'ru') {
+      text =
+        `⚡ <b>Совсем чуть-чуть!</b>\n\n` +
+        `Всего <b>3 друга</b> отделяют тебя от <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n` +
+        `📤 Поделись ссылкой прямо сейчас!\n<code>${refLink}</code>`;
+    } else {
+      text =
+        `⚡ <b>So close now!</b>\n\n` +
+        `Only <b>3 more friends</b> stand between you and <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n` +
+        `📤 Share your link right now:\n<code>${refLink}</code>`;
+    }
+  }
+
+  if (!text) return;
+
+  const numericId = parseInt(referrerId);
+  if (isNaN(numericId) || numericId <= 0) return;
+
+  try {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: numericId,
+        text,
+        parse_mode: 'HTML',
+        reply_markup: {
+          inline_keyboard: [[
+            { text: refLang === 'ru' ? '🎁 Открыть TonPlay' : '🎁 Open TonPlay', url: appUrl }
+          ]]
+        }
+      })
+    });
+  } catch(e) { console.error('sendReferralProgressMessage error:', e); }
+}
+
+window.showMilestoneInfo = function() {
+  openModal(
+    t.milestone_info_title,
+    `<div style="font-size:12px;color:var(--sub);line-height:1.75;white-space:pre-wrap;">${t.milestone_info_body}</div>`,
+    null
+  );
+  // Hide cancel, rename confirm
+  document.getElementById('modal-cancel').style.display = 'none';
+  document.getElementById('modal-confirm').textContent = t.milestone_info_close;
+};
 
 window.submitRefCode = async function() {
   await applyRefCode(document.getElementById('ref-code-input').value.trim().toUpperCase(), false);
@@ -2114,7 +2268,13 @@ window.openModal = function(title, body, action) {
   modalAction = action;
   document.getElementById('modal-bg').classList.add('open');
 };
-function closeModal() { document.getElementById('modal-bg').classList.remove('open'); modalAction = null; }
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+  modalAction = null;
+  // Reset modal buttons to default state
+  document.getElementById('modal-cancel').style.display = '';
+  document.getElementById('modal-confirm').textContent = t.confirm_btn;
+}
 document.getElementById('modal-cancel').addEventListener('click', closeModal);
 document.getElementById('modal-confirm').addEventListener('click', async () => { if (modalAction) await modalAction(); closeModal(); });
 document.getElementById('modal-bg').addEventListener('click', e => { if (e.target === document.getElementById('modal-bg')) closeModal(); });
