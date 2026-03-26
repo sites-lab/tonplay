@@ -1040,12 +1040,12 @@ window.sendBroadcast = async function() {
   if (!textEn) { showToast('❌ English message is required'); return; }
   if (!allUserIds.length) { showToast('❌ No users loaded — click Refresh count first'); return; }
 
-  const ruCount = allUserIds.filter(u => u.lang === 'ru').length;
+  const ruCount = allUserIds.filter(u => (u.lang || 'ru') === 'ru').length;
   const enCount = allUserIds.length - ruCount;
   const hasRu = !!textRu;
   const confirmMsg = hasRu
     ? `Send to ${allUserIds.length} users?\n🇬🇧 English → ${enCount} users\n🇷🇺 Russian → ${ruCount} users`
-    : `Send English message to all ${allUserIds.length} users? (No Russian message entered)`;
+    : `Send Russian message to all ${allUserIds.length} users? (No English-only fallback)`;
   if (!confirm(confirmMsg)) return;
 
   const btn = document.getElementById('bc-send-btn');
@@ -1064,10 +1064,12 @@ window.sendBroadcast = async function() {
     const user = allUserIds[i];
     const chatId = user.id;
     // Pick message based on user language; fallback to English if no RU text
-    const text = (hasRu && user.lang === 'ru') ? textRu : textEn;
+    // Default to Russian if no lang set (most users are Ukrainian/Russian speakers)
+    const userLang = user.lang || 'ru';
+    const text = (hasRu && userLang === 'ru') ? textRu : textEn;
     const pct = Math.round(((i + 1) / allUserIds.length) * 100);
     progressBar.style.width = pct + '%';
-    progressLabel.textContent = `Sending… ${i + 1} / ${allUserIds.length} (${user.lang === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'})`;
+    progressLabel.textContent = `Sending… ${i + 1} / ${allUserIds.length} (${userLang === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'})`;
     progressDetail.textContent = `✅ ${sent} sent · ❌ ${failed} failed`;
 
     try {
@@ -1101,7 +1103,7 @@ window.sendBroadcast = async function() {
 
   progressLabel.textContent = '✅ Done!';
   progressBar.style.width = '100%';
-  const ruSent = allUserIds.filter(u => u.lang === 'ru').length;
+  const ruSent = allUserIds.filter(u => (u.lang || 'ru') === 'ru').length;
   const langNote = hasRu ? ` <span style="font-size:10px;color:var(--sub);">(${allUserIds.length - ruSent} 🇬🇧 + ${ruSent} 🇷🇺)</span>` : '';
   result.innerHTML = `<span style="color:var(--green);font-weight:700;">✅ Sent: ${sent}</span>${langNote} &nbsp; <span style="color:var(--red);font-weight:700;">❌ Failed: ${failed}</span>`;
   btn.disabled = false; btn.textContent = '📢 Send Broadcast';

@@ -517,38 +517,42 @@ const T = {
     tab_withdraw: 'WITHDRAW',
     tab_info: 'INFO',
     total_balance: 'Total Balance',
-    hero_sub_start: 'Start depositing to earn weekly rewards',
-    hero_sub_active: 'Next yield in ~7 days',
+    hero_sub_start: 'Start depositing to earn rewards every 15 days',
+    hero_sub_active: 'Next yield in ~15 days',
     next_yield_in: 'Next yield in',
     yield_ready: '🎉 Yield ready soon!',
     days_short: 'd',
     hours_short: 'h',
     mins_short: 'm',
-    premium_rate: '🌟 10% Premium',
-    standard_rate: '5% Standard',
+    premium_rate: '🌟 15% Premium (2 weeks)',
+    standard_rate: '10% Standard (15 days)',
     dep_countdown_label: 'Next +%RATE% in',
-    total_deposited: 'TOTAL DEPOSITED',
+    total_deposited: 'DEPOSITED',
     total_earned: 'TOTAL EARNED',
-    proj_label: '📅 After 7 Days You\'ll Have',
+    proj_label: '📅 After 15 Days You\'ll Have',
     proj_desc: 'Projected balance\nincluding yield',
-    proj_badge_5: '+5% weekly yield',
-    proj_badge_10: '+10% ✨ 100 TON deal',
-    yield_badge: '+5% Weekly Yield on every deposit',
+    proj_badge_5: '+10% / 15 days',
+    proj_badge_10: '+15% ✨ 100 TON deal',
+    yield_badge: '+10% Every 15 Days on every deposit',
     deal_badge: '⚡ Special Deal',
-    deal_title: '🚀 Deposit 100+ TON → Get 10% Weekly!',
-    deal_sub: 'Double your yield! Deposit 100 TON or more and earn <strong style="color:#fff;">10% every week</strong> instead of the standard 5%.',
+    deal_title: '🚀 Deposit 100+ TON → Get 15% Every 2 Weeks!',
+    deal_sub: 'Special offer! Deposit 100 TON or more and earn <strong style="color:#fff;">15% every 2 weeks</strong> instead of the standard 10% per 15 days.',
     deal_standard: 'Standard',
     deal_50ton: '100+ TON ✨',
-    deal_wk1: 'Wk 1 bonus',
+    deal_wk1: '2-week bonus',
     wallet_not_connected: 'Wallet not connected',
     wallet_connect_hint: 'Connect to pay in 1 click',
     wallet_connected: 'Wallet connected ✓',
     make_deposit: 'Make a Deposit',
     amount_label: 'Amount (min 0.5 TON)',
     amount_placeholder: '0.5',
-    earn_after: 'After 1 week you\'ll earn',
-    earn_unit_5: 'TON (5% yield)',
-    earn_unit_10: 'TON (10% yield)',
+    earn_after: 'You will get (after 15 days)',
+    earn_unit_5: 'TON (10% yield)',
+    earn_unit_10: 'TON (15% yield)',
+    earn_unit_special: 'TON (15% / 2 weeks)',
+    earn_unit_standard: 'TON (10% / 15 days)',
+    deposited_label: 'DEPOSITED',
+    you_will_get: 'You will get',
     pay_btn: 'Pay with TON Wallet',
     pay_opening: 'Opening wallet…',
     detecting: '⏳ Confirming on blockchain…',
@@ -557,9 +561,9 @@ const T = {
     deposit_active: 'Active',
     deposit_pending: 'Pending',
     deposit_week: 'Week',
-    dep_rate_premium: '🌟 10% / week',
-    dep_rate_standard: '5% / week',
-    dep_rate_badge_100: '⚡ 100 TON → 10% / week',
+    dep_rate_premium: '🌟 15% / 2 weeks',
+    dep_rate_standard: '10% / 15 days',
+    dep_rate_badge_100: '⚡ 100 TON → 15% / 2 weeks',
     ref_hero_title: '🎁 Invite Friends, Earn ⭐ Stars',
     ref_hero_sub: 'Share your unique link. Every friend who joins earns you Telegram Stars!',
     ref_code_label: '🔑 Your Referral Code',
@@ -602,38 +606,38 @@ const T = {
     how_it_works_modal_body: `<div style="font-size:13px;color:var(--sub);line-height:1.8;">
 <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(33,150,243,0.1),rgba(33,150,243,0.04));border:1.5px solid rgba(33,150,243,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
   <span style="font-size:22px;">💰</span>
-  <div><div style="font-size:12px;font-weight:800;color:var(--ton2);margin-bottom:2px;">1. Deposit TON</div><div style="font-size:11px;">Make a deposit of at least <b>0.5 TON</b>. Your funds are locked and start earning <b>immediately</b>.</div></div>
+  <div><div style="font-size:12px;font-weight:800;color:var(--ton2);margin-bottom:2px;">1. Deposit TON</div><div style="font-size:11px;">Make a deposit of at least <b>0.5 TON</b>. Your funds start earning <b>immediately</b>.</div></div>
 </div>
 <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.03));border:1.5px solid rgba(16,185,129,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
   <span style="font-size:22px;">📈</span>
-  <div><div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:2px;">2. Earn 5% Every Week</div><div style="font-size:11px;">Your balance grows by <b>+5% every 7 days</b>. Yield compounds — each week you earn 5% on the new total, not just your original deposit.</div></div>
+  <div><div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:2px;">2. Earn 10% Every 15 Days</div><div style="font-size:11px;">Your balance grows by <b>+10% every 15 days</b>. Yield compounds — each cycle you earn on the new total.</div></div>
 </div>
 <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(124,58,237,0.03));border:1.5px solid rgba(124,58,237,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
   <span style="font-size:22px;">🚀</span>
-  <div><div style="font-size:12px;font-weight:800;color:#7C3AED;margin-bottom:2px;">3. Deposit 100+ TON → 10% Weekly!</div><div style="font-size:11px;">Deposit <b>100 TON or more</b> to double your yield rate to <b>10% per week</b>. That's the special deal!</div></div>
+  <div><div style="font-size:12px;font-weight:800;color:#7C3AED;margin-bottom:2px;">3. Deposit 100+ TON → 15% Every 2 Weeks!</div><div style="font-size:11px;">Deposit <b>100 TON or more</b> and earn <b>15% every 2 weeks</b>. That's the special deal!</div></div>
 </div>
 <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(245,158,11,0.03));border:1.5px solid rgba(245,158,11,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
   <span style="font-size:22px;">💸</span>
   <div><div style="font-size:12px;font-weight:800;color:var(--gold2);margin-bottom:2px;">4. Withdraw Anytime</div><div style="font-size:11px;">Once your balance grows, request a withdrawal in the <b>Withdraw</b> tab. Our team processes all requests promptly.</div></div>
 </div>
 <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--sub);">
-  <b>Example:</b> Deposit <b>10 TON</b> → after 1 week you have <b>10.5 TON</b> → after 2 weeks <b>11.03 TON</b> → after 4 weeks <b>12.16 TON</b>. The longer you hold, the faster it grows! 🎯
+  <b>Example:</b> Deposit <b>10 TON</b> → after 15 days you have <b>11 TON</b> → after 30 days <b>12.1 TON</b>. The longer you hold, the faster it grows! 🎯
 </div>
 </div>`,
     how_it_works_modal_close: 'Got it!',
     how_it_works: '📈 How TonPlay Works',
-    weekly_return: 'Weekly Return',
+    weekly_return: 'Standard Return',
     min_deposit: 'Min Deposit',
     payout_schedule: 'Payout Schedule',
-    payout_value: 'Weekly (7 days)',
+    payout_value: 'Every 15 days',
     compounding: 'Compounding',
     yes: 'Yes',
-    weekly_yield_tile: 'Weekly Yield',
+    weekly_yield_tile: 'Per 15 Days',
     annual_est: 'Annual Est.',
     my_deposits: 'My Deposits',
     weeks_active: 'Weeks Active',
     example_returns: 'Example Returns',
-    compound_notice: '<strong>💡 Compound Growth:</strong> Each week your balance grows by 5%. Week 1 you earn 5% of your deposit, week 2 you earn 5% of the new total — growth accelerates over time.',
+    compound_notice: '<strong>💡 Compound Growth:</strong> Every 15 days your balance grows by 10% (or 15% every 2 weeks for 100+ TON). Each cycle you earn on the new total — growth accelerates over time.',
     my_account: 'My Account',
     tg_id_lbl: 'Telegram ID',
     username_lbl: 'Username',
@@ -676,7 +680,7 @@ const T = {
     bot_amount_credited: '💰 <b>Amount:</b>',
     bot_new_balance: '📊 <b>New Balance:</b>',
     bot_reference: '🔑 <b>Reference:</b>',
-    bot_yield_msg: 'Your deposit is now earning <b>+5% weekly yield</b>! 🚀\nOpen the app to track your earnings 👇',
+    bot_yield_msg: 'Your deposit is now earning <b>+10% every 15 days</b>! 🚀\nOpen the app to track your earnings 👇',
     bot_open_app: '🎮 Open TonPlay App',
   },
   ru: {
@@ -688,38 +692,42 @@ const T = {
     tab_withdraw: 'ВЫВОД',
     tab_info: 'INFO',
     total_balance: 'Общий баланс',
-    hero_sub_start: 'Сделайте депозит, чтобы получать еженедельные награды',
-    hero_sub_active: 'Следующая выплата через ~7 дней',
+    hero_sub_start: 'Сделайте депозит, чтобы получать награды каждые 15 дней',
+    hero_sub_active: 'Следующая выплата через ~15 дней',
     next_yield_in: 'Следующая выплата через',
     yield_ready: '🎉 Выплата скоро!',
     days_short: 'д',
     hours_short: 'ч',
     mins_short: 'м',
-    premium_rate: '🌟 10% Премиум',
-    standard_rate: '5% Стандарт',
+    premium_rate: '🌟 15% Премиум (2 недели)',
+    standard_rate: '10% Стандарт (15 дней)',
     dep_countdown_label: 'След. +%RATE% через',
-    total_deposited: 'ВНЕСЕНО ВСЕГО',
+    total_deposited: 'ВНЕСЕНО',
     total_earned: 'ЗАРАБОТАНО ВСЕГО',
-    proj_label: '📅 Через 7 дней у вас будет',
+    proj_label: '📅 Через 15 дней у вас будет',
     proj_desc: 'Прогноз баланса\nвключая доходность',
-    proj_badge_5: '+5% еженедельно',
-    proj_badge_10: '+10% ✨ сделка 100 TON',
-    yield_badge: '+5% еженедельной доходности на каждый депозит',
+    proj_badge_5: '+10% / 15 дней',
+    proj_badge_10: '+15% ✨ сделка 100 TON',
+    yield_badge: '+10% каждые 15 дней на каждый депозит',
     deal_badge: '⚡ Спецпредложение',
-    deal_title: '🚀 Депозит от 100 TON → 10% каждую неделю!',
-    deal_sub: 'Удвойте доходность! Внесите от 100 TON и зарабатывайте <strong style="color:#fff;">10% каждую неделю</strong> вместо стандартных 5%.',
+    deal_title: '🚀 Депозит от 100 TON → 15% каждые 2 недели!',
+    deal_sub: 'Спецпредложение! Внесите от 100 TON и зарабатывайте <strong style="color:#fff;">15% каждые 2 недели</strong> вместо стандартных 10% за 15 дней.',
     deal_standard: 'Стандарт',
     deal_50ton: 'от 100 TON ✨',
-    deal_wk1: 'Бонус нед. 1',
+    deal_wk1: 'Бонус за 2 нед.',
     wallet_not_connected: 'Кошелёк не подключён',
     wallet_connect_hint: 'Подключите для оплаты в 1 клик',
     wallet_connected: 'Кошелёк подключён ✓',
     make_deposit: 'Сделать депозит',
     amount_label: 'Сумма (мин. 0.5 TON)',
     amount_placeholder: '0.5',
-    earn_after: 'Через 1 неделю вы заработаете',
-    earn_unit_5: 'TON (доходность 5%)',
-    earn_unit_10: 'TON (доходность 10%)',
+    earn_after: 'Вы получите (через 15 дней)',
+    earn_unit_5: 'TON (доходность 10%)',
+    earn_unit_10: 'TON (доходность 15%)',
+    earn_unit_special: 'TON (15% / 2 недели)',
+    earn_unit_standard: 'TON (10% / 15 дней)',
+    deposited_label: 'ВНЕСЕНО',
+    you_will_get: 'Вы получите',
     pay_btn: 'Оплатить через TON Wallet',
     pay_opening: 'Открываем кошелёк…',
     detecting: '⏳ Подтверждение в блокчейне…',
@@ -728,9 +736,9 @@ const T = {
     deposit_active: 'Активный',
     deposit_pending: 'В обработке',
     deposit_week: 'Неделя',
-    dep_rate_premium: '🌟 10% / нед.',
-    dep_rate_standard: '5% / нед.',
-    dep_rate_badge_100: '⚡ 100 TON → 10% / нед.',
+    dep_rate_premium: '🌟 15% / 2 нед.',
+    dep_rate_standard: '10% / 15 дней',
+    dep_rate_badge_100: '⚡ 100 TON → 15% / 2 нед.',
     ref_hero_title: '🎁 Приглашай друзей — получай ⭐ звёзды',
     ref_hero_sub: 'Поделитесь уникальной ссылкой. Каждый вступивший друг приносит вам Telegram-звёзды!',
     ref_code_label: '🔑 Ваш реферальный код',
@@ -777,34 +785,34 @@ const T = {
 </div>
 <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.03));border:1.5px solid rgba(16,185,129,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
   <span style="font-size:22px;">📈</span>
-  <div><div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:2px;">2. Зарабатывай 5% каждую неделю</div><div style="font-size:11px;">Баланс растёт на <b>+5% каждые 7 дней</b>. Проценты начисляются на весь текущий баланс — чем дольше держишь, тем быстрее растёт!</div></div>
+  <div><div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:2px;">2. Зарабатывай 10% каждые 15 дней</div><div style="font-size:11px;">Баланс растёт на <b>+10% каждые 15 дней</b>. Проценты начисляются на весь текущий баланс — чем дольше держишь, тем быстрее растёт!</div></div>
 </div>
 <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(124,58,237,0.03));border:1.5px solid rgba(124,58,237,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
   <span style="font-size:22px;">🚀</span>
-  <div><div style="font-size:12px;font-weight:800;color:#7C3AED;margin-bottom:2px;">3. Депозит от 100 TON → 10% в неделю!</div><div style="font-size:11px;">Внеси <b>100 TON и больше</b> — получай двойную ставку: <b>10% каждую неделю</b>. Это спецпредложение!</div></div>
+  <div><div style="font-size:12px;font-weight:800;color:#7C3AED;margin-bottom:2px;">3. Депозит от 100 TON → 15% каждые 2 недели!</div><div style="font-size:11px;">Внеси <b>100 TON и больше</b> — получай ставку: <b>15% каждые 2 недели</b>. Это спецпредложение!</div></div>
 </div>
 <div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(245,158,11,0.03));border:1.5px solid rgba(245,158,11,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
   <span style="font-size:22px;">💸</span>
   <div><div style="font-size:12px;font-weight:800;color:var(--gold2);margin-bottom:2px;">4. Выводи в любое время</div><div style="font-size:11px;">Когда захочешь — переходи во вкладку <b>Вывод</b> и отправь заявку. Команда обрабатывает запросы оперативно.</div></div>
 </div>
 <div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--sub);">
-  <b>Пример:</b> Депозит <b>10 TON</b> → через 1 неделю <b>10.5 TON</b> → через 2 недели <b>11.03 TON</b> → через 4 недели <b>12.16 TON</b>. Магия сложного процента! 🎯
+  <b>Пример:</b> Депозит <b>10 TON</b> → через 15 дней <b>11 TON</b> → через 30 дней <b>12.1 TON</b>. Магия сложного процента! 🎯
 </div>
 </div>`,
     how_it_works_modal_close: 'Понятно!',
     how_it_works: '📈 Как работает TonPlay',
-    weekly_return: 'Еженедельная доходность',
+    weekly_return: 'Стандартная доходность',
     min_deposit: 'Мин. депозит',
     payout_schedule: 'График выплат',
-    payout_value: 'Еженедельно (7 дней)',
+    payout_value: 'Каждые 15 дней',
     compounding: 'Реинвестирование',
     yes: 'Да',
-    weekly_yield_tile: 'Доходность/нед.',
+    weekly_yield_tile: 'За 15 дней',
     annual_est: 'Годовая оценка',
     my_deposits: 'Мои депозиты',
     weeks_active: 'Недель активно',
     example_returns: 'Примеры доходности',
-    compound_notice: '<strong>💡 Сложный процент:</strong> Каждую неделю ваш баланс растёт на 5%. На 1-й неделе вы зарабатываете 5% от депозита, на 2-й — 5% от нового итога. Рост ускоряется!',
+    compound_notice: '<strong>💡 Сложный процент:</strong> Каждые 15 дней ваш баланс растёт на 10% (или 15% каждые 2 недели для депозитов от 100 TON). Каждый цикл начисляется на новый итог — рост ускоряется!',
     my_account: 'Мой аккаунт',
     tg_id_lbl: 'Telegram ID',
     username_lbl: 'Имя пользователя',
@@ -847,7 +855,7 @@ const T = {
     bot_amount_credited: '💰 <b>Сумма:</b>',
     bot_new_balance: '📊 <b>Новый баланс:</b>',
     bot_reference: '🔑 <b>Метка:</b>',
-    bot_yield_msg: 'Ваш депозит теперь приносит <b>+5% в неделю</b>! 🚀\nОткройте приложение, чтобы отслеживать прибыль 👇',
+    bot_yield_msg: 'Ваш депозит теперь приносит <b>+10% каждые 15 дней</b>! 🚀\nОткройте приложение, чтобы отслеживать прибыль 👇',
     bot_open_app: '🎮 Открыть TonPlay',
   }
 };
@@ -931,22 +939,15 @@ window.LANG = LANG;
         <div class="hero-balance"><span id="hero-balance">0.00</span> <span class="hero-balance-unit">TON</span></div>
         <div class="hero-sub" id="hero-sub">Start depositing to earn weekly rewards</div>
         <div class="hero-stats">
-        <div class="hero-stat"><div class="hero-stat-val" id="hero-deposited">0.00</div><div class="hero-stat-lbl" data-i18n="total_deposited">TOTAL DEPOSITED</div></div>
-        <div class="hero-stat"><div class="hero-stat-val" id="hero-earned">+0.00</div><div class="hero-stat-lbl" data-i18n="total_earned">TOTAL EARNED</div></div>
+        <div class="hero-stat" style="background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);">
+          <div class="hero-stat-lbl" style="color:rgba(255,255,255,0.75);" data-i18n="total_deposited">DEPOSITED</div>
+          <div class="hero-stat-val" id="hero-deposited">0.00</div>
         </div>
-        <div class="hero-projection" id="hero-projection">
-          <div class="hero-projection-label" data-i18n="proj_label">📅 After 7 Days You'll Have</div>
-          <div class="hero-projection-row">
-            <div class="hero-projection-left">
-              <div class="hero-projection-icon">💰</div>
-              <div class="hero-projection-desc" data-i18n-html="proj_desc">Projected balance<br>including yield</div>
-            </div>
-            <div style="text-align:right;">
-              <div class="hero-projection-val" id="hero-proj-val">0.00</div>
-              <div class="hero-projection-unit">TON</div>
-            </div>
-          </div>
-          <div class="hero-projection-badge" id="hero-proj-badge">+5% weekly</div>
+        <div class="hero-stat">
+          <div class="hero-stat-lbl" style="color:rgba(255,255,255,0.75);" id="hero-you-get-lbl" data-i18n="you_will_get">YOU WILL GET</div>
+          <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:#86EFAC;" id="hero-will-get">+0.00</div>
+          <div id="hero-earned" style="display:none;">+0.00</div>
+        </div>
         </div>
       </div>
     </div>
@@ -962,9 +963,9 @@ window.LANG = LANG;
         <div class="deal-title" data-i18n="deal_title">🚀 Deposit 100+ TON → Get 10% Weekly!</div>
         <div class="deal-sub" data-i18n-html="deal_sub">Double your yield! Deposit 100 TON or more and earn <strong style="color:#fff;">10% every week</strong> instead of the standard 5%.</div>
         <div class="deal-stats">
-          <div class="deal-stat"><div class="deal-stat-val">5%</div><div class="deal-stat-lbl" data-i18n="deal_standard">Standard</div></div>
-          <div class="deal-stat" style="background:rgba(255,255,255,0.22);border:1.5px solid rgba(255,255,255,0.3);"><div class="deal-stat-val" style="color:#FCD34D;">10%</div><div class="deal-stat-lbl" style="color:rgba(255,255,255,0.9);" data-i18n="deal_50ton">100+ TON ✨</div></div>
-          <div class="deal-stat"><div class="deal-stat-val">+10 TON</div><div class="deal-stat-lbl" data-i18n="deal_wk1">Wk 1 bonus</div></div>
+          <div class="deal-stat"><div class="deal-stat-val">10%</div><div class="deal-stat-lbl" data-i18n="deal_standard">Standard</div></div>
+          <div class="deal-stat" style="background:rgba(255,255,255,0.22);border:1.5px solid rgba(255,255,255,0.3);"><div class="deal-stat-val" style="color:#FCD34D;">15%</div><div class="deal-stat-lbl" style="color:rgba(255,255,255,0.9);" data-i18n="deal_50ton">100+ TON ✨</div></div>
+          <div class="deal-stat"><div class="deal-stat-val">+15 TON</div><div class="deal-stat-lbl" data-i18n="deal_wk1">2-week bonus</div></div>
         </div>
       </div>
     </div>
@@ -1098,13 +1099,13 @@ window.LANG = LANG;
   <div class="tab-content" id="tab-info">
     <div class="info-box">
       <div class="info-box-title" data-i18n="how_it_works">📈 How TonPlay Works</div>
-      <div class="info-row"><span class="ir-l" data-i18n="weekly_return">Weekly Return</span><span class="ir-r" style="color:var(--green);">+5% per week</span></div>
+      <div class="info-row"><span class="ir-l" data-i18n="weekly_return">Standard Return</span><span class="ir-r" style="color:var(--green);">+10% / 15 days</span></div>
       <div class="info-row"><span class="ir-l" data-i18n="min_deposit">Min Deposit</span><span class="ir-r">0.5 TON</span></div>
-      <div class="info-row"><span class="ir-l" data-i18n="payout_schedule">Payout Schedule</span><span class="ir-r" data-i18n="payout_value">Weekly (7 days)</span></div>
+      <div class="info-row"><span class="ir-l" data-i18n="payout_schedule">Payout Schedule</span><span class="ir-r" data-i18n="payout_value">Every 15 days</span></div>
       <div class="info-row"><span class="ir-l" data-i18n="compounding">Compounding</span><span class="ir-r" style="color:var(--ton);" data-i18n="yes">Yes</span></div>
     </div>
     <div class="info-grid">
-      <div class="info-tile"><div class="info-tile-val">5%</div><div class="info-tile-lbl" data-i18n="weekly_yield_tile">Weekly Yield</div></div>
+      <div class="info-tile"><div class="info-tile-val">10%</div><div class="info-tile-lbl" data-i18n="weekly_yield_tile">Per 15 Days</div></div>
       <div class="info-tile"><div class="info-tile-val">26%</div><div class="info-tile-lbl" data-i18n="annual_est">Annual Est.</div></div>
       <div class="info-tile"><div class="info-tile-val" id="info-deposits">0</div><div class="info-tile-lbl" data-i18n="my_deposits">My Deposits</div></div>
       <div class="info-tile"><div class="info-tile-val" id="info-weeks">0</div><div class="info-tile-lbl" data-i18n="weeks_active">Weeks Active</div></div>
@@ -1112,9 +1113,9 @@ window.LANG = LANG;
     <div class="card">
       <div class="card-pad">
         <div class="sec-title" data-i18n="example_returns">Example Returns</div>
-        <div class="info-row"><span class="ir-l">1 TON · 1 week</span><span class="ir-r" style="color:var(--green);">1.05 TON</span></div>
-        <div class="info-row"><span class="ir-l">10 TON · 2 weeks</span><span class="ir-r" style="color:var(--green);">11.03 TON</span></div>
-        <div class="info-row"><span class="ir-l">100 TON · 4 weeks (10%)</span><span class="ir-r" style="color:var(--green);">146.41 TON</span></div>
+        <div class="info-row"><span class="ir-l">1 TON · 15 days</span><span class="ir-r" style="color:var(--green);">1.10 TON</span></div>
+        <div class="info-row"><span class="ir-l">10 TON · 30 days</span><span class="ir-r" style="color:var(--green);">12.10 TON</span></div>
+        <div class="info-row"><span class="ir-l">100 TON · 28 days (15%)</span><span class="ir-r" style="color:var(--green);">132.25 TON</span></div>
       </div>
     </div>
     <div class="notice" data-i18n-html="compound_notice"><strong>💡 Compound Growth:</strong> Each week your balance grows by 5%.</div>
@@ -1594,7 +1595,12 @@ function renderAll() {
 
   document.getElementById('header-balance').textContent = bal.toFixed(2);
   document.getElementById('hero-balance').textContent   = bal.toFixed(2);
+  const _weeklyRate = dep >= 100 ? 0.10 : 0.05;
+  const _weeklyEarn = dep * _weeklyRate;
   document.getElementById('hero-deposited').textContent = dep.toFixed(2);
+  document.getElementById('hero-will-get').textContent = '+' + _weeklyEarn.toFixed(2);
+  const _wLbl = document.getElementById('hero-weekly-lbl');
+  if (_wLbl) _wLbl.textContent = (t.lang === 'ru' || userData.lang === 'ru') ? 'ЧЕРЕЗ 1 НЕДЕЛЮ' : 'AFTER 1 WEEK';
   document.getElementById('hero-earned').textContent    = '+' + earned.toFixed(2);
 
   // hero-sub: show live countdown to next yield if deposits exist
@@ -1649,28 +1655,6 @@ function renderAll() {
     refUsed.innerHTML = `<div class="ref-used-badge">${t.ref_used_prefix}${userData.referredBy}</div>`;
     document.getElementById('ref-code-input').disabled = true;
     document.getElementById('ref-submit-btn').disabled = true;
-  }
-
-  // ─── 7-day projection ───
-  const projBox = document.getElementById('hero-projection');
-  if (dep > 0) {
-    const projRate  = dep >= 100 ? 0.10 : 0.05;
-    const projYield = dep * projRate;
-    const projTotal = bal + projYield;
-    document.getElementById('hero-proj-val').textContent = projTotal.toFixed(2);
-    const badge = document.getElementById('hero-proj-badge');
-    if (dep >= 100) {
-      badge.textContent = t.proj_badge_10;
-      badge.style.background = 'rgba(124,58,237,0.35)';
-      badge.style.border = '1px solid rgba(255,255,255,0.4)';
-    } else {
-      badge.textContent = t.proj_badge_5;
-      badge.style.background = 'rgba(255,255,255,0.22)';
-      badge.style.border = '1px solid rgba(255,255,255,0.35)';
-    }
-    projBox.classList.add('visible');
-  } else {
-    projBox.classList.remove('visible');
   }
 
   renderMilestones();
