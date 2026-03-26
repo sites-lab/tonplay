@@ -219,43 +219,78 @@ html,body{
 .deal-stat-lbl{font-size:9px;color:rgba(255,255,255,0.7);margin-top:3px;font-weight:600;letter-spacing:.3px;}
 
 /* ─── DEPOSIT SLOT CARDS ─── */
+/* Number-switcher pills inside hero card */
+.dep-switcher{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px;position:relative;z-index:2;}
+.dep-sw-pill{
+  width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:11px;font-weight:800;
+  cursor:pointer;border:2px solid rgba(255,255,255,0.35);
+  background:rgba(255,255,255,0.15);color:#fff;
+  transition:all .18s;flex-shrink:0;
+}
+.dep-sw-pill.active{
+  background:#fff;border-color:#fff;
+  box-shadow:0 2px 8px rgba(0,0,0,0.2);
+}
+/* pill active text colour matches the slot accent */
+.dep-sw-pill.active.sc1{color:#1565C0;}
+.dep-sw-pill.active.sc2{color:#B45309;}
+.dep-sw-pill.active.sc3{color:#065F46;}
+.dep-sw-pill.active.sc4{color:#374151;}
+.dep-sw-pill.active.sc5{color:#5B21B6;}
+.dep-sw-pill.active.sc6{color:#991B1B;}
+.dep-sw-pill.active.sc7{color:#831843;}
+.dep-sw-pill.active.sc8{color:#134E4A;}
+.dep-sw-pill.active.sc9{color:#7C2D12;}
+.dep-sw-pill.active.sc10{color:#1E1B4B;}
+
+/* Inline deposit panel inside the hero card */
+.dep-inline-panel{
+  background:rgba(255,255,255,0.12);
+  border:1.5px solid rgba(255,255,255,0.25);
+  border-radius:14px;
+  padding:12px 14px;
+  margin-top:10px;
+  position:relative;z-index:1;
+  transition:opacity .2s;
+}
+.dep-inline-panel.hidden{display:none;}
+.dep-inline-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.dep-inline-label{font-size:9px;font-weight:800;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase;}
+.dep-inline-status{font-size:8px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.35);letter-spacing:.4px;}
+.dep-inline-amount{font-family:'DM Mono',monospace;font-size:28px;font-weight:700;color:#fff;line-height:1;}
+.dep-inline-unit{font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;margin-bottom:6px;}
+.dep-inline-will-get{font-size:11px;color:rgba(255,255,255,0.85);font-weight:700;margin-bottom:8px;}
+.dep-inline-will-get span{color:#86EFAC;}
+.dep-inline-meta{display:flex;align-items:center;justify-content:space-between;}
+.dep-inline-date{font-size:9px;color:rgba(255,255,255,0.6);font-weight:600;}
+.dep-inline-badge{font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.3);}
+.dep-inline-cd{font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:6px;display:flex;align-items:center;gap:4px;}
+.dep-inline-cd.ready{color:#86EFAC;}
+
+/* standalone coloured cards (kept below hero, still used for scrolling history) */
 .dep-slots{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
 .dep-slot-card{
   border-radius:16px;padding:14px 16px;
   position:relative;overflow:hidden;
   box-shadow:0 4px 16px rgba(0,0,0,0.08);
-  cursor:default;
-  transition:transform .15s;
+  cursor:default;transition:transform .15s;
 }
 .dep-slot-card:active{transform:scale(0.98);}
+/* 10 slot colours */
+.dep-slot-1{background:linear-gradient(135deg,#1565C0,#2196F3,#42A5F5);box-shadow:0 4px 16px rgba(33,150,243,0.3);}
+.dep-slot-2{background:linear-gradient(135deg,#B45309,#D97706,#FBBF24);box-shadow:0 4px 16px rgba(217,119,6,0.3);}
+.dep-slot-3{background:linear-gradient(135deg,#065F46,#059669,#34D399);box-shadow:0 4px 16px rgba(16,185,129,0.3);}
+.dep-slot-4{background:linear-gradient(135deg,#374151,#6B7280,#9CA3AF);box-shadow:0 4px 16px rgba(107,114,128,0.3);}
+.dep-slot-5{background:linear-gradient(135deg,#5B21B6,#7C3AED,#A78BFA);box-shadow:0 4px 16px rgba(124,58,237,0.3);}
+.dep-slot-6{background:linear-gradient(135deg,#991B1B,#DC2626,#F87171);box-shadow:0 4px 16px rgba(220,38,38,0.3);}
+.dep-slot-7{background:linear-gradient(135deg,#831843,#DB2777,#F472B6);box-shadow:0 4px 16px rgba(219,39,119,0.3);}
+.dep-slot-8{background:linear-gradient(135deg,#134E4A,#0D9488,#2DD4BF);box-shadow:0 4px 16px rgba(13,148,136,0.3);}
+.dep-slot-9{background:linear-gradient(135deg,#7C2D12,#EA580C,#FB923C);box-shadow:0 4px 16px rgba(234,88,12,0.3);}
+.dep-slot-10{background:linear-gradient(135deg,#1E1B4B,#4338CA,#818CF8);box-shadow:0 4px 16px rgba(67,56,202,0.3);}
 
-/* Slot 1 — Blue */
-.dep-slot-1{
-  background:linear-gradient(135deg,#1565C0,#2196F3,#42A5F5);
-  box-shadow:0 4px 16px rgba(33,150,243,0.3);
-}
-/* Slot 2 — Gold */
-.dep-slot-2{
-  background:linear-gradient(135deg,#B45309,#D97706,#FBBF24);
-  box-shadow:0 4px 16px rgba(217,119,6,0.3);
-}
-/* Slot 3 — Green */
-.dep-slot-3{
-  background:linear-gradient(135deg,#065F46,#059669,#34D399);
-  box-shadow:0 4px 16px rgba(16,185,129,0.3);
-}
-/* Slot 4 — Grey */
-.dep-slot-4{
-  background:linear-gradient(135deg,#374151,#6B7280,#9CA3AF);
-  box-shadow:0 4px 16px rgba(107,114,128,0.3);
-}
-
-.dep-slot-num{
-  position:absolute;top:10px;right:12px;
-  font-family:'DM Mono',monospace;font-size:22px;font-weight:900;
-  color:rgba(255,255,255,0.18);line-height:1;
-  pointer-events:none;
-}
+.dep-slot-num{position:absolute;top:10px;right:12px;font-family:'DM Mono',monospace;font-size:22px;font-weight:900;color:rgba(255,255,255,0.18);line-height:1;pointer-events:none;}
 .dep-slot-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
 .dep-slot-label{font-size:9px;font-weight:800;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase;}
 .dep-slot-status{font-size:8px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.35);letter-spacing:.4px;}
@@ -987,6 +1022,8 @@ window.LANG = LANG;
         <div class="hero-label" data-i18n="total_balance">Total Balance</div>
         <div class="hero-balance"><span id="hero-balance">0.00</span> <span class="hero-balance-unit">TON</span></div>
         <div class="hero-sub" id="hero-sub">Start depositing to earn weekly rewards</div>
+        <div id="dep-switcher-wrap" style="display:none;"></div>
+        <div id="dep-inline-panel" class="dep-inline-panel hidden"></div>
         <div class="hero-stats">
         <div class="hero-stat" style="background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);">
           <div class="hero-stat-lbl" style="color:rgba(255,255,255,0.75);" data-i18n="total_deposited">DEPOSITED</div>
@@ -1644,10 +1681,19 @@ function renderAll() {
 
   document.getElementById('header-balance').textContent = bal.toFixed(2);
   document.getElementById('hero-balance').textContent   = bal.toFixed(2);
-  const _weeklyRate = dep >= 100 ? 0.10 : 0.05;
-  const _weeklyEarn = dep * _weeklyRate;
+  // "You will get" in hero = sum of per-deposit yields at correct rates
+  let _totalYield = 0;
+  if (depositsData.length) {
+    depositsData.filter(d => d.status === 'active').forEach(d => {
+      const amt = d.amount || 0;
+      const rate = (d.originalAmount || amt) >= 100 ? 0.15 : 0.10;
+      _totalYield += amt * rate;
+    });
+  } else {
+    _totalYield = dep * (dep >= 100 ? 0.15 : 0.10);
+  }
   document.getElementById('hero-deposited').textContent = dep.toFixed(2);
-  document.getElementById('hero-will-get').textContent = '+' + _weeklyEarn.toFixed(2);
+  document.getElementById('hero-will-get').textContent = '+' + _totalYield.toFixed(2);
   const _wLbl = document.getElementById('hero-weekly-lbl');
   if (_wLbl) _wLbl.textContent = (t.lang === 'ru' || userData.lang === 'ru') ? 'ЧЕРЕЗ 1 НЕДЕЛЮ' : 'AFTER 1 WEEK';
   document.getElementById('hero-earned').textContent    = '+' + earned.toFixed(2);
@@ -1822,54 +1868,101 @@ function refreshHeroSubCountdown() {
   }
 }
 
+// 10-slot colour palette
+const SLOT_COLORS = ['dep-slot-1','dep-slot-2','dep-slot-3','dep-slot-4','dep-slot-5','dep-slot-6','dep-slot-7','dep-slot-8','dep-slot-9','dep-slot-10'];
+const SLOT_PILL_CLS = ['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc8','sc9','sc10'];
+
+let activeDepIdx = 0; // currently selected deposit in hero switcher
+
+function buildDepCdHtml(d, inlineClass='dep-inline-cd') {
+  const isPremium = (d.originalAmount || d.amount || 0) >= 100;
+  const clockTs = d.lastYieldAt?.toMillis ? d.lastYieldAt.toMillis() : (d.createdAt?.toMillis ? d.createdAt.toMillis() : null);
+  if (!clockTs) return '';
+  const remaining = (clockTs + 15 * 24 * 3600 * 1000) - Date.now();
+  if (remaining <= 0) return `<div class="${inlineClass} ready" data-dep-id="${d.id}" data-deadline="0">🎉 ${t.yield_ready}</div>`;
+  const totalSecs = Math.floor(remaining / 1000);
+  const days  = Math.floor(totalSecs / 86400);
+  const hours = Math.floor((totalSecs % 86400) / 3600);
+  const mins  = Math.floor((totalSecs % 3600) / 60);
+  const timeStr = days > 0 ? `${days}${t.days_short} ${hours}${t.hours_short}` : `${hours}${t.hours_short} ${mins}${t.mins_short}`;
+  const lbl = (t.dep_countdown_label||'Next +%RATE% in').replace('%RATE%', isPremium?'15%':'10%');
+  return `<div class="${inlineClass}" data-dep-id="${d.id}" data-deadline="${Date.now()+remaining}">⏱ ${lbl} <strong>${timeStr}</strong></div>`;
+}
+
+function renderDepInlinePanel(d, idx) {
+  if (!d) return;
+  const isPremium = (d.originalAmount || d.amount || 0) >= 100;
+  const rate = isPremium ? 0.15 : 0.10;
+  const yieldAmt = (d.amount || 0) * rate;
+  const rateBadge = isPremium ? t.dep_rate_premium : t.dep_rate_standard;
+  const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
+  const cdHtml = buildDepCdHtml(d, 'dep-inline-cd');
+  const panel = document.getElementById('dep-inline-panel');
+  if (!panel) return;
+  panel.className = 'dep-inline-panel';
+  panel.innerHTML = `
+    <div class="dep-inline-top">
+      <span class="dep-inline-label">Deposit #${idx+1}</span>
+      <span class="dep-inline-status">${t.deposit_active}</span>
+    </div>
+    <div class="dep-inline-amount">${(d.amount||0).toFixed(2)}</div>
+    <div class="dep-inline-unit">TON</div>
+    <div class="dep-inline-will-get">→ You will get: <span>+${yieldAmt.toFixed(2)} TON</span></div>
+    <div class="dep-inline-meta">
+      <span class="dep-inline-date">📅 ${dt}</span>
+      <span class="dep-inline-badge">${rateBadge}</span>
+    </div>
+    ${cdHtml}
+  `;
+  startCountdownTickers();
+}
+
 function renderDeposits() {
   const list  = document.getElementById('deposits-list');
   const title = document.getElementById('deposits-title');
+  const switcherWrap = document.getElementById('dep-switcher-wrap');
+  const inlinePanel  = document.getElementById('dep-inline-panel');
+
+  const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 10);
+  const otherDeposits  = depositsData.filter(d => d.status !== 'active');
+
+  // ── Hero switcher + inline panel ──
+  if (activeDeposits.length && switcherWrap) {
+    switcherWrap.style.display = 'flex';
+    switcherWrap.className = 'dep-switcher';
+    switcherWrap.innerHTML = activeDeposits.map((d, i) => {
+      const pillCls = SLOT_PILL_CLS[i] || 'sc1';
+      const activeCls = i === activeDepIdx ? 'active '+pillCls : '';
+      return `<div class="dep-sw-pill ${pillCls} ${activeCls}" onclick="selectDepSlot(${i})">${i+1}</div>`;
+    }).join('');
+    inlinePanel.classList.remove('hidden');
+    // clamp index
+    if (activeDepIdx >= activeDeposits.length) activeDepIdx = 0;
+    renderDepInlinePanel(activeDeposits[activeDepIdx], activeDepIdx);
+  } else {
+    if (switcherWrap) switcherWrap.style.display = 'none';
+    if (inlinePanel) inlinePanel.classList.add('hidden');
+  }
+
+  // ── Deposits list section (standalone coloured cards below) ──
   if (!depositsData.length) { list.style.display = 'none'; title.style.display = 'none'; return; }
   title.style.display = 'block'; list.style.display = 'block';
 
-  // ── Slot colours (up to 4 deposits) ──
-  const SLOT_COLORS = ['dep-slot-1','dep-slot-2','dep-slot-3','dep-slot-4'];
-  const SLOT_LABELS = ['Deposit #1','Deposit #2','Deposit #3','Deposit #4'];
-
-  // Only show up to 4 active deposits as coloured cards; rest hidden or shown below
-  const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 4);
-  const otherDeposits  = depositsData.filter(d => d.status !== 'active');
-
+  // Active deposits as full standalone cards below
   const slotCards = activeDeposits.map((d, idx) => {
     const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
     const isPremium = (d.originalAmount || d.amount || 0) >= 100;
     const rateBadge = isPremium ? t.dep_rate_premium : t.dep_rate_standard;
-    const slotClass = SLOT_COLORS[idx] || 'dep-slot-1';
-    const slotLabel = SLOT_LABELS[idx] || `Deposit #${idx+1}`;
-
-    const clockTs = d.lastYieldAt?.toMillis
-      ? d.lastYieldAt.toMillis()
-      : (d.createdAt?.toMillis ? d.createdAt.toMillis() : null);
-    let cdHtml = '';
-    if (clockTs) {
-      const remaining = (clockTs + 15 * 24 * 3600 * 1000) - Date.now();
-      if (remaining <= 0) {
-        cdHtml = `<div class="dep-slot-countdown ready" data-dep-id="${d.id}" data-deadline="0">🎉 ${t.yield_ready}</div>`;
-      } else {
-        const totalSecs = Math.floor(remaining / 1000);
-        const days  = Math.floor(totalSecs / 86400);
-        const hours = Math.floor((totalSecs % 86400) / 3600);
-        const mins  = Math.floor((totalSecs % 3600) / 60);
-        const timeStr = days > 0 ? `${days}${t.days_short} ${hours}${t.hours_short}` : `${hours}${t.hours_short} ${mins}${t.mins_short}`;
-        const lbl = (t.dep_countdown_label||'Next +%RATE% in').replace('%RATE%', isPremium?'15%':'10%');
-        cdHtml = `<div class="dep-slot-countdown" data-dep-id="${d.id}" data-deadline="${Date.now()+remaining}">⏱ ${lbl} <strong>${timeStr}</strong></div>`;
-      }
-    }
-
-    return `<div class="dep-slot-card ${slotClass}">
+    const yieldAmt = ((d.amount || 0) * (isPremium ? 0.15 : 0.10));
+    const cdHtml = buildDepCdHtml(d, 'dep-slot-countdown');
+    return `<div class="dep-slot-card ${SLOT_COLORS[idx] || 'dep-slot-1'}">
       <div class="dep-slot-num">${idx+1}</div>
       <div class="dep-slot-top">
-        <span class="dep-slot-label">${slotLabel}</span>
+        <span class="dep-slot-label">Deposit #${idx+1}</span>
         <span class="dep-slot-status">${t.deposit_active}</span>
       </div>
       <div class="dep-slot-amount">${(d.amount||0).toFixed(2)}</div>
-      <div class="dep-slot-unit">TON</div>
+      <div class="dep-slot-unit">TON &nbsp;→&nbsp; <span style="color:#86EFAC;font-size:13px;font-weight:700;">+${yieldAmt.toFixed(2)} TON</span></div>
       <div class="dep-slot-meta">
         <span class="dep-slot-date">📅 ${dt}</span>
         <span class="dep-slot-badge">${rateBadge}</span>
@@ -1878,7 +1971,6 @@ function renderDeposits() {
     </div>`;
   }).join('');
 
-  // Pending / old deposits shown as compact rows below
   const otherRows = otherDeposits.map(d => {
     const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
     return `<div class="deposit-item">
@@ -1895,6 +1987,18 @@ function renderDeposits() {
   document.getElementById('info-weeks').textContent = Math.max(...depositsData.map(d => d.weeksActive || 0), 0);
   startCountdownTickers();
 }
+
+window.selectDepSlot = function(idx) {
+  const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 10);
+  if (idx >= activeDeposits.length) return;
+  activeDepIdx = idx;
+  // update pills
+  document.querySelectorAll('.dep-sw-pill').forEach((el, i) => {
+    const pillCls = SLOT_PILL_CLS[i] || 'sc1';
+    el.className = `dep-sw-pill ${pillCls}${i === idx ? ' active '+pillCls : ''}`;
+  });
+  renderDepInlinePanel(activeDeposits[idx], idx);
+};
 
 // ─── Countdown helpers ────────────────────────────────────────────
 
