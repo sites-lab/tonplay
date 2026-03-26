@@ -1369,8 +1369,9 @@ tonConnectUI.onStatusChange(wallet => {
     document.getElementById('wallet-addr-display').textContent = connectedWalletFriendly;
     document.getElementById('info-wallet').textContent = short;
     document.getElementById('btn-pay').disabled = false;
+    // Auto-fill withdraw wallet input with connected wallet address
     const wdInput = document.getElementById('wd-wallet-input');
-    if (wdInput && !wdInput.value) wdInput.value = connectedWalletFriendly;
+    if (wdInput) wdInput.value = connectedWalletFriendly;
   } else {
     connectedWalletAddr     = null;
     connectedWalletFriendly = null;
@@ -1761,10 +1762,16 @@ function renderAll() {
   document.getElementById('header-stars').textContent   = stars;
   document.getElementById('info-stars').textContent     = stars + ' ⭐';
 
-  if (userData.walletAddress) {
+  // Auto-fill withdraw wallet: prefer connected TON wallet, else saved Firestore address
+  (function fillWdWallet() {
     const wdInput = document.getElementById('wd-wallet-input');
-    if (wdInput && !wdInput.value) wdInput.value = userData.walletAddress;
-  }
+    if (!wdInput) return;
+    if (connectedWalletFriendly) {
+      wdInput.value = connectedWalletFriendly;
+    } else if (userData.walletAddress && !wdInput.value) {
+      wdInput.value = userData.walletAddress;
+    }
+  })();
 
   const refCode = userData.referralCode || '';
   const refLink = refCode ? buildRefLink(refCode) : '—';
@@ -2510,6 +2517,14 @@ window.switchTab = function(name, btn) {
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
   document.getElementById('tab-' + name).scrollTop = 0;
+  // Auto-fill wallet address whenever user opens the Withdraw tab
+  if (name === 'withdraw') {
+    const wdInput = document.getElementById('wd-wallet-input');
+    if (wdInput && !wdInput.value) {
+      if (connectedWalletFriendly) wdInput.value = connectedWalletFriendly;
+      else if (userData?.walletAddress) wdInput.value = userData.walletAddress;
+    }
+  }
 };
 
 let modalAction = null;
