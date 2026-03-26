@@ -1,10 +1,10 @@
 /**
- * TonPlay – Firebase Cloud Function: Payment Watcher
- * ───────────────────────────────────────────────────
- * Polls the TON blockchain every minute for new transactions
- * arriving at the vault wallet, parses the comment, matches it to
- * a pendingPayment document in Firestore, and automatically
- * credits the user's balance.
+ * TonPlay – Firebase Cloud Functions
+ * ────────────────────────────────────────────────────────────────
+ * 1. watchTonPayments  – runs every minute, auto-credits deposits
+ * 2. processWeeklyYield – runs every hour, pays 5% (or 10% for
+ *    deposits ≥ 100 TON) exactly 7 days after each deposit / last payout
+ * 3. checkTonPayment   – HTTP manual trigger
  *
  * Deploy:
  *   npm install -g firebase-tools
@@ -12,50 +12,45 @@
  *   firebase deploy --only functions
  */
 
-const functions  = require('firebase-functions');
-const admin      = require('firebase-admin');
-const fetch      = require('node-fetch');
+const functions = require('firebase-functions');
+const admin     = require('firebase-admin');
+const fetch     = require('node-fetch');
 
 admin.initializeApp();
 const db = admin.firestore();
 
-// ─── Config ──────────────────────────────────────────────
+// ─── Config ───────────────────────────────────────────────────────
 const VAULT_ADDRESS = 'UQBnGPixB1lrqOvhgaJNEzOuI_mLkVlq49i3wBysTE8WZJFE';
 const TONCENTER_URL = 'https://toncenter.com/api/v2';
-const TONCENTER_KEY = ''; // optional: set via: firebase functions:config:set ton.api_key="YOUR_KEY"
+const TONCENTER_KEY = ''; // optional: firebase functions:config:set ton.api_key="KEY"
 const BOT_TOKEN     = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
 const ADMIN_CHAT    = '5222030484';
-// ─────────────────────────────────────────────────────────
 
-/**
- * Scheduled function: runs every 1 minute.
- * Checks for new TON transactions and auto-credits matching pending payments.
- */
+const SEVEN_DAYS_MS  = 7 * 24 * 60 * 60 * 1000;
+// Yield rates
+const YIELD_STANDARD = 0.05;  // 5%  – all deposits
+const YIELD_PREMIUM  = 0.10;  // 10% – deposits ≥ 100 TON
+const PREMIUM_THRESHOLD = 100; // TON
+// ─────────────────────────────────────────────────────────────────
+
+
+// ═══════════════════════════════════════════════════════════════════
+// 1.  WATCH TON PAYMENTS  (every 1 minute)
+// ═══════════════════════════════════════════════════════════════════
 exports.watchTonPayments = functions.pubsub
   .schedule('every 1 minutes')
-  .onRun(async (context) => {
+  .onRun(async () => {
     console.log('🔍 Checking TON transactions...');
-    try {
-      await processTonTransactions();
-    } catch (err) {
-      console.error('watchTonPayments error:', err);
-    }
+    try { await processTonTransactions(); } catch (err) { console.error('watchTonPayments error:', err); }
     return null;
   });
 
-/**
- * HTTP endpoint for manual trigger / webhook (optional).
- * Call: POST https://<region>-<project>.cloudfunctions.net/checkTonPayment
- * Body: { "comment": "TP-XXXXXX-XXXX" }
- */
+// HTTP trigger – manual / webhook
 exports.checkTonPayment = functions.https.onRequest(async (req, res) => {
   try {
     const { comment } = req.body || {};
-    if (comment) {
-      await processSpecificComment(comment);
-    } else {
-      await processTonTransactions();
-    }
+    if (comment) await processSpecificComment(comment);
+    else         await processTonTransactions();
     res.json({ ok: true });
   } catch (err) {
     console.error(err);
@@ -63,49 +58,197 @@ exports.checkTonPayment = functions.https.onRequest(async (req, res) => {
   }
 });
 
-// ─── Core logic ───────────────────────────────────────────
+
+// ═══════════════════════════════════════════════════════════════════
+// 2.  WEEKLY YIELD PROCESSOR  (every hour)
+//     – Scans all active deposit docs under users/{uid}/deposits
+//     – When (now - lastYieldAt) >= 7 days, credits the yield
+//     – Rate: 5% standard, 10% if originalAmount >= 100 TON
+// ═══════════════════════════════════════════════════════════════════
+exports.processWeeklyYield = functions.pubsub
+  .schedule('every 60 minutes')
+  .onRun(async () => {
+    console.log('💰 Processing weekly yield...');
+    try { await runWeeklyYield(); } catch (err) { console.error('processWeeklyYield error:', err); }
+    return null;
+  });
+
+// HTTP trigger – manual testing
+exports.triggerWeeklyYield = functions.https.onRequest(async (req, res) => {
+  try {
+    await runWeeklyYield();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+async function runWeeklyYield() {
+  const now = Date.now();
+
+  // Fetch ALL users that have at least one deposit
+  const usersSnap = await db.collection('users').get();
+  if (usersSnap.empty) return;
+
+  let processed = 0;
+
+  for (const userDoc of usersSnap.docs) {
+    const userId = userDoc.id;
+
+    // Get all active deposits for this user
+    const depositsSnap = await db
+      .collection('users').doc(userId)
+      .collection('deposits')
+      .where('status', '==', 'active')
+      .get();
+
+    if (depositsSnap.empty) continue;
+
+    for (const depDoc of depositsSnap.docs) {
+      const dep = depDoc.data();
+
+      // Determine the clock start: first payout uses createdAt, subsequent use lastYieldAt
+      const clockStart = dep.lastYieldAt
+        ? dep.lastYieldAt.toMillis()
+        : (dep.createdAt?.toMillis ? dep.createdAt.toMillis() : null);
+
+      if (!clockStart) continue; // no timestamp yet – skip
+
+      const elapsed = now - clockStart;
+      if (elapsed < SEVEN_DAYS_MS) continue; // not yet 7 days
+
+      // ── Determine yield rate ──────────────────────────────────
+      // Use originalAmount if stored, otherwise fall back to amount
+      const principal = dep.originalAmount || dep.amount || 0;
+      const rate      = principal >= PREMIUM_THRESHOLD ? YIELD_PREMIUM : YIELD_STANDARD;
+      const yieldAmt  = parseFloat((dep.amount * rate).toFixed(6)); // % of current amount
+
+      if (yieldAmt <= 0) continue;
+
+      const newAmount   = parseFloat((dep.amount + yieldAmt).toFixed(6));
+      const newEarned   = parseFloat(((dep.earned || 0) + yieldAmt).toFixed(6));
+      const newWeeks    = (dep.weeksActive || 0) + 1;
+
+      // ── Atomic Firestore transaction ─────────────────────────
+      await db.runTransaction(async (t) => {
+        const depRef  = db.collection('users').doc(userId).collection('deposits').doc(depDoc.id);
+        const userRef = db.collection('users').doc(userId);
+
+        const [freshDep, freshUser] = await Promise.all([t.get(depRef), t.get(userRef)]);
+
+        // Idempotency: re-check the clock inside the transaction
+        const fd = freshDep.data();
+        const cs2 = fd.lastYieldAt
+          ? fd.lastYieldAt.toMillis()
+          : (fd.createdAt?.toMillis ? fd.createdAt.toMillis() : 0);
+        if ((Date.now() - cs2) < SEVEN_DAYS_MS) return; // another invocation beat us
+
+        // Update deposit doc
+        t.update(depRef, {
+          amount:      newAmount,
+          earned:      newEarned,
+          weeksActive: newWeeks,
+          lastYieldAt: admin.firestore.FieldValue.serverTimestamp()
+        });
+
+        // Update user balance & totalEarned
+        if (freshUser.exists) {
+          const ud       = freshUser.data();
+          const newBal   = parseFloat(((ud.balance || 0) + yieldAmt).toFixed(6));
+          const newTotal = parseFloat(((ud.totalEarned || 0) + yieldAmt).toFixed(6));
+          t.update(userRef, { balance: newBal, totalEarned: newTotal });
+        }
+      });
+
+      processed++;
+      console.log(`✅ Yield paid: ${yieldAmt} TON → user ${userId} | deposit ${depDoc.id} | rate ${rate*100}%`);
+
+      // ── Notify user via bot ───────────────────────────────────
+      const ud      = userDoc.data();
+      const chatId  = userId; // Telegram user ID == Firestore doc ID
+      const lang    = ud.lang || 'en';
+      const isPrem  = rate === YIELD_PREMIUM;
+
+      let msg;
+      if (lang === 'ru') {
+        msg =
+          `💸 <b>Еженедельная выплата!</b>\n\n` +
+          `💰 <b>+${yieldAmt.toFixed(4)} TON</b> зачислено на ваш баланс\n` +
+          `📊 Доходность: <b>${isPrem ? '10% 🌟 Премиум' : '5% стандарт'}</b>\n` +
+          `🏦 Депозит сейчас: <b>${newAmount.toFixed(4)} TON</b>\n` +
+          `📅 Неделя #${newWeeks}\n\n` +
+          `⏳ Следующая выплата через 7 дней.\n` +
+          (isPrem
+            ? `🌟 Вы используете премиум ставку (депозит ≥ 100 TON)!\n`
+            : `💡 Внесите ≥ 100 TON для повышения до 10% в неделю!\n`) +
+          `\n👇 Открыть приложение`;
+      } else {
+        msg =
+          `💸 <b>Weekly Yield Paid!</b>\n\n` +
+          `💰 <b>+${yieldAmt.toFixed(4)} TON</b> added to your balance\n` +
+          `📊 Rate: <b>${isPrem ? '10% 🌟 Premium' : '5% standard'}</b>\n` +
+          `🏦 Deposit now: <b>${newAmount.toFixed(4)} TON</b>\n` +
+          `📅 Week #${newWeeks}\n\n` +
+          `⏳ Next yield in 7 days.\n` +
+          (isPrem
+            ? `🌟 You're on the premium rate (deposit ≥ 100 TON)!\n`
+            : `💡 Deposit ≥ 100 TON to upgrade to 10% per week!\n`) +
+          `\n👇 Open the app`;
+      }
+
+      await sendBotMessageToUser(chatId, msg);
+
+      // Admin log
+      await sendBotMessage(
+        `💰 <b>Yield Paid</b>\n` +
+        `👤 User: ${ud.userName ? '@'+ud.userName : userId}\n` +
+        `💵 Amount: +${yieldAmt.toFixed(4)} TON (${(rate*100)}%)\n` +
+        `🏦 Deposit: ${newAmount.toFixed(4)} TON | Week #${newWeeks}`
+      );
+    }
+  }
+
+  console.log(`✅ Weekly yield run complete. Processed: ${processed} deposits.`);
+}
+
+
+// ═══════════════════════════════════════════════════════════════════
+// 3.  PAYMENT WATCHER CORE LOGIC
+// ═══════════════════════════════════════════════════════════════════
 
 async function processTonTransactions() {
   const txs = await fetchTransactions(50);
   if (!txs.length) return;
 
-  // Load all pending payments from Firestore
   const pendingSnap = await db.collection('pendingPayments')
     .where('status', '==', 'pending')
     .limit(100)
     .get();
 
-  if (pendingSnap.empty) {
-    console.log('No pending payments in Firestore.');
-    return;
-  }
+  if (pendingSnap.empty) { console.log('No pending payments in Firestore.'); return; }
 
-  // Build a map: comment → pending payment doc
   const pendingMap = {};
   pendingSnap.docs.forEach(d => {
     const data = d.data();
     if (data.comment) pendingMap[data.comment] = { id: d.id, ...data };
   });
 
-  // Match transactions to pending payments
   for (const tx of txs) {
     const comment = extractComment(tx);
     if (!comment) continue;
-
     const pending = pendingMap[comment];
     if (!pending) continue;
 
-    // Verify amount (allow 1% slippage for network fees)
     const receivedNano = parseInt(tx.in_msg?.value || '0');
     const expectedNano = Math.floor((pending.amount || 0) * 1e9 * 0.99);
     if (receivedNano < expectedNano) {
-      console.log(`Amount mismatch for comment ${comment}: got ${receivedNano}, expected ≥${expectedNano}`);
+      console.log(`Amount mismatch for ${comment}: got ${receivedNano}, expected ≥${expectedNano}`);
       continue;
     }
 
-    console.log(`✅ Matched payment! Comment: ${comment}, User: ${pending.userId}, Amount: ${pending.amount} TON`);
+    console.log(`✅ Matched: ${comment}, User: ${pending.userId}, Amount: ${pending.amount} TON`);
     await creditUser(pending, tx);
-    delete pendingMap[comment]; // avoid double-processing same comment
+    delete pendingMap[comment];
   }
 }
 
@@ -116,88 +259,72 @@ async function processSpecificComment(comment) {
     .limit(1)
     .get();
 
-  if (pendingSnap.empty) {
-    console.log('No pending payment found for comment:', comment);
-    return;
-  }
+  if (pendingSnap.empty) { console.log('No pending payment for comment:', comment); return; }
 
   const pending = { id: pendingSnap.docs[0].id, ...pendingSnap.docs[0].data() };
   const txs     = await fetchTransactions(20);
 
   for (const tx of txs) {
-    const txComment = extractComment(tx);
-    if (txComment !== comment) continue;
-
+    if (extractComment(tx) !== comment) continue;
     const receivedNano = parseInt(tx.in_msg?.value || '0');
     const expectedNano = Math.floor((pending.amount || 0) * 1e9 * 0.99);
     if (receivedNano < expectedNano) continue;
-
     await creditUser(pending, tx);
     return;
   }
-
   console.log('Transaction not yet found for comment:', comment);
 }
 
-// ─── Credit user in Firestore ─────────────────────────────
+
+// ─── Credit user in Firestore ─────────────────────────────────────
 
 async function creditUser(pending, tx) {
   const { userId, amount, comment, id: pendingDocId } = pending;
 
-  // Use Firestore transaction for atomicity (prevents double-credit)
   await db.runTransaction(async (t) => {
     const pendingRef = db.collection('pendingPayments').doc(pendingDocId);
     const userRef    = db.collection('users').doc(userId);
 
-    const [pendingDoc, userDoc] = await Promise.all([
-      t.get(pendingRef),
-      t.get(userRef)
-    ]);
+    const [pendingDoc, userDoc] = await Promise.all([t.get(pendingRef), t.get(userRef)]);
 
-    // Idempotency guard: skip if already confirmed
     if (pendingDoc.data()?.status === 'confirmed') {
-      console.log(`Already confirmed: ${pendingDocId}`);
-      return;
+      console.log(`Already confirmed: ${pendingDocId}`); return;
     }
 
-    // Mark pending payment confirmed
     t.update(pendingRef, {
-      status: 'confirmed',
+      status:      'confirmed',
       confirmedAt: admin.firestore.FieldValue.serverTimestamp(),
-      txHash: tx.transaction_id?.hash || ''
+      txHash:      tx.transaction_id?.hash || ''
     });
 
-    // Create deposit record
-    const depositRef = db.collection('deposits').doc();
+    // Create deposit record in users/{uid}/deposits sub-collection
+    // Store originalAmount so yield rate never changes after upgrades
+    const depositRef = db.collection('users').doc(userId).collection('deposits').doc();
     t.set(depositRef, {
       userId,
-      userName:     pending.userName || '',
-      displayName:  pending.displayName || '',
+      userName:       pending.userName || '',
+      displayName:    pending.displayName || '',
       amount,
+      originalAmount: amount, // locked – used to determine 5% vs 10%
       comment,
-      walletAddress: tx.in_msg?.source || '',
-      txHash:        tx.transaction_id?.hash || '',
-      status:        'active',
-      weeksActive:   0,
-      earned:        0,
-      autoDetected:  true,
-      createdAt:     admin.firestore.FieldValue.serverTimestamp()
+      walletAddress:  tx.in_msg?.source || '',
+      txHash:         tx.transaction_id?.hash || '',
+      status:         'active',
+      weeksActive:    0,
+      earned:         0,
+      autoDetected:   true,
+      lastYieldAt:    null,  // null = use createdAt as clock start
+      createdAt:      admin.firestore.FieldValue.serverTimestamp()
     });
 
-    // Update user balance and totalDeposited
     if (userDoc.exists) {
       const ud     = userDoc.data();
       const newBal = parseFloat(((ud.balance || 0) + amount).toFixed(6));
       const newDep = parseFloat(((ud.totalDeposited || 0) + amount).toFixed(6));
-      t.update(userRef, {
-        balance:          newBal,
-        totalDeposited:   newDep,
-        withdrawUnlocked: true
-      });
+      t.update(userRef, { balance: newBal, totalDeposited: newDep, withdrawUnlocked: true });
     }
   });
 
-  // Notify admin via Telegram bot
   await sendBotMessage(
     `✅ <b>Auto-Detected Deposit!</b>\n\n` +
     `👤 <b>User:</b> ${pending.userName ? '@' + pending.userName : userId}\n` +
@@ -210,30 +337,24 @@ async function creditUser(pending, tx) {
   console.log(`✅ Credited ${amount} TON to user ${userId}`);
 }
 
-// ─── TON API helpers ──────────────────────────────────────
+
+// ─── TON API helpers ───────────────────────────────────────────────
 
 async function fetchTransactions(limit = 20) {
   const apiKey      = TONCENTER_KEY || (functions.config().ton && functions.config().ton.api_key) || '';
   const apiKeyParam = apiKey ? `&api_key=${apiKey}` : '';
   const url         = `${TONCENTER_URL}/getTransactions?address=${VAULT_ADDRESS}&limit=${limit}${apiKeyParam}`;
-
   const res  = await fetch(url);
   const data = await res.json();
-
-  if (!data.ok) {
-    console.error('TON API error:', JSON.stringify(data));
-    return [];
-  }
+  if (!data.ok) { console.error('TON API error:', JSON.stringify(data)); return []; }
   return data.result || [];
 }
 
 function extractComment(tx) {
   const inMsg = tx.in_msg;
   if (!inMsg?.msg_data) return null;
-
   const msgData = inMsg.msg_data;
 
-  // msg.dataText — base64-encoded UTF-8
   if (msgData['@type'] === 'msg.dataText') {
     try {
       const text = Buffer.from(msgData.text || '', 'base64').toString('utf8');
@@ -241,22 +362,20 @@ function extractComment(tx) {
     } catch(e) { return null; }
   }
 
-  // msg.dataRaw — binary payload, first 4 bytes = opcode 0x00000000 for text comment
   if (msgData['@type'] === 'msg.dataRaw') {
     try {
       const bytes = Buffer.from(msgData.body || '', 'base64');
       if (bytes.length < 4) return null;
-      const op = bytes.readUInt32BE(0);
-      if (op !== 0) return null; // only process simple text comments
-      const text = bytes.slice(4).toString('utf8').trim();
-      return text || null;
+      if (bytes.readUInt32BE(0) !== 0) return null;
+      return bytes.slice(4).toString('utf8').trim() || null;
     } catch(e) { return null; }
   }
 
   return null;
 }
 
-// ─── Telegram Bot notification ────────────────────────────
+
+// ─── Telegram Bot helpers ──────────────────────────────────────────
 
 async function sendBotMessage(text) {
   try {
@@ -265,7 +384,15 @@ async function sendBotMessage(text) {
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ chat_id: ADMIN_CHAT, text, parse_mode: 'HTML' })
     });
-  } catch(e) {
-    console.error('Bot message failed:', e.message);
-  }
+  } catch(e) { console.error('Bot message (admin) failed:', e.message); }
+}
+
+async function sendBotMessageToUser(chatId, text) {
+  try {
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
+    });
+  } catch(e) { console.error('Bot message (user) failed:', e.message); }
 }

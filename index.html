@@ -229,6 +229,13 @@ html,body{
 .di-right{text-align:right;flex-shrink:0;}
 .di-yield{font-size:11px;font-weight:700;color:var(--green);}
 .di-weeks{font-size:10px;color:var(--sub);}
+/* ─── Deposit countdown ─── */
+.di-countdown{font-size:10px;font-weight:700;color:var(--ton);margin-top:3px;display:flex;align-items:center;gap:4px;}
+.di-countdown.urgent{color:var(--gold2);}
+.di-countdown.ready{color:var(--green);}
+.di-rate-badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:9px;font-weight:700;margin-top:3px;}
+.di-rate-badge.premium{background:linear-gradient(135deg,rgba(124,58,237,0.12),rgba(124,58,237,0.06));color:#7C3AED;border:1px solid rgba(124,58,237,0.25);}
+.di-rate-badge.standard{background:var(--ton-light);color:var(--ton2);border:1px solid rgba(33,150,243,0.2);}
 
 /* ─── INFO TILES ─── */
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;width:100%;}
@@ -318,7 +325,47 @@ html,body{
 .ms-row.locked-ms .ms-icon-badge{background:linear-gradient(145deg,#94A3B8,#64748B);}
 .ms-row:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-icon-badge{background:linear-gradient(145deg,#D97706,#FBBF24);box-shadow:0 3px 10px rgba(245,158,11,0.3);}
 
-.ms-star-svg{width:24px;height:24px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3));}
+.ms-star-svg{width:24px;height:24px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3));position:relative;z-index:2;}
+
+/* Telegram icon behind star in milestone badge */
+.ms-tg-bg{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  z-index:1;
+  pointer-events:none;
+}
+.ms-tg-bg svg{
+  width:36px;height:36px;
+  opacity:0.18;
+  animation:ms-tg-float 3.5s ease-in-out infinite;
+}
+.ms-row.done-ms .ms-tg-bg svg{opacity:0.22;animation:ms-tg-float 3.5s ease-in-out infinite;}
+.ms-row.next-ms .ms-tg-bg svg{opacity:0.28;animation:ms-tg-pulse 2.2s ease-in-out infinite;}
+@keyframes ms-tg-float{
+  0%,100%{transform:scale(1) rotate(-6deg);opacity:0.18;}
+  50%{transform:scale(1.15) rotate(4deg);opacity:0.28;}
+}
+@keyframes ms-tg-pulse{
+  0%,100%{transform:scale(1) rotate(0deg);opacity:0.22;}
+  40%{transform:scale(1.2) rotate(-5deg);opacity:0.38;}
+  70%{transform:scale(0.95) rotate(3deg);opacity:0.25;}
+}
+
+/* Telegram Stars label below reward value */
+.ms-tg-stars-lbl{
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+  display:flex;
+  align-items:center;
+  gap:3px;
+  margin-top:1px;
+}
+.ms-row.done-ms   .ms-tg-stars-lbl{color:rgba(16,185,129,0.7);}
+.ms-row.next-ms   .ms-tg-stars-lbl{color:rgba(99,102,241,0.8);}
+.ms-row.locked-ms .ms-tg-stars-lbl{color:var(--muted);}
+.ms-row:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-tg-stars-lbl{color:rgba(217,119,6,0.75);}
 
 /* Middle: info */
 .ms-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;}
@@ -462,60 +509,57 @@ const LANG = detectLang();
 
 const T = {
   en: {
-    // Header
     stars_chip: '⭐',
     ton_unit: 'TON',
-    // User line
     loading: 'Loading...',
-    // Tabs
     tab_home: 'HOME',
     tab_referral: 'REFERRAL',
     tab_withdraw: 'WITHDRAW',
     tab_info: 'INFO',
-    // Hero card
     total_balance: 'Total Balance',
     hero_sub_start: 'Start depositing to earn weekly rewards',
     hero_sub_active: 'Next yield in ~7 days',
+    next_yield_in: 'Next yield in',
+    yield_ready: '🎉 Yield ready soon!',
+    days_short: 'd',
+    hours_short: 'h',
+    mins_short: 'm',
+    premium_rate: '🌟 10% Premium',
+    standard_rate: '5% Standard',
+    dep_countdown_label: 'Next +%RATE% in',
     total_deposited: 'TOTAL DEPOSITED',
     total_earned: 'TOTAL EARNED',
-    // Projection
     proj_label: '📅 After 7 Days You\'ll Have',
     proj_desc: 'Projected balance\nincluding yield',
     proj_badge_5: '+5% weekly yield',
-    proj_badge_10: '+10% ✨ 50 TON deal',
-    // Yield badge
+    proj_badge_10: '+10% ✨ 100 TON deal',
     yield_badge: '+5% Weekly Yield on every deposit',
-    // Special deal
     deal_badge: '⚡ Special Deal',
-    deal_title: '🚀 Deposit 50+ TON → Get 10% Weekly!',
-    deal_sub: 'Double your yield! Deposit 50 TON or more and earn <strong style="color:#fff;">10% every week</strong> instead of the standard 5%.',
+    deal_title: '🚀 Deposit 100+ TON → Get 10% Weekly!',
+    deal_sub: 'Double your yield! Deposit 100 TON or more and earn <strong style="color:#fff;">10% every week</strong> instead of the standard 5%.',
     deal_standard: 'Standard',
-    deal_50ton: '50+ TON ✨',
+    deal_50ton: '100+ TON ✨',
     deal_wk1: 'Wk 1 bonus',
-    // Wallet banner
     wallet_not_connected: 'Wallet not connected',
     wallet_connect_hint: 'Connect to pay in 1 click',
     wallet_connected: 'Wallet connected ✓',
-    // Deposit form
     make_deposit: 'Make a Deposit',
     amount_label: 'Amount (min 0.5 TON)',
     amount_placeholder: '0.5',
-    // Earn preview
     earn_after: 'After 1 week you\'ll earn',
     earn_unit_5: 'TON (5% yield)',
     earn_unit_10: 'TON (10% yield)',
-    // Pay button
     pay_btn: 'Pay with TON Wallet',
     pay_opening: 'Opening wallet…',
-    // Detection / status
     detecting: '⏳ Confirming on blockchain…',
     pay_confirmed: '✅ Payment confirmed!\nYour balance has been updated.',
-    // Active deposits
     active_deposits: 'Active Deposits',
     deposit_active: 'Active',
     deposit_pending: 'Pending',
     deposit_week: 'Week',
-    // Referral tab
+    dep_rate_premium: '🌟 10% / week',
+    dep_rate_standard: '5% / week',
+    dep_rate_badge_100: '⚡ 100 TON → 10% / week',
     ref_hero_title: '🎁 Invite Friends, Earn ⭐ Stars',
     ref_hero_sub: 'Share your unique link. Every friend who joins earns you Telegram Stars!',
     ref_code_label: '🔑 Your Referral Code',
@@ -542,7 +586,6 @@ const T = {
     milestone_info_close: 'Got it',
     joined_badge: '✓ Joined',
     ref_used_prefix: '✓ Code applied: ',
-    // Withdraw tab
     wd_title: '💸 Withdraw TON',
     wd_avail: 'Available Balance',
     wd_form_title: 'Request Withdrawal',
@@ -555,7 +598,29 @@ const T = {
     wd_history: 'Withdrawal History',
     wd_status_done: '✅ Done',
     wd_status_pending: '⏳ Pending',
-    // Info tab
+    how_it_works_modal_title: 'How TonPlay Works',
+    how_it_works_modal_body: `<div style="font-size:13px;color:var(--sub);line-height:1.8;">
+<div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(33,150,243,0.1),rgba(33,150,243,0.04));border:1.5px solid rgba(33,150,243,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+  <span style="font-size:22px;">💰</span>
+  <div><div style="font-size:12px;font-weight:800;color:var(--ton2);margin-bottom:2px;">1. Deposit TON</div><div style="font-size:11px;">Make a deposit of at least <b>0.5 TON</b>. Your funds are locked and start earning <b>immediately</b>.</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.03));border:1.5px solid rgba(16,185,129,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+  <span style="font-size:22px;">📈</span>
+  <div><div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:2px;">2. Earn 5% Every Week</div><div style="font-size:11px;">Your balance grows by <b>+5% every 7 days</b>. Yield compounds — each week you earn 5% on the new total, not just your original deposit.</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(124,58,237,0.03));border:1.5px solid rgba(124,58,237,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+  <span style="font-size:22px;">🚀</span>
+  <div><div style="font-size:12px;font-weight:800;color:#7C3AED;margin-bottom:2px;">3. Deposit 100+ TON → 10% Weekly!</div><div style="font-size:11px;">Deposit <b>100 TON or more</b> to double your yield rate to <b>10% per week</b>. That's the special deal!</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(245,158,11,0.03));border:1.5px solid rgba(245,158,11,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+  <span style="font-size:22px;">💸</span>
+  <div><div style="font-size:12px;font-weight:800;color:var(--gold2);margin-bottom:2px;">4. Withdraw Anytime</div><div style="font-size:11px;">Once your balance grows, request a withdrawal in the <b>Withdraw</b> tab. Our team processes all requests promptly.</div></div>
+</div>
+<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--sub);">
+  <b>Example:</b> Deposit <b>10 TON</b> → after 1 week you have <b>10.5 TON</b> → after 2 weeks <b>11.03 TON</b> → after 4 weeks <b>12.16 TON</b>. The longer you hold, the faster it grows! 🎯
+</div>
+</div>`,
+    how_it_works_modal_close: 'Got it!',
     how_it_works: '📈 How TonPlay Works',
     weekly_return: 'Weekly Return',
     min_deposit: 'Min Deposit',
@@ -579,10 +644,8 @@ const T = {
     withdrawals_open: 'Open',
     stars_lbl: 'Stars',
     ref_notice: '<strong>🎁 Referral System:</strong> Every player gets a unique referral code. Share your link — when a friend joins and uses your code, you earn Stars!',
-    // Modal / toast
     cancel_btn: 'Cancel',
     confirm_btn: 'Confirm',
-    // Toasts
     connect_wallet_first: '⚠️ Connect your wallet first',
     min_deposit_warn: '⚠️ Minimum deposit is 0.5 TON',
     link_copied: '✅ Invite link copied!',
@@ -602,16 +665,13 @@ const T = {
     tx_cancelled: '❌ Transaction cancelled',
     wallet_disconnected: '⚠️ Wallet disconnected. Please reconnect.',
     tx_failed: '❌ Transaction failed: ',
-    // Payment modal
     confirm_payment: '💎 Confirm Payment',
     amount_to_send: 'AMOUNT TO SEND',
     from_wallet: 'FROM WALLET',
     to_vault: 'TO VAULT',
     payment_ref: '🔑 PAYMENT REFERENCE',
     payment_ref_sub: 'Auto-included in transaction — do not edit',
-    // Withdraw modal
     confirm_withdrawal: '💸 Confirm Withdrawal',
-    // Bot messages (user notification)
     bot_deposit_confirmed: '✅ <b>Deposit Confirmed!</b>',
     bot_amount_credited: '💰 <b>Amount:</b>',
     bot_new_balance: '📊 <b>New Balance:</b>',
@@ -620,60 +680,57 @@ const T = {
     bot_open_app: '🎮 Open TonPlay App',
   },
   ru: {
-    // Header
     stars_chip: '⭐',
     ton_unit: 'TON',
-    // User line
     loading: 'Загрузка...',
-    // Tabs
     tab_home: 'ГЛАВНАЯ',
     tab_referral: 'РЕФЕРАЛЫ',
     tab_withdraw: 'ВЫВОД',
     tab_info: 'INFO',
-    // Hero card
     total_balance: 'Общий баланс',
     hero_sub_start: 'Сделайте депозит, чтобы получать еженедельные награды',
     hero_sub_active: 'Следующая выплата через ~7 дней',
+    next_yield_in: 'Следующая выплата через',
+    yield_ready: '🎉 Выплата скоро!',
+    days_short: 'д',
+    hours_short: 'ч',
+    mins_short: 'м',
+    premium_rate: '🌟 10% Премиум',
+    standard_rate: '5% Стандарт',
+    dep_countdown_label: 'След. +%RATE% через',
     total_deposited: 'ВНЕСЕНО ВСЕГО',
     total_earned: 'ЗАРАБОТАНО ВСЕГО',
-    // Projection
     proj_label: '📅 Через 7 дней у вас будет',
     proj_desc: 'Прогноз баланса\nвключая доходность',
     proj_badge_5: '+5% еженедельно',
-    proj_badge_10: '+10% ✨ сделка 50 TON',
-    // Yield badge
+    proj_badge_10: '+10% ✨ сделка 100 TON',
     yield_badge: '+5% еженедельной доходности на каждый депозит',
-    // Special deal
     deal_badge: '⚡ Спецпредложение',
-    deal_title: '🚀 Депозит от 50 TON → 10% каждую неделю!',
-    deal_sub: 'Удвойте доходность! Внесите от 50 TON и зарабатывайте <strong style="color:#fff;">10% каждую неделю</strong> вместо стандартных 5%.',
+    deal_title: '🚀 Депозит от 100 TON → 10% каждую неделю!',
+    deal_sub: 'Удвойте доходность! Внесите от 100 TON и зарабатывайте <strong style="color:#fff;">10% каждую неделю</strong> вместо стандартных 5%.',
     deal_standard: 'Стандарт',
-    deal_50ton: 'от 50 TON ✨',
+    deal_50ton: 'от 100 TON ✨',
     deal_wk1: 'Бонус нед. 1',
-    // Wallet banner
     wallet_not_connected: 'Кошелёк не подключён',
     wallet_connect_hint: 'Подключите для оплаты в 1 клик',
     wallet_connected: 'Кошелёк подключён ✓',
-    // Deposit form
     make_deposit: 'Сделать депозит',
     amount_label: 'Сумма (мин. 0.5 TON)',
     amount_placeholder: '0.5',
-    // Earn preview
     earn_after: 'Через 1 неделю вы заработаете',
     earn_unit_5: 'TON (доходность 5%)',
     earn_unit_10: 'TON (доходность 10%)',
-    // Pay button
     pay_btn: 'Оплатить через TON Wallet',
     pay_opening: 'Открываем кошелёк…',
-    // Detection / status
     detecting: '⏳ Подтверждение в блокчейне…',
     pay_confirmed: '✅ Платёж подтверждён!\nВаш баланс обновлён.',
-    // Active deposits
     active_deposits: 'Активные депозиты',
     deposit_active: 'Активный',
     deposit_pending: 'В обработке',
     deposit_week: 'Неделя',
-    // Referral tab
+    dep_rate_premium: '🌟 10% / нед.',
+    dep_rate_standard: '5% / нед.',
+    dep_rate_badge_100: '⚡ 100 TON → 10% / нед.',
     ref_hero_title: '🎁 Приглашай друзей — получай ⭐ звёзды',
     ref_hero_sub: 'Поделитесь уникальной ссылкой. Каждый вступивший друг приносит вам Telegram-звёзды!',
     ref_code_label: '🔑 Ваш реферальный код',
@@ -700,7 +757,6 @@ const T = {
     milestone_info_close: 'Понятно',
     joined_badge: '✓ Вступил',
     ref_used_prefix: '✓ Код применён: ',
-    // Withdraw tab
     wd_title: '💸 Вывод TON',
     wd_avail: 'Доступный баланс',
     wd_form_title: 'Запрос на вывод',
@@ -713,7 +769,29 @@ const T = {
     wd_history: 'История выводов',
     wd_status_done: '✅ Выполнено',
     wd_status_pending: '⏳ В обработке',
-    // Info tab
+    how_it_works_modal_title: 'Как работает TonPlay',
+    how_it_works_modal_body: `<div style="font-size:13px;color:var(--sub);line-height:1.8;">
+<div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(33,150,243,0.1),rgba(33,150,243,0.04));border:1.5px solid rgba(33,150,243,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+  <span style="font-size:22px;">💰</span>
+  <div><div style="font-size:12px;font-weight:800;color:var(--ton2);margin-bottom:2px;">1. Сделай депозит</div><div style="font-size:11px;">Внеси минимум <b>0.5 TON</b>. Средства начинают работать <b>сразу же</b> после подтверждения.</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.03));border:1.5px solid rgba(16,185,129,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+  <span style="font-size:22px;">📈</span>
+  <div><div style="font-size:12px;font-weight:800;color:var(--green);margin-bottom:2px;">2. Зарабатывай 5% каждую неделю</div><div style="font-size:11px;">Баланс растёт на <b>+5% каждые 7 дней</b>. Проценты начисляются на весь текущий баланс — чем дольше держишь, тем быстрее растёт!</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(124,58,237,0.08),rgba(124,58,237,0.03));border:1.5px solid rgba(124,58,237,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+  <span style="font-size:22px;">🚀</span>
+  <div><div style="font-size:12px;font-weight:800;color:#7C3AED;margin-bottom:2px;">3. Депозит от 100 TON → 10% в неделю!</div><div style="font-size:11px;">Внеси <b>100 TON и больше</b> — получай двойную ставку: <b>10% каждую неделю</b>. Это спецпредложение!</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(245,158,11,0.08),rgba(245,158,11,0.03));border:1.5px solid rgba(245,158,11,0.2);border-radius:12px;padding:12px 14px;margin-bottom:12px;">
+  <span style="font-size:22px;">💸</span>
+  <div><div style="font-size:12px;font-weight:800;color:var(--gold2);margin-bottom:2px;">4. Выводи в любое время</div><div style="font-size:11px;">Когда захочешь — переходи во вкладку <b>Вывод</b> и отправь заявку. Команда обрабатывает запросы оперативно.</div></div>
+</div>
+<div style="background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--sub);">
+  <b>Пример:</b> Депозит <b>10 TON</b> → через 1 неделю <b>10.5 TON</b> → через 2 недели <b>11.03 TON</b> → через 4 недели <b>12.16 TON</b>. Магия сложного процента! 🎯
+</div>
+</div>`,
+    how_it_works_modal_close: 'Понятно!',
     how_it_works: '📈 Как работает TonPlay',
     weekly_return: 'Еженедельная доходность',
     min_deposit: 'Мин. депозит',
@@ -737,10 +815,8 @@ const T = {
     withdrawals_open: 'Открыто',
     stars_lbl: 'Звёзды',
     ref_notice: '<strong>🎁 Реферальная система:</strong> Каждый игрок получает уникальный код. Поделитесь ссылкой — когда друг вступит и введёт ваш код, вы получите звёзды!',
-    // Modal / toast
     cancel_btn: 'Отмена',
     confirm_btn: 'Подтвердить',
-    // Toasts
     connect_wallet_first: '⚠️ Сначала подключите кошелёк',
     min_deposit_warn: '⚠️ Минимальный депозит — 0.5 TON',
     link_copied: '✅ Пригласительная ссылка скопирована!',
@@ -760,16 +836,13 @@ const T = {
     tx_cancelled: '❌ Транзакция отменена',
     wallet_disconnected: '⚠️ Кошелёк отключён. Переподключите его.',
     tx_failed: '❌ Ошибка транзакции: ',
-    // Payment modal
     confirm_payment: '💎 Подтвердите платёж',
     amount_to_send: 'СУММА К ОТПРАВКЕ',
     from_wallet: 'С КОШЕЛЬКА',
     to_vault: 'НА ХРАНИЛИЩЕ',
     payment_ref: '🔑 МЕТКА ПЛАТЕЖА',
     payment_ref_sub: 'Включается в транзакцию автоматически — не редактируйте',
-    // Withdraw modal
     confirm_withdrawal: '💸 Подтвердите вывод',
-    // Bot messages (user notification)
     bot_deposit_confirmed: '✅ <b>Депозит подтверждён!</b>',
     bot_amount_credited: '💰 <b>Сумма:</b>',
     bot_new_balance: '📊 <b>Новый баланс:</b>',
@@ -810,13 +883,10 @@ window.LANG = LANG;
       <div class="bal-chip">
         <div class="bci">
         <svg viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- TON gem: top triangle -->
           <path d="M28 10 L44 22 L28 22 Z" fill="white" opacity="0.95"/>
           <path d="M28 10 L12 22 L28 22 Z" fill="white" opacity="0.75"/>
-          <!-- TON gem: bottom teardrop -->
           <path d="M28 22 L12 22 L28 47 Z" fill="white" opacity="0.85"/>
           <path d="M28 22 L44 22 L28 47 Z" fill="white" opacity="0.65"/>
-          <!-- center divider line for depth -->
           <line x1="28" y1="22" x2="28" y2="47" stroke="rgba(0,136,204,0.35)" stroke-width="0.8"/>
           <line x1="12" y1="22" x2="44" y2="22" stroke="rgba(0,136,204,0.25)" stroke-width="0.6"/>
         </svg>
@@ -854,6 +924,9 @@ window.LANG = LANG;
 
     <div class="hero-card">
       <div style="position:relative;z-index:1;">
+        <button onclick="showHowItWorksModal()" style="position:absolute;top:0;right:0;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </button>
         <div class="hero-label" data-i18n="total_balance">Total Balance</div>
         <div class="hero-balance"><span id="hero-balance">0.00</span> <span class="hero-balance-unit">TON</span></div>
         <div class="hero-sub" id="hero-sub">Start depositing to earn weekly rewards</div>
@@ -861,8 +934,6 @@ window.LANG = LANG;
         <div class="hero-stat"><div class="hero-stat-val" id="hero-deposited">0.00</div><div class="hero-stat-lbl" data-i18n="total_deposited">TOTAL DEPOSITED</div></div>
         <div class="hero-stat"><div class="hero-stat-val" id="hero-earned">+0.00</div><div class="hero-stat-lbl" data-i18n="total_earned">TOTAL EARNED</div></div>
         </div>
-
-        <!-- 7-day projection box -->
         <div class="hero-projection" id="hero-projection">
           <div class="hero-projection-label" data-i18n="proj_label">📅 After 7 Days You'll Have</div>
           <div class="hero-projection-row">
@@ -888,12 +959,12 @@ window.LANG = LANG;
     <div class="special-deal">
       <div style="position:relative;z-index:1;">
         <div class="deal-badge" data-i18n="deal_badge">⚡ Special Deal</div>
-        <div class="deal-title" data-i18n="deal_title">🚀 Deposit 50+ TON → Get 10% Weekly!</div>
-        <div class="deal-sub" data-i18n-html="deal_sub">Double your yield! Deposit 50 TON or more and earn <strong style="color:#fff;">10% every week</strong> instead of the standard 5%.</div>
+        <div class="deal-title" data-i18n="deal_title">🚀 Deposit 100+ TON → Get 10% Weekly!</div>
+        <div class="deal-sub" data-i18n-html="deal_sub">Double your yield! Deposit 100 TON or more and earn <strong style="color:#fff;">10% every week</strong> instead of the standard 5%.</div>
         <div class="deal-stats">
           <div class="deal-stat"><div class="deal-stat-val">5%</div><div class="deal-stat-lbl" data-i18n="deal_standard">Standard</div></div>
-          <div class="deal-stat" style="background:rgba(255,255,255,0.22);border:1.5px solid rgba(255,255,255,0.3);"><div class="deal-stat-val" style="color:#FCD34D;">10%</div><div class="deal-stat-lbl" style="color:rgba(255,255,255,0.9);" data-i18n="deal_50ton">50+ TON ✨</div></div>
-          <div class="deal-stat"><div class="deal-stat-val">+5 TON</div><div class="deal-stat-lbl" data-i18n="deal_wk1">Wk 1 bonus</div></div>
+          <div class="deal-stat" style="background:rgba(255,255,255,0.22);border:1.5px solid rgba(255,255,255,0.3);"><div class="deal-stat-val" style="color:#FCD34D;">10%</div><div class="deal-stat-lbl" style="color:rgba(255,255,255,0.9);" data-i18n="deal_50ton">100+ TON ✨</div></div>
+          <div class="deal-stat"><div class="deal-stat-val">+10 TON</div><div class="deal-stat-lbl" data-i18n="deal_wk1">Wk 1 bonus</div></div>
         </div>
       </div>
     </div>
@@ -927,7 +998,6 @@ window.LANG = LANG;
         <button class="preset-btn" onclick="setAmount(100,this)">100</button>
       </div>
 
-      <!-- Weekly earnings preview -->
       <div class="earn-preview" id="earn-preview" style="display:none;">
         <div class="earn-preview-left">
           <div class="earn-preview-icon">📈</div>
@@ -940,7 +1010,6 @@ window.LANG = LANG;
         <div id="earn-preview-rate-badge" style="background:var(--green-light);border:1.5px solid rgba(16,185,129,0.3);border-radius:20px;padding:4px 10px;font-size:10px;font-weight:800;color:var(--green);flex-shrink:0;">+5%</div>
       </div>
 
-      <!-- PAY button (TON Connect flow) -->
       <button class="btn-pay" id="btn-pay" onclick="handlePay()">
         <div class="btn-pay-icon">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
@@ -948,7 +1017,6 @@ window.LANG = LANG;
         <span data-i18n="pay_btn">Pay with TON Wallet</span>
       </button>
 
-      <!-- Detection status banners -->
       <div class="detection-banner" id="detection-banner">
         <span style="font-size:18px;">⏳</span>
         <div class="detection-banner-text" id="detection-text" data-i18n="detecting">Waiting for blockchain confirmation…</div>
@@ -988,7 +1056,7 @@ window.LANG = LANG;
     </button>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
       <div class="sec-title" style="margin-bottom:0;" data-i18n="reward_milestones">⭐ Reward Milestones</div>
-      <button onclick="showMilestoneInfo()" style="width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:var(--surf);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" title="How it works">
+      <button onclick="showMilestoneInfo()" style="width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);background:var(--surf);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
       </button>
     </div>
@@ -1012,9 +1080,9 @@ window.LANG = LANG;
     </div>
     <div class="wd-form-card">
       <div class="wd-form-title" data-i18n="wd_form_title">Request Withdrawal</div>
-      <div class="wd-form-sub" data-i18n="wd_form_sub">Enter your TON wallet address and the amount you wish to withdraw. Our team will process it shortly.</div>
+      <div class="wd-form-sub" data-i18n="wd_form_sub">Enter your TON wallet address and the amount you wish to withdraw.</div>
       <label class="form-label" style="margin-top:8px;" data-i18n="wd_wallet_label">Your TON Wallet Address</label>
-      <input class="wd-input" id="wd-wallet-input" type="text" data-i18n-placeholder="wd_wallet_placeholder" placeholder="EQ... or UQ... your TON wallet address" spellcheck="false" autocomplete="off" style="margin-bottom:10px;">
+      <input class="wd-input" id="wd-wallet-input" type="text" data-i18n-placeholder="wd_wallet_placeholder" placeholder="EQ... or UQ..." spellcheck="false" autocomplete="off" style="margin-bottom:10px;">
       <label class="form-label" data-i18n="wd_amount_label">Amount (TON)</label>
       <input class="wd-input" id="wd-amount" type="number" min="0.1" step="0.1" data-i18n-placeholder="wd_amount_placeholder" placeholder="Amount to withdraw">
       <button class="btn-gold" onclick="submitWithdraw()">
@@ -1046,10 +1114,10 @@ window.LANG = LANG;
         <div class="sec-title" data-i18n="example_returns">Example Returns</div>
         <div class="info-row"><span class="ir-l">1 TON · 1 week</span><span class="ir-r" style="color:var(--green);">1.05 TON</span></div>
         <div class="info-row"><span class="ir-l">10 TON · 2 weeks</span><span class="ir-r" style="color:var(--green);">11.03 TON</span></div>
-        <div class="info-row"><span class="ir-l">100 TON · 4 weeks</span><span class="ir-r" style="color:var(--green);">121.55 TON</span></div>
+        <div class="info-row"><span class="ir-l">100 TON · 4 weeks (10%)</span><span class="ir-r" style="color:var(--green);">146.41 TON</span></div>
       </div>
     </div>
-    <div class="notice" data-i18n-html="compound_notice"><strong>💡 Compound Growth:</strong> Each week your balance grows by 5%. Week 1 you earn 5% of your deposit, week 2 you earn 5% of the new total — growth accelerates over time.</div>
+    <div class="notice" data-i18n-html="compound_notice"><strong>💡 Compound Growth:</strong> Each week your balance grows by 5%.</div>
     <div class="card">
       <div class="card-pad">
         <div class="sec-title" data-i18n="my_account">My Account</div>
@@ -1062,7 +1130,7 @@ window.LANG = LANG;
       </div>
     </div>
     <div class="notice" style="background:var(--green-light);border-color:rgba(16,185,129,0.3);" data-i18n-html="ref_notice">
-      <strong>🎁 Referral System:</strong> Every player gets a unique referral code. Share your link — when a friend joins and uses your code, you earn Stars!
+      <strong>🎁 Referral System:</strong> Every player gets a unique referral code.
     </div>
   </div>
 
@@ -1086,17 +1154,14 @@ window.LANG = LANG;
 (function applyI18n() {
   const t = window.t;
   if (!t) return;
-  // text content
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (t[key] !== undefined && typeof t[key] === 'string') el.textContent = t[key];
   });
-  // innerHTML (allows HTML tags)
   document.querySelectorAll('[data-i18n-html]').forEach(el => {
     const key = el.getAttribute('data-i18n-html');
     if (t[key] !== undefined) el.innerHTML = t[key].replace('\n', '<br>');
   });
-  // placeholder attributes
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     const key = el.getAttribute('data-i18n-placeholder');
     if (t[key] !== undefined) el.placeholder = t[key];
@@ -1124,7 +1189,6 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 window._db = db;
 
-// ─── Constants ───
 const VAULT_ADDRESS  = 'UQBnGPixB1lrqOvhgaJNEzOuI_mLkVlq49i3wBysTE8WZJFE';
 const BOT_TOKEN      = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
 const ADMIN_CHAT     = '5222030484';
@@ -1180,7 +1244,6 @@ tonConnectUI.onStatusChange(wallet => {
     document.getElementById('wallet-addr-display').textContent = connectedWalletFriendly;
     document.getElementById('info-wallet').textContent = short;
     document.getElementById('btn-pay').disabled = false;
-    // Pre-fill withdraw wallet input if empty
     const wdInput = document.getElementById('wd-wallet-input');
     if (wdInput && !wdInput.value) wdInput.value = connectedWalletFriendly;
   } else {
@@ -1201,21 +1264,12 @@ function generatePaymentComment(userId) {
   return `TP-${String(userId).slice(-6)}-${ts}`;
 }
 
-// ─── Handle Pay button click ───
 window.handlePay = async function() {
-  if (!connectedWalletAddr) {
-    showToast(t.connect_wallet_first);
-    return;
-  }
-  const amountStr = document.getElementById('deposit-amount').value;
-  const amount = parseFloat(amountStr);
-  if (isNaN(amount) || amount < 0.5) {
-    showToast(t.min_deposit_warn);
-    return;
-  }
+  if (!connectedWalletAddr) { showToast(t.connect_wallet_first); return; }
+  const amount = parseFloat(document.getElementById('deposit-amount').value);
+  if (isNaN(amount) || amount < 0.5) { showToast(t.min_deposit_warn); return; }
   const uid = String(currentUser.id);
   const comment = generatePaymentComment(uid);
-  // Use the friendly address (EQ.../UQ...) for display, not the raw hex
   const shortAddr = connectedWalletFriendly.slice(0, 6) + '…' + connectedWalletFriendly.slice(-4);
 
   openModal(t.confirm_payment,
@@ -1239,116 +1293,75 @@ window.handlePay = async function() {
         <div style="font-size:9px;color:var(--sub);margin-top:4px;">${t.payment_ref_sub}</div>
       </div>
     </div>`,
-    async () => {
-      await sendTonTransaction(amount, comment, uid);
-    }
+    async () => { await sendTonTransaction(amount, comment, uid); }
   );
 };
 
-// ─── Send TON Transaction via TON Connect ───
 async function sendTonTransaction(amount, comment, uid) {
   const btn = document.getElementById('btn-pay');
   const paySpan = btn.querySelector('span[data-i18n]');
   if (paySpan) paySpan.textContent = t.pay_opening;
-    btn.disabled = true;
+  btn.disabled = true;
 
   try {
     const amountNano = Math.floor(amount * 1e9).toString();
-
     const transaction = {
       validUntil: Math.floor(Date.now() / 1000) + 600,
-      messages: [
-        {
-          address: VAULT_ADDRESS,
-          amount: amountNano,
-          payload: buildTonPayload(comment)
-        }
-      ]
+      messages: [{ address: VAULT_ADDRESS, amount: amountNano, payload: buildTonPayload(comment) }]
     };
 
-    // Opens wallet — user confirms here
     const result = await tonConnectUI.sendTransaction(transaction);
 
-    // ✅ Wallet confirmed — transaction is NOW broadcast to TON network
     const paySpan2 = btn.querySelector('span[data-i18n]');
     if (paySpan2) paySpan2.textContent = t.pay_btn;
     btn.disabled = false;
     showDetectionBanner(t.detecting);
     showToast(t.tx_sent);
 
-    // Save pending record to Firestore
     const pendingRef = await addDoc(collection(db, 'depositNotifications'), {
       userId: uid,
       userName: currentUser.username || '',
       displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
-      amount,
-      comment,
-      boc: result.boc || '',
+      amount, comment, boc: result.boc || '',
       walletFriendly: connectedWalletFriendly || '',
-      status: 'pending',
-      createdAt: serverTimestamp()
+      status: 'pending', createdAt: serverTimestamp()
     });
 
-    // ── STEP 1: Credit the user IMMEDIATELY (wallet confirmed = tx is sent) ──
     await confirmPaymentInFirebase(comment, amount, uid, pendingRef.id);
-
-    // ── STEP 2: Also start background polling for on-chain confirmation ──
     startPaymentDetection(comment, amount, uid, pendingRef.id);
 
   } catch (err) {
     const paySpan3 = btn.querySelector('span[data-i18n]');
     if (paySpan3) paySpan3.textContent = t.pay_btn;
     btn.disabled = false;
-
-    if (err?.message?.includes('User rejects')) {
-      showToast(t.tx_cancelled);
-    } else if (err?.message?.includes('Wallet is not connected')) {
-      showToast(t.wallet_disconnected);
-    } else {
-      showToast(t.tx_failed + (err?.message || 'Unknown error'));
-    }
+    if (err?.message?.includes('User rejects')) showToast(t.tx_cancelled);
+    else if (err?.message?.includes('Wallet is not connected')) showToast(t.wallet_disconnected);
+    else showToast(t.tx_failed + (err?.message || 'Unknown error'));
     console.error('TON transaction error:', err);
   }
 }
 
 function buildTonPayload(text) {
-  return beginCell()
-    .storeUint(0, 32)
-    .storeStringTail(text)
-    .endCell()
-    .toBoc()
-    .toString('base64');
+  return beginCell().storeUint(0, 32).storeStringTail(text).endCell().toBoc().toString('base64');
 }
 
-// ─── Poll TON API to confirm on-chain ───
 let detectionInterval = null;
-
 function startPaymentDetection(comment, expectedAmount, uid, pendingDocId) {
   let attempts = 0;
-  const MAX_ATTEMPTS = 60;
-
   if (detectionInterval) clearInterval(detectionInterval);
-
   detectionInterval = setInterval(async () => {
     attempts++;
-    if (attempts > MAX_ATTEMPTS) {
-      clearInterval(detectionInterval);
-      return;
-    }
+    if (attempts > 60) { clearInterval(detectionInterval); return; }
     try {
       const found = await checkTransactionOnChain(comment, expectedAmount);
       if (found) {
         clearInterval(detectionInterval);
-        // confirmPaymentInFirebase has idempotency guard, safe to call again
         await confirmPaymentInFirebase(comment, expectedAmount, uid, pendingDocId);
       }
-    } catch (e) {
-      console.error('Detection poll error:', e);
-    }
+    } catch (e) { console.error('Detection poll error:', e); }
   }, 10000);
 }
 
-// ─── Fixed: properly decode BOC text comment from toncenter v2 ───
 async function checkTransactionOnChain(comment, expectedAmount) {
   try {
     const apiKeyParam = TONAPI_KEY ? `&api_key=${TONAPI_KEY}` : '';
@@ -1356,120 +1369,75 @@ async function checkTransactionOnChain(comment, expectedAmount) {
     const res = await fetch(url);
     const data = await res.json();
     if (!data.ok || !data.result) return false;
-
     const minNano = Math.floor(expectedAmount * 1e9 * 0.98);
-
     for (const tx of data.result) {
       const inMsg = tx.in_msg;
       if (!inMsg) continue;
-      const valueNano = parseInt(inMsg.value || '0');
-      if (valueNano < minNano) continue;
-
+      if (parseInt(inMsg.value || '0') < minNano) continue;
       const msgBody = inMsg.msg_data;
       if (!msgBody) continue;
-
       const msgType = msgBody['@type'] || '';
       let txComment = '';
-
       if (msgType === 'msg.dataText') {
-        // Plain base64-encoded UTF-8 text
-        try {
-          txComment = decodeURIComponent(escape(atob(msgBody.text || '')));
-        } catch(e) {
-          try { txComment = atob(msgBody.text || ''); } catch(e2) {}
-        }
-
+        try { txComment = decodeURIComponent(escape(atob(msgBody.text || ''))); } catch(e) { try { txComment = atob(msgBody.text || ''); } catch(e2) {} }
       } else if (msgType === 'msg.dataRaw') {
-        // BOC binary: 4-byte op=0 header followed by UTF-8 text bytes
         try {
-          const bocBase64 = msgBody.body || '';
-          const rawBytes = Uint8Array.from(atob(bocBase64), c => c.charCodeAt(0));
-          // The TON cell for a text comment is: op(4 bytes = 0x00000000) + text bytes
-          // We need to find the UTF-8 text after the op code
-          // Scan for our TP- prefix in the raw bytes
+          const rawBytes = Uint8Array.from(atob(msgBody.body || ''), c => c.charCodeAt(0));
           const tpBytes = new TextEncoder().encode('TP-');
           for (let i = 0; i < rawBytes.length - tpBytes.length; i++) {
-            if (rawBytes[i] === tpBytes[0] &&
-                rawBytes[i+1] === tpBytes[1] &&
-                rawBytes[i+2] === tpBytes[2]) {
-              // Found "TP-" — extract text from here
-              const textBytes = rawBytes.slice(i, Math.min(i + 32, rawBytes.length));
-              txComment = new TextDecoder('utf-8', { fatal: false }).decode(textBytes);
+            if (rawBytes[i] === tpBytes[0] && rawBytes[i+1] === tpBytes[1] && rawBytes[i+2] === tpBytes[2]) {
+              txComment = new TextDecoder('utf-8', { fatal: false }).decode(rawBytes.slice(i, Math.min(i + 32, rawBytes.length)));
               break;
             }
           }
         } catch(e) {}
       }
-
-      // Normalize and compare
-      const normalized = txComment.replace(/\x00/g, '').trim();
-      if (normalized.includes(comment)) {
-        return true;
-      }
+      if (txComment.replace(/\x00/g, '').trim().includes(comment)) return true;
     }
     return false;
-  } catch (e) {
-    console.error('TON API error:', e);
-    return false;
-  }
+  } catch (e) { console.error('TON API error:', e); return false; }
 }
 
-// ─── Credit user in Firestore + notify via bot ───
-// Has idempotency guard: safe to call multiple times for same payment
 async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
   try {
-    // Idempotency: check if already confirmed
     const pendingSnap = await getDoc(doc(db, 'depositNotifications', pendingDocId));
-    if (pendingSnap.exists() && pendingSnap.data()?.status === 'confirmed') {
-      console.log('Already confirmed, skipping:', pendingDocId);
-      return;
-    }
+    if (pendingSnap.exists() && pendingSnap.data()?.status === 'confirmed') return;
 
-    // Mark pending payment as confirmed
-    await updateDoc(doc(db, 'depositNotifications', pendingDocId), {
-      status: 'confirmed',
-      confirmedAt: serverTimestamp()
-    });
+    await updateDoc(doc(db, 'depositNotifications', pendingDocId), { status: 'confirmed', confirmedAt: serverTimestamp() });
 
-    // Create deposit record
     await addDoc(collection(db, 'users/' + uid + '/deposits'), {
       userId: uid,
       userName: currentUser.username || '',
       displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
       amount,
+      originalAmount: amount,  // locked for yield rate determination
       comment,
       walletAddress: connectedWalletFriendly || connectedWalletAddr || '',
       status: 'active',
       weeksActive: 0,
       earned: 0,
       autoDetected: true,
+      lastYieldAt: null,        // null = use createdAt as clock start
       createdAt: serverTimestamp()
     });
 
-    // Update user balance
     const userRef = doc(db, 'users', uid);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
       const ud = userSnap.data();
       const newBal = parseFloat(((ud.balance || 0) + amount).toFixed(6));
       const newDep = parseFloat(((ud.totalDeposited || 0) + amount).toFixed(6));
-      await updateDoc(userRef, {
-        balance: newBal,
-        totalDeposited: newDep,
-        withdrawUnlocked: true
-      });
+      await updateDoc(userRef, { balance: newBal, totalDeposited: newDep, withdrawUnlocked: true });
       userData.balance = newBal;
       userData.totalDeposited = newDep;
       userData.withdrawUnlocked = true;
     }
 
-    // Update UI
     hideDetectionBanner();
     showPaySuccess(`✅ +${amount.toFixed(2)} TON added to your balance!`);
     renderAll();
     await loadDeposits();
 
-    // Notify admin
     await sendBotMessage(
       `✅ <b>Auto-Detected Deposit!</b>\n\n` +
       `👤 <b>User:</b> ${currentUser.username ? '@' + currentUser.username : uid}\n` +
@@ -1477,11 +1445,7 @@ async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
       `🔑 <b>Comment:</b> <code>${comment}</code>\n` +
       `📱 <b>Source:</b> TON Connect (auto-detected)`
     );
-
-    // ─── Notify USER via Telegram bot ───
-    // This runs immediately after wallet confirmation, not waiting for on-chain
     await sendUserBotMessage(uid, amount, comment);
-
     showToast(t.balance_updated);
   } catch (e) {
     console.error('Firebase confirmation error:', e);
@@ -1489,14 +1453,11 @@ async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
   }
 }
 
-// ─── Send Telegram notification to the user's own chat ───
 async function sendUserBotMessage(uid, amount, comment) {
   const numericId = parseInt(uid);
   if (isNaN(numericId) || numericId <= 0) return;
-
   const newBalance = (userData.balance || 0).toFixed(2);
   const appUrl = `https://t.me/${BOT_USERNAME}/${APP_PATH}`;
-
   const msgT = window.t;
   const text =
     `${msgT.bot_deposit_confirmed}\n\n` +
@@ -1504,39 +1465,15 @@ async function sendUserBotMessage(uid, amount, comment) {
     `${msgT.bot_new_balance} ${newBalance} TON\n` +
     `${msgT.bot_reference} <code>${comment}</code>\n\n` +
     `${msgT.bot_yield_msg}`;
-
   try {
-    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: numericId,
-        text,
-        parse_mode: 'HTML',
-        reply_markup: {
-          inline_keyboard: [[
-            { text: msgT.bot_open_app, url: appUrl }
-          ]]
-        }
-      })
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: numericId, text, parse_mode: 'HTML',
+        reply_markup: { inline_keyboard: [[{ text: msgT.bot_open_app, url: appUrl }]] } })
     });
-    const data = await res.json();
-    if (!data.ok) {
-      // Common reason: user hasn't started the bot yet
-      console.warn('Bot message failed:', data.description);
-      // Notify admin so they can follow up
-      await sendBotMessage(
-        `⚠️ <b>Could not notify user</b> (ID: <code>${numericId}</code>)\n` +
-        `Reason: ${data.description}\n` +
-        `They may need to start the bot first: @${BOT_USERNAME}`
-      );
-    }
-  } catch(e) {
-    console.error('sendUserBotMessage error:', e);
-  }
+  } catch(e) { console.error('sendUserBotMessage error:', e); }
 }
 
-// ─── Banner helpers ───
 function showDetectionBanner(text, isError = false) {
   const banner = document.getElementById('detection-banner');
   const textEl = document.getElementById('detection-text');
@@ -1547,18 +1484,13 @@ function showDetectionBanner(text, isError = false) {
   banner.classList.add('show');
   document.getElementById('pay-status').classList.remove('show');
 }
-
-function hideDetectionBanner() {
-  document.getElementById('detection-banner').classList.remove('show');
-}
-
+function hideDetectionBanner() { document.getElementById('detection-banner').classList.remove('show'); }
 function showPaySuccess(text) {
   document.getElementById('pay-status-text').textContent = text;
   document.getElementById('pay-status').classList.add('show');
   document.getElementById('detection-banner').classList.remove('show');
 }
 
-// ─── Telegram helpers ───
 const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
@@ -1566,14 +1498,12 @@ tg?.expand();
 async function sendBotMessage(text) {
   try {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chat_id: ADMIN_CHAT, text, parse_mode: 'HTML' })
     });
   } catch(e) {}
 }
 
-// ─── User / Data ───
 let currentUser = null;
 let userData    = null;
 let globalSettings = { referralBonus: 0.05, referralMilestones: [] };
@@ -1591,17 +1521,13 @@ function generateReferralCode(uid) {
   return String(uid).slice(-6).toUpperCase() + suffix;
 }
 
-function buildRefLink(code) {
-  return `https://t.me/${BOT_USERNAME}/${APP_PATH}?startapp=${code}`;
-}
+function buildRefLink(code) { return `https://t.me/${BOT_USERNAME}/${APP_PATH}?startapp=${code}`; }
 
 async function init() {
   const tgUser = tg?.initDataUnsafe?.user;
   currentUser = tgUser?.id ? tgUser : { id: 'dev_user', first_name: 'Dev', last_name: '', username: 'devuser' };
-
   document.getElementById('user-line').textContent =
     `👤 ${currentUser.first_name||''} ${currentUser.last_name||''} ${currentUser.username ? '@'+currentUser.username : ''}`.trim();
-
   await loadGlobalSettings();
   await loadOrCreateUser();
   renderAll();
@@ -1609,7 +1535,6 @@ async function init() {
   loadWithdrawals();
   loadInvitedFriends();
   resumePendingDetection();
-
   const startCode = getStartParam();
   if (startCode && !userData.referredBy && startCode !== userData.referralCode) {
     document.getElementById('ref-code-input').value = startCode;
@@ -1642,19 +1567,9 @@ async function loadOrCreateUser() {
     userData = { id: uid, ...snap.data() };
     if (!userData.referralCode && userData.referral_code) userData.referralCode = userData.referral_code;
     const updates = {};
-    if (!userData.referralCode) {
-      const code = generateReferralCode(uid);
-      userData.referralCode = code;
-      updates.referralCode = code;
-    }
-    // Save language for existing users who don't have it yet
-    if (!userData.lang) {
-      userData.lang = LANG;
-      updates.lang = LANG;
-    }
-    if (Object.keys(updates).length) {
-      try { await updateDoc(ref, updates); } catch(e) {}
-    }
+    if (!userData.referralCode) { const code = generateReferralCode(uid); userData.referralCode = code; updates.referralCode = code; }
+    if (!userData.lang) { userData.lang = LANG; updates.lang = LANG; }
+    if (Object.keys(updates).length) { try { await updateDoc(ref, updates); } catch(e) {} }
   } else {
     const code = generateReferralCode(uid);
     userData = {
@@ -1681,12 +1596,38 @@ function renderAll() {
   document.getElementById('hero-balance').textContent   = bal.toFixed(2);
   document.getElementById('hero-deposited').textContent = dep.toFixed(2);
   document.getElementById('hero-earned').textContent    = '+' + earned.toFixed(2);
-  document.getElementById('hero-sub').textContent       = dep > 0 ? t.hero_sub_active : t.hero_sub_start;
+
+  // hero-sub: show live countdown to next yield if deposits exist
+  const heroSubEl = document.getElementById('hero-sub');
+  if (dep > 0 && depositsData.length > 0) {
+    let minRemaining = Infinity;
+    for (const d of depositsData) {
+      if (d.status !== 'active') continue;
+      const clockTs = d.lastYieldAt?.toMillis
+        ? d.lastYieldAt.toMillis()
+        : (d.createdAt?.toMillis ? d.createdAt.toMillis() : null);
+      if (!clockTs) continue;
+      const rem = (clockTs + 7 * 24 * 3600 * 1000) - Date.now();
+      if (rem < minRemaining) minRemaining = rem;
+    }
+    if (minRemaining < Infinity && minRemaining > 0) {
+      const totalSecs = Math.floor(minRemaining / 1000);
+      const days  = Math.floor(totalSecs / 86400);
+      const hours = Math.floor((totalSecs % 86400) / 3600);
+      const mins  = Math.floor((totalSecs % 3600) / 60);
+      const timeStr = days > 0 ? `${days}${t.days_short} ${hours}${t.hours_short}` : `${hours}${t.hours_short} ${mins}${t.mins_short}`;
+      heroSubEl.textContent = `${t.next_yield_in} ${timeStr}`;
+    } else {
+      heroSubEl.textContent = minRemaining <= 0 ? t.yield_ready : t.hero_sub_active;
+    }
+  } else {
+    heroSubEl.textContent = dep > 0 ? t.hero_sub_active : t.hero_sub_start;
+  }
+
   document.getElementById('wd-balance').textContent     = bal.toFixed(2);
   document.getElementById('header-stars').textContent   = stars;
   document.getElementById('info-stars').textContent     = stars + ' ⭐';
 
-  // Pre-fill wallet if saved
   if (userData.walletAddress) {
     const wdInput = document.getElementById('wd-wallet-input');
     if (wdInput && !wdInput.value) wdInput.value = userData.walletAddress;
@@ -1698,7 +1639,6 @@ function renderAll() {
   document.getElementById('ref-link-display').textContent = refLink;
   document.getElementById('ref-count').textContent        = userData.referralCount || 0;
   document.getElementById('ref-earned').textContent       = stars + ' ⭐';
-
   document.getElementById('info-tgid').textContent    = userData.userId || '—';
   document.getElementById('info-username').textContent = userData.userName ? '@' + userData.userName : '—';
   document.getElementById('info-ref-code').textContent = refCode || '—';
@@ -1711,15 +1651,15 @@ function renderAll() {
     document.getElementById('ref-submit-btn').disabled = true;
   }
 
-  // ─── 7-day projection inside blue hero box ───
+  // ─── 7-day projection ───
   const projBox = document.getElementById('hero-projection');
   if (dep > 0) {
-    const projRate  = dep >= 50 ? 0.10 : 0.05;
+    const projRate  = dep >= 100 ? 0.10 : 0.05;
     const projYield = dep * projRate;
     const projTotal = bal + projYield;
     document.getElementById('hero-proj-val').textContent = projTotal.toFixed(2);
     const badge = document.getElementById('hero-proj-badge');
-    if (dep >= 50) {
+    if (dep >= 100) {
       badge.textContent = t.proj_badge_10;
       badge.style.background = 'rgba(124,58,237,0.35)';
       badge.style.border = '1px solid rgba(255,255,255,0.4)';
@@ -1742,191 +1682,12 @@ function renderMilestones() {
   const count = userData?.referralCount || 0;
   if (!ms.length) { list.innerHTML = '<div class="empty-state"><p>No milestones yet.</p></div>'; return; }
   const nextIdx = ms.findIndex(m => count < m.friends);
-
-  // Rich detailed star SVGs per tier — each uses proper 5-point star path with layered shading
   const starSVGs = [
-
-    // ── Tier 1 : BRONZE star ──────────────────────────────────
-    `<svg class="ms-star-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="br-body" cx="40%" cy="30%" r="65%">
-          <stop offset="0%" stop-color="#F0A060"/>
-          <stop offset="45%" stop-color="#C8682A"/>
-          <stop offset="100%" stop-color="#7A3A10"/>
-        </radialGradient>
-        <radialGradient id="br-shine" cx="35%" cy="25%" r="50%">
-          <stop offset="0%" stop-color="#FFD4A0" stop-opacity="0.9"/>
-          <stop offset="100%" stop-color="#FFD4A0" stop-opacity="0"/>
-        </radialGradient>
-        <filter id="br-shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#7A3A10" flood-opacity="0.5"/>
-        </filter>
-      </defs>
-      <!-- outer glow ring -->
-      <circle cx="32" cy="32" r="28" fill="none" stroke="#C8682A" stroke-width="1" opacity="0.3"/>
-      <!-- star body -->
-      <path d="M32 6 L37.9 22.5 L55.5 22.5 L41.8 32.5 L47.7 49 L32 39 L16.3 49 L22.2 32.5 L8.5 22.5 L26.1 22.5 Z"
-        fill="url(#br-body)" filter="url(#br-shadow)" stroke="#8B4513" stroke-width="0.8" stroke-linejoin="round"/>
-      <!-- highlight facets -->
-      <path d="M32 6 L37.9 22.5 L26.1 22.5 Z" fill="#E8924A" opacity="0.6"/>
-      <path d="M32 6 L37.9 22.5 L41.8 32.5 L32 39 Z" fill="#D4762C" opacity="0.3"/>
-      <!-- shine -->
-      <ellipse cx="28" cy="20" rx="7" ry="4" fill="url(#br-shine)" transform="rotate(-20,28,20)"/>
-      <!-- center gem -->
-      <circle cx="32" cy="30" r="5" fill="#E8924A" opacity="0.5"/>
-      <circle cx="32" cy="30" r="2.5" fill="#FFD4A0" opacity="0.7"/>
-    </svg>`,
-
-    // ── Tier 2 : SILVER star ──────────────────────────────────
-    `<svg class="ms-star-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="sv-body" cx="38%" cy="28%" r="68%">
-          <stop offset="0%" stop-color="#F0F4FF"/>
-          <stop offset="35%" stop-color="#A8B8CC"/>
-          <stop offset="100%" stop-color="#4A5568"/>
-        </radialGradient>
-        <linearGradient id="sv-left" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#CBD5E1"/>
-          <stop offset="100%" stop-color="#718096"/>
-        </linearGradient>
-        <radialGradient id="sv-shine" cx="30%" cy="20%" r="55%">
-          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1"/>
-          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-        </radialGradient>
-        <filter id="sv-shadow">
-          <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#2D3748" flood-opacity="0.4"/>
-        </filter>
-      </defs>
-      <circle cx="32" cy="32" r="28" fill="none" stroke="#94A3B8" stroke-width="1" opacity="0.35"/>
-      <path d="M32 6 L37.9 22.5 L55.5 22.5 L41.8 32.5 L47.7 49 L32 39 L16.3 49 L22.2 32.5 L8.5 22.5 L26.1 22.5 Z"
-        fill="url(#sv-body)" filter="url(#sv-shadow)" stroke="#718096" stroke-width="0.8" stroke-linejoin="round"/>
-      <!-- left facet darker -->
-      <path d="M32 39 L16.3 49 L22.2 32.5 L8.5 22.5 L26.1 22.5 L32 6 Z" fill="url(#sv-left)" opacity="0.35"/>
-      <!-- highlight top -->
-      <path d="M32 6 L37.9 22.5 L26.1 22.5 Z" fill="#E8EEF8" opacity="0.7"/>
-      <!-- sparkles -->
-      <line x1="52" y1="10" x2="52" y2="16" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round"/>
-      <line x1="49" y1="13" x2="55" y2="13" stroke="#CBD5E1" stroke-width="1.5" stroke-linecap="round"/>
-      <line x1="14" y1="44" x2="14" y2="48" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round"/>
-      <line x1="12" y1="46" x2="16" y2="46" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round"/>
-      <!-- shine -->
-      <ellipse cx="27" cy="19" rx="8" ry="4.5" fill="url(#sv-shine)" transform="rotate(-25,27,19)"/>
-      <!-- center gem -->
-      <circle cx="32" cy="30" r="5" fill="#94A3B8" opacity="0.4"/>
-      <circle cx="32" cy="30" r="2.5" fill="white" opacity="0.8"/>
-    </svg>`,
-
-    // ── Tier 3 : GOLD star ────────────────────────────────────
-    `<svg class="ms-star-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <radialGradient id="gd-body" cx="38%" cy="25%" r="70%">
-          <stop offset="0%" stop-color="#FFF4A0"/>
-          <stop offset="30%" stop-color="#FBBF24"/>
-          <stop offset="75%" stop-color="#D97706"/>
-          <stop offset="100%" stop-color="#92400E"/>
-        </radialGradient>
-        <radialGradient id="gd-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#FDE68A" stop-opacity="0.6"/>
-          <stop offset="100%" stop-color="#F59E0B" stop-opacity="0"/>
-        </radialGradient>
-        <radialGradient id="gd-shine" cx="30%" cy="18%" r="50%">
-          <stop offset="0%" stop-color="#FFFDE7" stop-opacity="1"/>
-          <stop offset="100%" stop-color="#FFFDE7" stop-opacity="0"/>
-        </radialGradient>
-        <filter id="gd-shadow">
-          <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#92400E" flood-opacity="0.5"/>
-        </filter>
-      </defs>
-      <!-- ambient glow -->
-      <circle cx="32" cy="32" r="30" fill="url(#gd-glow)"/>
-      <circle cx="32" cy="32" r="28" fill="none" stroke="#F59E0B" stroke-width="1" opacity="0.4"/>
-      <!-- star -->
-      <path d="M32 5 L38.2 22 L56.5 22 L42.2 32.5 L48.4 49.5 L32 39 L15.6 49.5 L21.8 32.5 L7.5 22 L25.8 22 Z"
-        fill="url(#gd-body)" filter="url(#gd-shadow)" stroke="#B45309" stroke-width="0.8" stroke-linejoin="round"/>
-      <!-- dark right shadow facet -->
-      <path d="M42.2 32.5 L48.4 49.5 L32 39 Z" fill="#B45309" opacity="0.25"/>
-      <path d="M32 39 L15.6 49.5 L21.8 32.5 Z" fill="#92400E" opacity="0.2"/>
-      <!-- highlight top facet -->
-      <path d="M32 5 L38.2 22 L25.8 22 Z" fill="#FFF9C4" opacity="0.75"/>
-      <!-- sparkles around star -->
-      <circle cx="54" cy="14" r="1.5" fill="#FDE68A"/>
-      <line x1="54" y1="9" x2="54" y2="12" stroke="#FDE68A" stroke-width="1.2" stroke-linecap="round"/>
-      <line x1="51" y1="14" x2="57" y2="14" stroke="#FDE68A" stroke-width="1.2" stroke-linecap="round"/>
-      <circle cx="11" cy="48" r="1" fill="#FBBF24"/>
-      <line x1="11" y1="44" x2="11" y2="47" stroke="#FBBF24" stroke-width="1" stroke-linecap="round"/>
-      <line x1="8.5" y1="48" x2="13.5" y2="48" stroke="#FBBF24" stroke-width="1" stroke-linecap="round"/>
-      <circle cx="57" cy="38" r="1" fill="#FCD34D" opacity="0.8"/>
-      <!-- shine blob -->
-      <ellipse cx="27" cy="17" rx="8" ry="4" fill="url(#gd-shine)" transform="rotate(-25,27,17)"/>
-      <!-- center jewel -->
-      <circle cx="32" cy="29" r="5.5" fill="#D97706" opacity="0.4"/>
-      <circle cx="32" cy="29" r="3" fill="#FFF9C4" opacity="0.85"/>
-      <circle cx="31" cy="28" r="1" fill="white" opacity="0.6"/>
-    </svg>`,
-
-    // ── Tier 4 : DIAMOND / PRISMATIC star ────────────────────
-    `<svg class="ms-star-svg" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="dm-a" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#E879F9"/>
-          <stop offset="33%" stop-color="#818CF8"/>
-          <stop offset="66%" stop-color="#38BDF8"/>
-          <stop offset="100%" stop-color="#34D399"/>
-        </linearGradient>
-        <linearGradient id="dm-b" x1="1" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#FDE68A"/>
-          <stop offset="50%" stop-color="#F472B6"/>
-          <stop offset="100%" stop-color="#818CF8"/>
-        </linearGradient>
-        <radialGradient id="dm-glow" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#A78BFA" stop-opacity="0.55"/>
-          <stop offset="100%" stop-color="#38BDF8" stop-opacity="0"/>
-        </radialGradient>
-        <radialGradient id="dm-shine" cx="28%" cy="18%" r="55%">
-          <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.95"/>
-          <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
-        </radialGradient>
-        <filter id="dm-shadow">
-          <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#6D28D9" flood-opacity="0.55"/>
-        </filter>
-        <clipPath id="dm-clip">
-          <path d="M32 5 L38.2 22 L56.5 22 L42.2 32.5 L48.4 49.5 L32 39 L15.6 49.5 L21.8 32.5 L7.5 22 L25.8 22 Z"/>
-        </clipPath>
-      </defs>
-      <!-- outer glow -->
-      <circle cx="32" cy="32" r="30" fill="url(#dm-glow)"/>
-      <!-- orbit ring -->
-      <circle cx="32" cy="32" r="28" fill="none" stroke="url(#dm-a)" stroke-width="1.2" opacity="0.5"/>
-      <!-- star base -->
-      <path d="M32 5 L38.2 22 L56.5 22 L42.2 32.5 L48.4 49.5 L32 39 L15.6 49.5 L21.8 32.5 L7.5 22 L25.8 22 Z"
-        fill="url(#dm-a)" filter="url(#dm-shadow)" stroke="#7C3AED" stroke-width="0.8" stroke-linejoin="round"/>
-      <!-- prismatic facet overlay -->
-      <path d="M32 5 L38.2 22 L56.5 22 L42.2 32.5 L32 39 Z" fill="url(#dm-b)" opacity="0.45" clip-path="url(#dm-clip)"/>
-      <!-- white highlight facets -->
-      <path d="M32 5 L38.2 22 L25.8 22 Z" fill="white" opacity="0.3"/>
-      <path d="M32 39 L21.8 32.5 L25.8 22 L32 5 Z" fill="white" opacity="0.08"/>
-      <!-- sparkles -->
-      <circle cx="53" cy="11" r="1.8" fill="#E879F9" opacity="0.9"/>
-      <line x1="53" y1="6" x2="53" y2="9.5" stroke="#E879F9" stroke-width="1.4" stroke-linecap="round"/>
-      <line x1="49" y1="11" x2="57" y2="11" stroke="#E879F9" stroke-width="1.4" stroke-linecap="round"/>
-      <line x1="56" y1="8" x2="58.5" y2="9" stroke="#E879F9" stroke-width="1" stroke-linecap="round"/>
-      <line x1="56" y1="14" x2="58.5" y2="13" stroke="#E879F9" stroke-width="1" stroke-linecap="round"/>
-      <circle cx="10" cy="46" r="1.3" fill="#38BDF8" opacity="0.9"/>
-      <line x1="10" y1="42" x2="10" y2="44.5" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round"/>
-      <line x1="7" y1="46" x2="13" y2="46" stroke="#38BDF8" stroke-width="1.2" stroke-linecap="round"/>
-      <circle cx="56" cy="40" r="1" fill="#34D399" opacity="0.8"/>
-      <line x1="56" y1="37" x2="56" y2="39" stroke="#34D399" stroke-width="1" stroke-linecap="round"/>
-      <line x1="54" y1="40" x2="58" y2="40" stroke="#34D399" stroke-width="1" stroke-linecap="round"/>
-      <!-- shine -->
-      <ellipse cx="26" cy="17" rx="9" ry="4.5" fill="url(#dm-shine)" transform="rotate(-28,26,17)"/>
-      <!-- center gem -->
-      <circle cx="32" cy="29" r="6" fill="white" opacity="0.15"/>
-      <circle cx="32" cy="29" r="3.5" fill="white" opacity="0.4"/>
-      <circle cx="31" cy="27.5" r="1.5" fill="white" opacity="0.7"/>
-    </svg>`
-
+    `<svg class="ms-star-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M179.6 61.2L33.4 117.9c-9.9 3.9-9.8 9.5-.2 11.9l37.4 11.7 14.5 44.3c1.8 5.2 2.7 7.1 5.8 7.1 3.1 0 4.5-1.4 6.3-3.1l18.8-18.2 39.1 28.8c7.2 4 12.4 1.9 14.2-6.7l25.7-121.1c2.5-10-3.7-14.5-14.4-11.4z" fill="white"/></svg>`,
+    `<svg class="ms-star-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M179.6 61.2L33.4 117.9c-9.9 3.9-9.8 9.5-.2 11.9l37.4 11.7 14.5 44.3c1.8 5.2 2.7 7.1 5.8 7.1 3.1 0 4.5-1.4 6.3-3.1l18.8-18.2 39.1 28.8c7.2 4 12.4 1.9 14.2-6.7l25.7-121.1c2.5-10-3.7-14.5-14.4-11.4z" fill="white"/></svg>`,
+    `<svg class="ms-star-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M179.6 61.2L33.4 117.9c-9.9 3.9-9.8 9.5-.2 11.9l37.4 11.7 14.5 44.3c1.8 5.2 2.7 7.1 5.8 7.1 3.1 0 4.5-1.4 6.3-3.1l18.8-18.2 39.1 28.8c7.2 4 12.4 1.9 14.2-6.7l25.7-121.1c2.5-10-3.7-14.5-14.4-11.4z" fill="white"/></svg>`,
+    `<svg class="ms-star-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M179.6 61.2L33.4 117.9c-9.9 3.9-9.8 9.5-.2 11.9l37.4 11.7 14.5 44.3c1.8 5.2 2.7 7.1 5.8 7.1 3.1 0 4.5-1.4 6.3-3.1l18.8-18.2 39.1 28.8c7.2 4 12.4 1.9 14.2-6.7l25.7-121.1c2.5-10-3.7-14.5-14.4-11.4z" fill="white"/></svg>`
   ];
-
   const tierLabels = ['Bronze','Silver','Gold','Diamond'];
   list.innerHTML = '<div class="milestones-wrap">' + ms.map((m, i) => {
     const done   = count >= m.friends;
@@ -1940,19 +1701,19 @@ function renderMilestones() {
     const starsVal = m.stars ? `${m.stars}` : '0';
     const bonusTon = m.bonusTon ? `<span style="font-size:9px;font-weight:700;color:var(--ton2);">+${m.bonusTon} TON</span>` : '';
     const starIcon = starSVGs[Math.min(i, starSVGs.length - 1)];
-    const tierLabel = tierLabels[i] || `Tier ${i+1}`;
+    const tgStarsLbl = 'Telegram Stars';
+    const tgBgSvg = `<svg viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M179.6 61.2L33.4 117.9c-9.9 3.9-9.8 9.5-.2 11.9l37.4 11.7 14.5 44.3c1.8 5.2 2.7 7.1 5.8 7.1 3.1 0 4.5-1.4 6.3-3.1l18.8-18.2 39.1 28.8c7.2 4 12.4 1.9 14.2-6.7l25.7-121.1c2.5-10-3.7-14.5-14.4-11.4z" fill="white"/></svg>`;
     return `<div class="ms-row ${cls}">
-      <div class="ms-icon-badge">
-        ${starIcon}
-      </div>
+      <div class="ms-icon-badge"><div class="ms-tg-bg">${tgBgSvg}</div>${starIcon}</div>
       <div class="ms-info">
         <div class="ms-info-top">
           <span class="ms-friends-label">${m.friends} ${t.milestone_friends_lbl}</span>
           <span class="ms-status-chip ${chipCls}">${chipText}</span>
         </div>
-        <div class="ms-reward-line">
-          <span class="ms-reward-val">+${starsVal} ⭐</span>
-          ${bonusTon}
+        <div class="ms-reward-line"><span class="ms-reward-val">+${starsVal} ⭐</span>${bonusTon}</div>
+        <div class="ms-tg-stars-lbl">
+          <svg width="8" height="8" viewBox="0 0 240 240" fill="none"><path d="M179.6 61.2L33.4 117.9c-9.9 3.9-9.8 9.5-.2 11.9l37.4 11.7 14.5 44.3c1.8 5.2 2.7 7.1 5.8 7.1 3.1 0 4.5-1.4 6.3-3.1l18.8-18.2 39.1 28.8c7.2 4 12.4 1.9 14.2-6.7l25.7-121.1c2.5-10-3.7-14.5-14.4-11.4z" fill="currentColor"/></svg>
+          ${tgStarsLbl}
         </div>
         <div class="ms-bar"><div class="ms-bar-fill" style="width:${pct}%"></div></div>
         <div style="font-size:9px;font-weight:700;color:${done?'var(--green)':isNext?'#6366F1':'var(--muted)'}">${progLbl}</div>
@@ -1993,7 +1754,39 @@ async function loadDeposits() {
     const snap = await getDocs(query(collection(db, 'users/' + String(currentUser.id) + '/deposits'), orderBy('createdAt', 'desc'), limit(20)));
     depositsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderDeposits();
+    refreshHeroSubCountdown();
   } catch(e) {}
+}
+
+// Refresh just the hero-sub countdown text without full re-render
+function refreshHeroSubCountdown() {
+  const dep = userData?.totalDeposited || 0;
+  const heroSubEl = document.getElementById('hero-sub');
+  if (!heroSubEl) return;
+  if (dep <= 0 || !depositsData.length) {
+    heroSubEl.textContent = dep > 0 ? t.hero_sub_active : t.hero_sub_start;
+    return;
+  }
+  let minRemaining = Infinity;
+  for (const d of depositsData) {
+    if (d.status !== 'active') continue;
+    const clockTs = d.lastYieldAt?.toMillis
+      ? d.lastYieldAt.toMillis()
+      : (d.createdAt?.toMillis ? d.createdAt.toMillis() : null);
+    if (!clockTs) continue;
+    const rem = (clockTs + 7 * 24 * 3600 * 1000) - Date.now();
+    if (rem < minRemaining) minRemaining = rem;
+  }
+  if (minRemaining < Infinity && minRemaining > 0) {
+    const totalSecs = Math.floor(minRemaining / 1000);
+    const days  = Math.floor(totalSecs / 86400);
+    const hours = Math.floor((totalSecs % 86400) / 3600);
+    const mins  = Math.floor((totalSecs % 3600) / 60);
+    const timeStr = days > 0 ? `${days}${t.days_short} ${hours}${t.hours_short}` : `${hours}${t.hours_short} ${mins}${t.mins_short}`;
+    heroSubEl.textContent = `${t.next_yield_in} ${timeStr}`;
+  } else {
+    heroSubEl.textContent = minRemaining <= 0 ? t.yield_ready : t.hero_sub_active;
+  }
 }
 
 function renderDeposits() {
@@ -2005,15 +1798,82 @@ function renderDeposits() {
     const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
     const autoTag = d.autoDetected ? ' · <span style="color:var(--ton);font-size:9px;font-weight:700;">⚡ AUTO</span>' : '';
     const depStatusLabel = d.status==='active' ? `<span style="color:var(--green);">${t.deposit_active}</span>` : (t.deposit_pending);
+
+    // ── Rate badge ──────────────────────────────────────────
+    const isPremium  = (d.originalAmount || d.amount || 0) >= 100;
+    const rateClass  = isPremium ? 'premium' : 'standard';
+    const rateLabel  = isPremium ? t.dep_rate_premium : t.dep_rate_standard;
+    const rateBadge  = `<span class="di-rate-badge ${rateClass}">${rateLabel}</span>`;
+
+    // ── Countdown ───────────────────────────────────────────
+    const clockTs = d.lastYieldAt?.toMillis
+      ? d.lastYieldAt.toMillis()
+      : (d.createdAt?.toMillis ? d.createdAt.toMillis() : null);
+
+    let countdownHtml = '';
+    if (clockTs && d.status === 'active') {
+      const remaining = (clockTs + 7 * 24 * 3600 * 1000) - Date.now();
+      countdownHtml = buildCountdownHtml(remaining, d.id, isPremium);
+    }
+
     return `<div class="deposit-item">
       <div class="di-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ton)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-      <div class="di-info"><div class="di-amount">${(d.amount||0).toFixed(2)} TON</div>
-        <div class="di-date">${dt} · ${depStatusLabel}${autoTag}</div></div>
+      <div class="di-info">
+        <div class="di-amount">${(d.amount||0).toFixed(2)} TON</div>
+        <div class="di-date">${dt} · ${depStatusLabel}${autoTag}</div>
+        ${rateBadge}
+        ${countdownHtml}
+      </div>
       <div class="di-right"><div class="di-yield">+${(d.earned||0).toFixed(2)} TON</div><div class="di-weeks">${t.deposit_week} ${d.weeksActive||0}</div></div>
     </div>`;
   }).join('');
   document.getElementById('info-deposits').textContent = depositsData.length;
   document.getElementById('info-weeks').textContent = Math.max(...depositsData.map(d => d.weeksActive || 0), 0);
+  startCountdownTickers();
+}
+
+// ─── Countdown helpers ────────────────────────────────────────────
+
+function buildCountdownHtml(remainingMs, depId, isPremium) {
+  const rate = isPremium ? '10%' : '5%';
+  if (remainingMs <= 0) {
+    return `<div class="di-countdown ready" data-dep-id="${depId}" data-deadline="0">
+      ${t.yield_ready}
+    </div>`;
+  }
+  const totalSecs = Math.floor(remainingMs / 1000);
+  const days  = Math.floor(totalSecs / 86400);
+  const hours = Math.floor((totalSecs % 86400) / 3600);
+  const mins  = Math.floor((totalSecs % 3600) / 60);
+  const urgent = days === 0;
+  const label  = (t.dep_countdown_label || 'Next +%RATE% in').replace('%RATE%', rate);
+  const timeStr = days > 0
+    ? `${days}${t.days_short} ${hours}${t.hours_short}`
+    : `${hours}${t.hours_short} ${mins}${t.mins_short}`;
+  return `<div class="di-countdown${urgent ? ' urgent' : ''}" data-dep-id="${depId}" data-deadline="${Date.now() + remainingMs}">
+    ⏱ ${label} <strong>${timeStr}</strong>
+  </div>`;
+}
+
+let _countdownTimer = null;
+function startCountdownTickers() {
+  if (_countdownTimer) clearInterval(_countdownTimer);
+  _countdownTimer = setInterval(() => {
+    document.querySelectorAll('.di-countdown[data-deadline]').forEach(el => {
+      const deadline = parseInt(el.dataset.deadline || '0');
+      if (!deadline) return;
+      const remaining = deadline - Date.now();
+      const depId = el.dataset.depId;
+      const dep = depositsData.find(d => d.id === depId);
+      const isPremium = dep ? (dep.originalAmount || dep.amount || 0) >= 100 : false;
+      const newHtml = buildCountdownHtml(remaining, depId, isPremium);
+      const tmp = document.createElement('div');
+      tmp.innerHTML = newHtml;
+      const newEl = tmp.firstChild;
+      if (newEl) el.replaceWith(newEl);
+    });
+    refreshHeroSubCountdown();
+  }, 30000);
 }
 
 async function loadWithdrawals() {
@@ -2055,7 +1915,6 @@ window.submitWithdraw = async function() {
           userId: uid, userName, displayName,
           amount, walletAddress: wallet, status: 'pending', createdAt: serverTimestamp()
         });
-        // Notify admin via bot with full user info
         await sendBotMessage(
           `💸 <b>New Withdrawal Request!</b>\n\n` +
           `👤 <b>User:</b> ${userName ? '@' + userName : uid} (${displayName})\n` +
@@ -2074,7 +1933,6 @@ window.submitWithdraw = async function() {
     }
   );
 };
-
 
 window.copyRefLink = function() {
   const code = userData?.referralCode || '';
@@ -2115,104 +1973,64 @@ async function applyRefCode(code, silent = false) {
     renderAll();
     const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
     const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
-    // Admin notification
     await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${newCount}\n🔑 <b>Code used:</b> <code>${code}</code>`);
-    // Notify the REFERRER via Telegram bot (bilingual, based on their saved lang)
     await sendReferralProgressMessage(refDoc.id, newCount, refData);
   } catch(e) { if (!silent) showToast('❌ ' + e.message); }
 }
 
-// ─── Send referral progress/reward message to the referrer ───
 async function sendReferralProgressMessage(referrerId, newCount, refData) {
   const refLang = refData.lang || 'en';
   const ms = globalSettings.referralMilestones;
   const appUrl = `https://t.me/${BOT_USERNAME}/${APP_PATH}`;
   const refLink = buildRefLink(refData.referralCode || '');
-
-  // Check if this new count exactly hits a milestone
   const hitMilestone = ms.find(m => m.friends === newCount);
-
-  // Find next milestone after current count
   const nextMs = ms.find(m => m.friends > newCount);
   const remaining = nextMs ? nextMs.friends - newCount : null;
-
   let text = null;
 
   if (hitMilestone) {
-    // 🎉 Reward unlocked!
     const reward = hitMilestone.stars ? `${hitMilestone.stars} ⭐` : '';
     const bonusTon = hitMilestone.bonusTon ? ` + ${hitMilestone.bonusTon} TON` : '';
     if (refLang === 'ru') {
-      text =
-        `🎉 <b>Награда разблокирована!</b>\n\n` +
-        `Спасибо за помощь! Ты пригласил <b>${newCount} друзей</b> в TonPlay 🙌\n\n` +
-        `🏆 <b>Твоя награда:</b> ${reward}${bonusTon}\n` +
-        `🔓 Открой приложение, чтобы забрать свою награду! 👇`;
+      text = `🎉 <b>Награда разблокирована!</b>\n\nСпасибо за помощь! Ты пригласил <b>${newCount} друзей</b> в TonPlay 🙌\n\n🏆 <b>Твоя награда:</b> ${reward}${bonusTon}\n🔓 Открой приложение, чтобы забрать свою награду! 👇`;
     } else {
-      text =
-        `🎉 <b>Reward Unlocked!</b>\n\n` +
-        `Thank you for your help! You've invited <b>${newCount} friends</b> to TonPlay 🙌\n\n` +
-        `🏆 <b>Your reward:</b> ${reward}${bonusTon}\n` +
-        `🔓 Open the app to claim your reward! 👇`;
+      text = `🎉 <b>Reward Unlocked!</b>\n\nThank you for your help! You've invited <b>${newCount} friends</b> to TonPlay 🙌\n\n🏆 <b>Your reward:</b> ${reward}${bonusTon}\n🔓 Open the app to claim your reward! 👇`;
     }
   } else if (remaining === 5) {
-    // 5 away from next milestone
     if (refLang === 'ru') {
-      text =
-        `🔥 <b>Ты близко!</b>\n\n` +
-        `Пригласи ещё <b>5 друзей</b> и получи <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n` +
-        `📤 Поделись своей реферальной ссылкой сейчас!\n<code>${refLink}</code>`;
+      text = `🔥 <b>Ты близко!</b>\n\nПригласи ещё <b>5 друзей</b> и получи <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n📤 Поделись своей реферальной ссылкой сейчас!\n<code>${refLink}</code>`;
     } else {
-      text =
-        `🔥 <b>You're almost there!</b>\n\n` +
-        `Invite just <b>5 more friends</b> and get <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n` +
-        `📤 Share your invite link now:\n<code>${refLink}</code>`;
+      text = `🔥 <b>You're almost there!</b>\n\nInvite just <b>5 more friends</b> and get <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n📤 Share your invite link now:\n<code>${refLink}</code>`;
     }
   } else if (remaining === 3) {
-    // 3 away from next milestone
     if (refLang === 'ru') {
-      text =
-        `⚡ <b>Совсем чуть-чуть!</b>\n\n` +
-        `Всего <b>3 друга</b> отделяют тебя от <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n` +
-        `📤 Поделись ссылкой прямо сейчас!\n<code>${refLink}</code>`;
+      text = `⚡ <b>Совсем чуть-чуть!</b>\n\nВсего <b>3 друга</b> отделяют тебя от <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n📤 Поделись ссылкой прямо сейчас!\n<code>${refLink}</code>`;
     } else {
-      text =
-        `⚡ <b>So close now!</b>\n\n` +
-        `Only <b>3 more friends</b> stand between you and <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n` +
-        `📤 Share your link right now:\n<code>${refLink}</code>`;
+      text = `⚡ <b>So close now!</b>\n\nOnly <b>3 more friends</b> stand between you and <b>${nextMs.stars} ⭐${nextMs.bonusTon ? ' + ' + nextMs.bonusTon + ' TON' : ''}</b>!\n\n📤 Share your link right now:\n<code>${refLink}</code>`;
     }
   }
 
   if (!text) return;
-
   const numericId = parseInt(referrerId);
   if (isNaN(numericId) || numericId <= 0) return;
-
   try {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: numericId,
-        text,
-        parse_mode: 'HTML',
-        reply_markup: {
-          inline_keyboard: [[
-            { text: refLang === 'ru' ? '🎁 Открыть TonPlay' : '🎁 Open TonPlay', url: appUrl }
-          ]]
-        }
-      })
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: numericId, text, parse_mode: 'HTML',
+        reply_markup: { inline_keyboard: [[{ text: refLang === 'ru' ? '🎁 Открыть TonPlay' : '🎁 Open TonPlay', url: appUrl }]] } })
     });
   } catch(e) { console.error('sendReferralProgressMessage error:', e); }
 }
 
+window.showHowItWorksModal = function() {
+  openModal(t.how_it_works_modal_title, t.how_it_works_modal_body, null);
+  document.getElementById('modal-cancel').style.display = 'none';
+  document.getElementById('modal-confirm').textContent = t.how_it_works_modal_close;
+};
+
 window.showMilestoneInfo = function() {
-  openModal(
-    t.milestone_info_title,
-    `<div style="font-size:12px;color:var(--sub);line-height:1.75;white-space:pre-wrap;">${t.milestone_info_body}</div>`,
-    null
-  );
-  // Hide cancel, rename confirm
+  openModal(t.milestone_info_title,
+    `<div style="font-size:12px;color:var(--sub);line-height:1.75;white-space:pre-wrap;">${t.milestone_info_body}</div>`, null);
   document.getElementById('modal-cancel').style.display = 'none';
   document.getElementById('modal-confirm').textContent = t.milestone_info_close;
 };
@@ -2225,25 +2043,24 @@ function updateEarnPreview() {
   const amount = parseFloat(document.getElementById('deposit-amount').value);
   const preview = document.getElementById('earn-preview');
   if (!amount || amount < 0.5) { preview.style.display = 'none'; return; }
-  const is50Deal = amount >= 50;
-  const rate = is50Deal ? 0.10 : 0.05;
+  const isPremium = amount >= 100;
+  const rate = isPremium ? 0.10 : 0.05;
   const earned = amount * rate;
   document.getElementById('earn-preview-val').textContent = '+' + earned.toFixed(2);
-  document.getElementById('earn-preview-unit').textContent = is50Deal ? t.earn_unit_10 : t.earn_unit_5;
-  document.getElementById('earn-preview-rate-badge').textContent = is50Deal ? '+10% ✨' : '+5%';
-  document.getElementById('earn-preview-rate-badge').style.background = is50Deal ? 'linear-gradient(135deg,rgba(124,58,237,0.15),rgba(124,58,237,0.08))' : 'var(--green-light)';
-  document.getElementById('earn-preview-rate-badge').style.borderColor = is50Deal ? 'rgba(124,58,237,0.3)' : 'rgba(16,185,129,0.3)';
-  document.getElementById('earn-preview-rate-badge').style.color = is50Deal ? '#7C3AED' : 'var(--green)';
-  document.getElementById('earn-preview').style.borderColor = is50Deal ? 'rgba(124,58,237,0.3)' : 'rgba(16,185,129,0.25)';
-  document.getElementById('earn-preview').style.background = is50Deal
+  document.getElementById('earn-preview-unit').textContent = isPremium ? t.earn_unit_10 : t.earn_unit_5;
+  document.getElementById('earn-preview-rate-badge').textContent = isPremium ? '+10% ✨' : '+5%';
+  document.getElementById('earn-preview-rate-badge').style.background = isPremium ? 'linear-gradient(135deg,rgba(124,58,237,0.15),rgba(124,58,237,0.08))' : 'var(--green-light)';
+  document.getElementById('earn-preview-rate-badge').style.borderColor = isPremium ? 'rgba(124,58,237,0.3)' : 'rgba(16,185,129,0.3)';
+  document.getElementById('earn-preview-rate-badge').style.color = isPremium ? '#7C3AED' : 'var(--green)';
+  document.getElementById('earn-preview').style.borderColor = isPremium ? 'rgba(124,58,237,0.3)' : 'rgba(16,185,129,0.25)';
+  document.getElementById('earn-preview').style.background = isPremium
     ? 'linear-gradient(135deg,rgba(124,58,237,0.08),rgba(124,58,237,0.03))'
     : 'linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.03))';
-  document.getElementById('earn-preview-val').style.color = is50Deal ? '#7C3AED' : 'var(--green)';
-  document.getElementById('earn-preview-icon').textContent = is50Deal ? '🚀' : '📈';
+  document.getElementById('earn-preview-val').style.color = isPremium ? '#7C3AED' : 'var(--green)';
+  document.getElementById('earn-preview-icon').textContent = isPremium ? '🚀' : '📈';
   preview.style.display = 'flex';
 }
 
-// Live update as user types
 document.getElementById('deposit-amount').addEventListener('input', updateEarnPreview);
 
 window.setAmount = function(val, btn) {
@@ -2271,7 +2088,6 @@ window.openModal = function(title, body, action) {
 function closeModal() {
   document.getElementById('modal-bg').classList.remove('open');
   modalAction = null;
-  // Reset modal buttons to default state
   document.getElementById('modal-cancel').style.display = '';
   document.getElementById('modal-confirm').textContent = t.confirm_btn;
 }
@@ -2280,12 +2096,11 @@ document.getElementById('modal-confirm').addEventListener('click', async () => {
 document.getElementById('modal-bg').addEventListener('click', e => { if (e.target === document.getElementById('modal-bg')) closeModal(); });
 
 window.showToast = function(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2800);
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2800);
 };
 
-// ─── Resume any pending payments from previous session ───
 async function resumePendingDetection() {
   try {
     const uid = String(currentUser.id);
@@ -2297,9 +2112,7 @@ async function resumePendingDetection() {
       limit(5)
     ));
     if (snap.empty) return;
-
     showDetectionBanner(t.detecting);
-
     for (const docSnap of snap.docs) {
       const pd = docSnap.data();
       const age = Date.now() - (pd.createdAt?.toMillis?.() || 0);
@@ -2307,14 +2120,10 @@ async function resumePendingDetection() {
         await updateDoc(doc(db, 'depositNotifications', docSnap.id), { status: 'expired' });
         continue;
       }
-
-      // For resumed sessions: since wallet already confirmed, credit immediately
-      // The user's wallet confirmation happened — they just closed the app
       await confirmPaymentInFirebase(pd.comment, pd.amount, uid, docSnap.id);
       hideDetectionBanner();
       return;
     }
-
     hideDetectionBanner();
   } catch(e) {
     console.error('resumePendingDetection error:', e);
