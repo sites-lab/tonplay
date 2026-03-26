@@ -655,38 +655,134 @@ async function loadWithdrawals() {
     const snap = await getDocs(query(collection(db, 'withdrawals'), orderBy('createdAt', 'desc'), limit(100)));
     const docs = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
     if (!docs.length) { list.innerHTML = '<div class="empty-state"><div class="emoji">✅</div>No withdrawal requests</div>'; return; }
-    document.getElementById('s-withdrawals').textContent = docs.filter(d => d.status !== 'done').length;
+    document.getElementById('s-withdrawals').textContent = docs.filter(d => d.status === 'pending').length;
     list.innerHTML = docs.map(d => {
       const ts = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleString() : '—';
-      const statusChip = d.status === 'done' ? '<span class="chip done">✅ Paid</span>' : '<span class="chip pending">⏳ Pending</span>';
-      return `<div class="notif-row">
-        <div class="notif-info">
-          <div class="notif-user">@${d.userName || d.userId} <span style="font-weight:400;font-size:10px;color:var(--sub);">(${d.userId})</span></div>
-          <div class="notif-sub">Amount: <strong style="color:var(--gold2);">${(d.amount || 0).toFixed(2)} TON</strong> · ${ts}</div>
-          <div class="notif-addr">📤 To: ${d.walletAddress || '—'}</div>
+      const isPending = d.status === 'pending';
+      const isCancelled = d.status === 'cancelled';
+
+      let statusChip = '';
+      if (d.status === 'done') statusChip = '<span class="chip done">✅ Paid</span>';
+      else if (isCancelled) statusChip = '<span class="chip red">❌ Cancelled</span>';
+      else statusChip = '<span class="chip pending">⏳ Pending</span>';
+
+      // Deposit breakdown
+      let depHtml = '';
+      const deps = d.selectedDeposits || [];
+      if (deps.length) {
+        depHtml = `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;">`;
+        deps.forEach(dep => {
+          const rate = (dep.originalAmount || dep.amount || 0) >= 100 ? '15%' : '10%';
+          depHtml += `<span style="background:rgba(33,150,243,0.1);border:1px solid rgba(33,150,243,0.25);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--ton);">Deposit #${dep.idx}: ${(dep.amount||0).toFixed(2)} TON (${rate})</span>`;
+        });
+        depHtml += `</div>`;
+      }
+
+      const confirmBtn = `<button class="btn-act green" style="padding:7px 14px;font-size:11px;" onclick="adminConfirmWithdrawal('${d.docId}','${d.userId}')">
+        ✅ Confirm &amp; Deduct
+      </button>`;
+      const cancelBtn = `<button class="btn-act red" style="padding:7px 14px;font-size:11px;" onclick="adminCancelWithdrawal('${d.docId}','${d.userId}')">
+        ❌ Cancel
+      </button>`;
+
+      return `<div class="notif-row" style="${isPending ? 'background:linear-gradient(90deg,rgba(245,158,11,0.04),transparent);border-left:3px solid var(--gold);' : ''}">
+        <div class="notif-info" style="flex:1;">
+          <div class="notif-user" style="display:flex;align-items:center;gap:8px;">
+            @${d.userName || d.userId}
+            <span style="font-weight:400;font-size:10px;color:var(--sub);">(${d.userId})</span>
+            ${statusChip}
+          </div>
+          <div class="notif-sub" style="margin-top:4px;">
+            <strong style="color:var(--gold2);font-size:13px;">${(d.amount || 0).toFixed(2)} TON</strong>
+            <span style="color:var(--muted);"> · ${ts}</span>
+          </div>
+          <div class="notif-addr" style="margin-top:3px;">📤 <span onclick="navigator.clipboard?.writeText('${d.walletAddress||''}')" style="cursor:pointer;" title="Click to copy">${d.walletAddress || '—'}</span></div>
+          ${depHtml}
         </div>
-        <div class="notif-actions">
-          ${statusChip}
-          ${d.status !== 'done' ? `<button class="btn-act green" onclick="markWithdrawalDone('${d.docId}','${d.userId}',${d.amount||0})">✅ Mark Paid</button>` : ''}
-        </div>
+        ${isPending ? `<div class="notif-actions" style="flex-direction:column;gap:6px;align-items:stretch;min-width:140px;">${confirmBtn}${cancelBtn}</div>` : ''}
       </div>`;
     }).join('');
   } catch(e) { list.innerHTML = `<div class="empty-state"><div style="color:var(--red);">${e.message}</div></div>`; }
 }
 
-window.markWithdrawalDone = async function(docId, userId, amount) {
-  if (!confirm(`Mark withdrawal of ${amount} TON as paid for ${userId}?`)) return;
+window.adminConfirmWithdrawal = async function(docId, userId) {
+  if (!confirm('Confirm this withdrawal and deduct balance?')) return;
   try {
-    await updateDoc(doc(db, 'withdrawals', docId), { status: 'done', processedAt: serverTimestamp() });
-    // Deduct balance
+    const wdSnap = await getDoc(doc(db, 'withdrawals', docId));
+    if (!wdSnap.exists()) { showToast('❌ Not found'); return; }
+    const wd = wdSnap.data();
+    if (wd.status !== 'pending') { showToast('Already processed'); await loadWithdrawals(); return; }
+
+    // 1. Mark done
+    await updateDoc(doc(db, 'withdrawals', docId), { status: 'done', confirmedAt: serverTimestamp() });
+
+    // 2. Deduct user balance
     const userSnap = await getDoc(doc(db, 'users', userId));
+    let newBal = 0;
     if (userSnap.exists()) {
       const ud = userSnap.data();
-      const newBal = Math.max(0, parseFloat(((ud.balance || 0) - amount).toFixed(6)));
+      newBal = Math.max(0, parseFloat(((ud.balance || 0) - (wd.amount || 0)).toFixed(6)));
       await updateDoc(doc(db, 'users', userId), { balance: newBal });
     }
-    showToast('✅ Marked as paid and balance deducted!');
+
+    // 3. Deduct from deposit cards
+    const selectedDeposits = wd.selectedDeposits || [];
+    for (const dep of selectedDeposits) {
+      if (!dep.id) continue;
+      try {
+        const depRef = doc(db, 'users', userId, 'deposits', dep.id);
+        const depSnap = await getDoc(depRef);
+        if (depSnap.exists()) {
+          const depData = depSnap.data();
+          const remainingAmt = parseFloat(((depData.amount || 0) - dep.amount).toFixed(6));
+          if (remainingAmt <= 0.001) {
+            await updateDoc(depRef, { status: 'withdrawn', amount: 0, withdrawnAt: serverTimestamp() });
+          } else {
+            await updateDoc(depRef, { amount: remainingAmt });
+          }
+        }
+      } catch(e2) { console.warn('Deposit update error:', e2); }
+    }
+
+    // 4. Notify user
+    const numericId = parseInt(userId);
+    if (!isNaN(numericId) && numericId > 0) {
+      await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: numericId, parse_mode: 'HTML',
+          text: `✅ <b>Withdrawal Confirmed!</b>\n\n💰 <b>${(wd.amount||0).toFixed(2)} TON</b> has been sent to:\n<code>${wd.walletAddress}</code>\n\n📊 Your new balance: <b>${newBal.toFixed(4)} TON</b>`
+        })
+      });
+    }
+
+    showToast(`✅ Confirmed! New balance: ${newBal.toFixed(4)} TON`);
     await loadWithdrawals(); await loadPlayers();
+  } catch(e) { showToast('❌ ' + e.message); }
+};
+
+window.adminCancelWithdrawal = async function(docId, userId) {
+  if (!confirm('Cancel this withdrawal request?')) return;
+  try {
+    const wdSnap = await getDoc(doc(db, 'withdrawals', docId));
+    if (!wdSnap.exists()) { showToast('❌ Not found'); return; }
+    const wd = wdSnap.data();
+    await updateDoc(doc(db, 'withdrawals', docId), { status: 'cancelled', cancelledAt: serverTimestamp() });
+
+    // Notify user
+    const numericId = parseInt(userId);
+    if (!isNaN(numericId) && numericId > 0) {
+      await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: numericId, parse_mode: 'HTML',
+          text: `❌ <b>Withdrawal Rejected</b>\n\nYour withdrawal request of <b>${(wd.amount||0).toFixed(2)} TON</b> was cancelled by the admin. Please contact support if you have questions.`
+        })
+      });
+    }
+
+    showToast('❌ Withdrawal cancelled');
+    await loadWithdrawals();
   } catch(e) { showToast('❌ ' + e.message); }
 };
 
