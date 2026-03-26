@@ -218,7 +218,56 @@ html,body{
 .deal-stat-val{font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:#fff;line-height:1;}
 .deal-stat-lbl{font-size:9px;color:rgba(255,255,255,0.7);margin-top:3px;font-weight:600;letter-spacing:.3px;}
 
-/* ─── DEPOSIT ITEMS ─── */
+/* ─── DEPOSIT SLOT CARDS ─── */
+.dep-slots{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.dep-slot-card{
+  border-radius:16px;padding:14px 16px;
+  position:relative;overflow:hidden;
+  box-shadow:0 4px 16px rgba(0,0,0,0.08);
+  cursor:default;
+  transition:transform .15s;
+}
+.dep-slot-card:active{transform:scale(0.98);}
+
+/* Slot 1 — Blue */
+.dep-slot-1{
+  background:linear-gradient(135deg,#1565C0,#2196F3,#42A5F5);
+  box-shadow:0 4px 16px rgba(33,150,243,0.3);
+}
+/* Slot 2 — Gold */
+.dep-slot-2{
+  background:linear-gradient(135deg,#B45309,#D97706,#FBBF24);
+  box-shadow:0 4px 16px rgba(217,119,6,0.3);
+}
+/* Slot 3 — Green */
+.dep-slot-3{
+  background:linear-gradient(135deg,#065F46,#059669,#34D399);
+  box-shadow:0 4px 16px rgba(16,185,129,0.3);
+}
+/* Slot 4 — Grey */
+.dep-slot-4{
+  background:linear-gradient(135deg,#374151,#6B7280,#9CA3AF);
+  box-shadow:0 4px 16px rgba(107,114,128,0.3);
+}
+
+.dep-slot-num{
+  position:absolute;top:10px;right:12px;
+  font-family:'DM Mono',monospace;font-size:22px;font-weight:900;
+  color:rgba(255,255,255,0.18);line-height:1;
+  pointer-events:none;
+}
+.dep-slot-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.dep-slot-label{font-size:9px;font-weight:800;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase;}
+.dep-slot-status{font-size:8px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.35);letter-spacing:.4px;}
+.dep-slot-amount{font-family:'DM Mono',monospace;font-size:26px;font-weight:700;color:#fff;line-height:1;margin-bottom:2px;}
+.dep-slot-unit{font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;}
+.dep-slot-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+.dep-slot-date{font-size:9px;color:rgba(255,255,255,0.65);font-weight:600;}
+.dep-slot-badge{font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.3);}
+.dep-slot-countdown{font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:6px;display:flex;align-items:center;gap:4px;}
+.dep-slot-countdown.ready{color:#86EFAC;}
+
+/* ─── DEPOSIT ITEMS (legacy, keep for fallback) ─── */
 .deposit-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);}
 .deposit-item:last-child{border:none;}
 .di-icon{width:40px;height:40px;border-radius:12px;background:var(--ton-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -1613,7 +1662,7 @@ function renderAll() {
         ? d.lastYieldAt.toMillis()
         : (d.createdAt?.toMillis ? d.createdAt.toMillis() : null);
       if (!clockTs) continue;
-      const rem = (clockTs + 7 * 24 * 3600 * 1000) - Date.now();
+      const rem = (clockTs + 15 * 24 * 3600 * 1000) - Date.now();
       if (rem < minRemaining) minRemaining = rem;
     }
     if (minRemaining < Infinity && minRemaining > 0) {
@@ -1778,39 +1827,70 @@ function renderDeposits() {
   const title = document.getElementById('deposits-title');
   if (!depositsData.length) { list.style.display = 'none'; title.style.display = 'none'; return; }
   title.style.display = 'block'; list.style.display = 'block';
-  list.innerHTML = depositsData.map(d => {
+
+  // ── Slot colours (up to 4 deposits) ──
+  const SLOT_COLORS = ['dep-slot-1','dep-slot-2','dep-slot-3','dep-slot-4'];
+  const SLOT_LABELS = ['Deposit #1','Deposit #2','Deposit #3','Deposit #4'];
+
+  // Only show up to 4 active deposits as coloured cards; rest hidden or shown below
+  const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 4);
+  const otherDeposits  = depositsData.filter(d => d.status !== 'active');
+
+  const slotCards = activeDeposits.map((d, idx) => {
     const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
-    const autoTag = d.autoDetected ? ' · <span style="color:var(--ton);font-size:9px;font-weight:700;">⚡ AUTO</span>' : '';
-    const depStatusLabel = d.status==='active' ? `<span style="color:var(--green);">${t.deposit_active}</span>` : (t.deposit_pending);
+    const isPremium = (d.originalAmount || d.amount || 0) >= 100;
+    const rateBadge = isPremium ? t.dep_rate_premium : t.dep_rate_standard;
+    const slotClass = SLOT_COLORS[idx] || 'dep-slot-1';
+    const slotLabel = SLOT_LABELS[idx] || `Deposit #${idx+1}`;
 
-    // ── Rate badge ──────────────────────────────────────────
-    const isPremium  = (d.originalAmount || d.amount || 0) >= 100;
-    const rateClass  = isPremium ? 'premium' : 'standard';
-    const rateLabel  = isPremium ? t.dep_rate_premium : t.dep_rate_standard;
-    const rateBadge  = `<span class="di-rate-badge ${rateClass}">${rateLabel}</span>`;
-
-    // ── Countdown ───────────────────────────────────────────
     const clockTs = d.lastYieldAt?.toMillis
       ? d.lastYieldAt.toMillis()
       : (d.createdAt?.toMillis ? d.createdAt.toMillis() : null);
-
-    let countdownHtml = '';
-    if (clockTs && d.status === 'active') {
-      const remaining = (clockTs + 7 * 24 * 3600 * 1000) - Date.now();
-      countdownHtml = buildCountdownHtml(remaining, d.id, isPremium);
+    let cdHtml = '';
+    if (clockTs) {
+      const remaining = (clockTs + 15 * 24 * 3600 * 1000) - Date.now();
+      if (remaining <= 0) {
+        cdHtml = `<div class="dep-slot-countdown ready" data-dep-id="${d.id}" data-deadline="0">🎉 ${t.yield_ready}</div>`;
+      } else {
+        const totalSecs = Math.floor(remaining / 1000);
+        const days  = Math.floor(totalSecs / 86400);
+        const hours = Math.floor((totalSecs % 86400) / 3600);
+        const mins  = Math.floor((totalSecs % 3600) / 60);
+        const timeStr = days > 0 ? `${days}${t.days_short} ${hours}${t.hours_short}` : `${hours}${t.hours_short} ${mins}${t.mins_short}`;
+        const lbl = (t.dep_countdown_label||'Next +%RATE% in').replace('%RATE%', isPremium?'15%':'10%');
+        cdHtml = `<div class="dep-slot-countdown" data-dep-id="${d.id}" data-deadline="${Date.now()+remaining}">⏱ ${lbl} <strong>${timeStr}</strong></div>`;
+      }
     }
 
-    return `<div class="deposit-item">
-      <div class="di-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--ton)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-      <div class="di-info">
-        <div class="di-amount">${(d.amount||0).toFixed(2)} TON</div>
-        <div class="di-date">${dt} · ${depStatusLabel}${autoTag}</div>
-        ${rateBadge}
-        ${countdownHtml}
+    return `<div class="dep-slot-card ${slotClass}">
+      <div class="dep-slot-num">${idx+1}</div>
+      <div class="dep-slot-top">
+        <span class="dep-slot-label">${slotLabel}</span>
+        <span class="dep-slot-status">${t.deposit_active}</span>
       </div>
-      <div class="di-right"><div class="di-yield">+${(d.earned||0).toFixed(2)} TON</div><div class="di-weeks">${t.deposit_week} ${d.weeksActive||0}</div></div>
+      <div class="dep-slot-amount">${(d.amount||0).toFixed(2)}</div>
+      <div class="dep-slot-unit">TON</div>
+      <div class="dep-slot-meta">
+        <span class="dep-slot-date">📅 ${dt}</span>
+        <span class="dep-slot-badge">${rateBadge}</span>
+      </div>
+      ${cdHtml}
     </div>`;
   }).join('');
+
+  // Pending / old deposits shown as compact rows below
+  const otherRows = otherDeposits.map(d => {
+    const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
+    return `<div class="deposit-item">
+      <div class="di-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+      <div class="di-info">
+        <div class="di-amount">${(d.amount||0).toFixed(2)} TON</div>
+        <div class="di-date">${dt} · ${t.deposit_pending}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  list.innerHTML = `<div class="dep-slots">${slotCards}</div>${otherRows ? `<div class="card" style="margin-top:0;">${otherRows}</div>` : ''}`;
   document.getElementById('info-deposits').textContent = depositsData.length;
   document.getElementById('info-weeks').textContent = Math.max(...depositsData.map(d => d.weeksActive || 0), 0);
   startCountdownTickers();
@@ -1843,6 +1923,29 @@ let _countdownTimer = null;
 function startCountdownTickers() {
   if (_countdownTimer) clearInterval(_countdownTimer);
   _countdownTimer = setInterval(() => {
+    // Tick slot-card countdowns
+    document.querySelectorAll('.dep-slot-countdown[data-deadline]').forEach(el => {
+      const deadline = parseInt(el.dataset.deadline || '0');
+      if (!deadline) return;
+      const remaining = deadline - Date.now();
+      const depId = el.dataset.depId;
+      const dep = depositsData.find(d => d.id === depId);
+      const isPremium = dep ? (dep.originalAmount || dep.amount || 0) >= 100 : false;
+      if (remaining <= 0) {
+        el.className = 'dep-slot-countdown ready';
+        el.dataset.deadline = '0';
+        el.innerHTML = `🎉 ${t.yield_ready}`;
+        return;
+      }
+      const totalSecs = Math.floor(remaining / 1000);
+      const days  = Math.floor(totalSecs / 86400);
+      const hours = Math.floor((totalSecs % 86400) / 3600);
+      const mins  = Math.floor((totalSecs % 3600) / 60);
+      const timeStr = days > 0 ? `${days}${t.days_short} ${hours}${t.hours_short}` : `${hours}${t.hours_short} ${mins}${t.mins_short}`;
+      const lbl = (t.dep_countdown_label||'Next +%RATE% in').replace('%RATE%', isPremium?'15%':'10%');
+      el.innerHTML = `⏱ ${lbl} <strong>${timeStr}</strong>`;
+    });
+    // Also tick legacy di-countdown elements if any
     document.querySelectorAll('.di-countdown[data-deadline]').forEach(el => {
       const deadline = parseInt(el.dataset.deadline || '0');
       if (!deadline) return;
@@ -2028,11 +2131,11 @@ function updateEarnPreview() {
   const preview = document.getElementById('earn-preview');
   if (!amount || amount < 0.5) { preview.style.display = 'none'; return; }
   const isPremium = amount >= 100;
-  const rate = isPremium ? 0.10 : 0.05;
+  const rate = isPremium ? 0.15 : 0.10;
   const earned = amount * rate;
   document.getElementById('earn-preview-val').textContent = '+' + earned.toFixed(2);
   document.getElementById('earn-preview-unit').textContent = isPremium ? t.earn_unit_10 : t.earn_unit_5;
-  document.getElementById('earn-preview-rate-badge').textContent = isPremium ? '+10% ✨' : '+5%';
+  document.getElementById('earn-preview-rate-badge').textContent = isPremium ? '+15% ✨' : '+10%';
   document.getElementById('earn-preview-rate-badge').style.background = isPremium ? 'linear-gradient(135deg,rgba(124,58,237,0.15),rgba(124,58,237,0.08))' : 'var(--green-light)';
   document.getElementById('earn-preview-rate-badge').style.borderColor = isPremium ? 'rgba(124,58,237,0.3)' : 'rgba(16,185,129,0.3)';
   document.getElementById('earn-preview-rate-badge').style.color = isPremium ? '#7C3AED' : 'var(--green)';

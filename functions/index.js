@@ -1,17 +1,9 @@
 /**
  * TonPlay – Firebase Cloud Functions
  * ────────────────────────────────────────────────────────────────
- * 1. watchTonPayments       – every 1 min, auto-credits deposits
- * 2. processWeeklyYield     – every hour, pays 10% / 15% yield
- * 3. checkNoWithdrawBonus   – every hour, awards TG Stars to users
- *    who deposited ≥15 TON and haven't withdrawn:
- *      • After week 1  → notification (in-app + Telegram)
- *      • After 4 weeks (1 month) → Stars credited
- *        Stars = 100 base + 10 per extra TON above 15 (max 50 extra TON)
- *        Example: 20 TON → 100 + 50 = 150 ⭐
- *                 45 TON → 100 + 300 = 400 ⭐
- *                 65 TON → 100 + 500 = 600 ⭐ (capped)
- * 4. checkTonPayment        – HTTP manual trigger
+ * 1. watchTonPayments   – every 1 min, auto-credits deposits
+ * 2. processWeeklyYield – every hour, pays 10% / 15% yield
+ * 3. checkTonPayment    – HTTP manual trigger
  */
 
 const functions = require('firebase-functions');
@@ -30,21 +22,13 @@ const ADMIN_CHAT     = '5222030484';
 const BOT_USERNAME   = 'Ton_Play_tbot';
 const APP_PATH       = 'get_ton';
 
-const SEVEN_DAYS_MS   = 7  * 24 * 60 * 60 * 1000;  // kept for NWB week-1 check
 const FIFTEEN_DAYS_MS = 15 * 24 * 60 * 60 * 1000;  // standard yield cycle
 const TWO_WEEKS_MS    = 14 * 24 * 60 * 60 * 1000;  // premium yield cycle (100+ TON)
-const FOUR_WEEKS_MS   = 28 * 24 * 60 * 60 * 1000;
 
 // Yield
 const YIELD_STANDARD     = 0.10;  // 10% every 15 days
 const YIELD_PREMIUM      = 0.15;  // 15% every 2 weeks (100+ TON)
 const PREMIUM_THRESHOLD  = 100;
-
-// No-Withdraw Stars Bonus
-const NWB_MIN_TON        = 15;    // min deposit to qualify
-const NWB_BASE_STARS     = 100;   // base stars after 4 weeks
-const NWB_STARS_PER_TON  = 10;    // extra stars per TON above 15
-const NWB_MAX_EXTRA_TON  = 50;    // cap on extra TON (50 → max +500 extra)
 // ─────────────────────────────────────────────────────────────────
 
 
@@ -198,201 +182,6 @@ async function runWeeklyYield() {
 }
 
 
-// ═══════════════════════════════════════════════════════════════════
-// 3.  NO-WITHDRAW BONUS  (every hour)
-//
-//  Rules:
-//  • Deposit must be ≥ 15 TON (originalAmount)
-//  • No withdrawal recorded for this user since deposit
-//
-//  Timeline per qualifying deposit:
-//    Week 1 (7 days)  → In-app + Telegram NOTIFICATION only
-//                        "Keep going! Hold for 3 more weeks to earn ⭐ Stars"
-//    Week 4 (28 days) → Stars credited + notification
-//                        Stars = 100 + 10 × min(extraTON, 50)
-//
-//  Tracking stored on the deposit doc:
-//    nwbWeek1NotifSent: bool
-//    nwbStarsAwarded:   bool
-// ═══════════════════════════════════════════════════════════════════
-exports.checkNoWithdrawBonus = functions.pubsub
-  .schedule('every 60 minutes')
-  .onRun(async () => {
-    console.log('⭐ Checking no-withdraw bonus...');
-    try { await runNoWithdrawBonus(); } catch (err) { console.error('checkNoWithdrawBonus error:', err); }
-    return null;
-  });
-
-exports.triggerNoWithdrawBonus = functions.https.onRequest(async (req, res) => {
-  try {
-    await runNoWithdrawBonus();
-    res.json({ ok: true });
-  } catch (err) {
-    res.status(500).json({ ok: false, error: err.message });
-  }
-});
-
-async function runNoWithdrawBonus() {
-  const now      = Date.now();
-  const usersSnap = await db.collection('users').get();
-  if (usersSnap.empty) return;
-
-  for (const userDoc of usersSnap.docs) {
-    const userId = userDoc.id;
-    const ud     = userDoc.data();
-
-    // Check if user has any completed (done) withdrawal
-    const wdSnap = await db.collection('withdrawals')
-      .where('userId', '==', userId)
-      .where('status', '==', 'done')
-      .limit(1)
-      .get();
-    const hasWithdrawn = !wdSnap.empty;
-
-    // Also check pending withdrawals (to be safe — treat pending as "tried to withdraw")
-    const wdPendingSnap = await db.collection('withdrawals')
-      .where('userId', '==', userId)
-      .where('status', '==', 'pending')
-      .limit(1)
-      .get();
-    const hasPendingWd = !wdPendingSnap.empty;
-
-    if (hasWithdrawn || hasPendingWd) continue; // user withdrew — skip
-
-    // Check active deposits ≥ NWB_MIN_TON
-    const depositsSnap = await db
-      .collection('users').doc(userId)
-      .collection('deposits')
-      .where('status', '==', 'active')
-      .get();
-
-    if (depositsSnap.empty) continue;
-
-    for (const depDoc of depositsSnap.docs) {
-      const dep       = depDoc.data();
-      const original  = dep.originalAmount || dep.amount || 0;
-      if (original < NWB_MIN_TON) continue;
-
-      const createdTs = dep.createdAt?.toMillis ? dep.createdAt.toMillis() : null;
-      if (!createdTs) continue;
-
-      const ageMs = now - createdTs;
-
-      // ── Week 1 notification (≥ 7 days, not yet sent) ──────────
-      if (ageMs >= SEVEN_DAYS_MS && !dep.nwbWeek1NotifSent) {
-        const extraTon   = Math.min(original - NWB_MIN_TON, NWB_MAX_EXTRA_TON);
-        const starsToEarn = NWB_BASE_STARS + Math.floor(extraTon) * NWB_STARS_PER_TON;
-        const lang = ud.lang || 'en';
-
-        const week1Msg = lang === 'ru'
-          ? `🎉 <b>Отличная работа!</b>\n\n` +
-            `💎 Вы держите <b>${original.toFixed(1)} TON</b> уже 1 неделю без вывода!\n\n` +
-            `⭐ <b>Продолжайте ещё 3 недели</b> (всего 1 месяц) — и получите\n` +
-            `<b>${starsToEarn} Telegram Stars</b> прямо на свой аккаунт!\n\n` +
-            `🏦 Ваш депозит продолжает расти (+10% каждые 15 дней). Не спешите выводить!\n\n` +
-            `⏳ <i>Осталось 3 недели до награды</i>\n👇 Открыть приложение`
-          : `🎉 <b>Great job!</b>\n\n` +
-            `💎 You've held <b>${original.toFixed(1)} TON</b> for 1 full week without withdrawing!\n\n` +
-            `⭐ <b>Keep going for 3 more weeks</b> (1 month total) and earn\n` +
-            `<b>${starsToEarn} Telegram Stars</b> sent straight to your account!\n\n` +
-            `🏦 Your deposit keeps growing (+10% every 15 days). Don't withdraw yet!\n\n` +
-            `⏳ <i>3 weeks left until your Stars reward</i>\n👇 Open the app`;
-
-        const appUrl = `https://t.me/${BOT_USERNAME}/${APP_PATH}`;
-        const btnLabel = lang === 'ru' ? '🎮 Открыть TonPlay' : '🎮 Open TonPlay';
-
-        await sendBotMessageWithButton(userId, week1Msg, btnLabel, appUrl);
-
-        // Mark notif sent on the deposit doc
-        await db.collection('users').doc(userId)
-          .collection('deposits').doc(depDoc.id)
-          .update({ nwbWeek1NotifSent: true });
-
-        // Also write a Firestore notification so the in-app popup can show it
-        await db.collection('users').doc(userId)
-          .collection('notifications').add({
-            type:    'nwb_week1',
-            depositId: depDoc.id,
-            starsToEarn,
-            depositAmount: original,
-            read:    false,
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-          });
-
-        console.log(`📣 Week-1 NWB notif → user ${userId} | deposit ${depDoc.id} | ${starsToEarn} ⭐ pending`);
-      }
-
-      // ── 4-week Stars payout (≥ 28 days, not yet awarded) ──────
-      if (ageMs >= FOUR_WEEKS_MS && !dep.nwbStarsAwarded) {
-        const extraTon    = Math.min(original - NWB_MIN_TON, NWB_MAX_EXTRA_TON);
-        const starsEarned = NWB_BASE_STARS + Math.floor(extraTon) * NWB_STARS_PER_TON;
-        const lang = ud.lang || 'en';
-
-        // Credit stars to user doc
-        await db.runTransaction(async (t) => {
-          const depRef  = db.collection('users').doc(userId).collection('deposits').doc(depDoc.id);
-          const userRef = db.collection('users').doc(userId);
-          const [freshDep, freshUser] = await Promise.all([t.get(depRef), t.get(userRef)]);
-
-          // Idempotency
-          if (freshDep.data()?.nwbStarsAwarded) return;
-
-          t.update(depRef, { nwbStarsAwarded: true, nwbStarsAmount: starsEarned });
-
-          if (freshUser.exists) {
-            const curStars = freshUser.data().referralStars || 0;
-            t.update(userRef, { referralStars: curStars + starsEarned });
-          }
-        });
-
-        // Telegram notification
-        const appUrl   = `https://t.me/${BOT_USERNAME}/${APP_PATH}`;
-        const btnLabel = lang === 'ru' ? '🎮 Открыть TonPlay' : '🎮 Open TonPlay';
-
-        const starMsg = lang === 'ru'
-          ? `🌟 <b>Поздравляем! Вы получили ${starsEarned} ⭐ Telegram Stars!</b>\n\n` +
-            `💎 Вы держали <b>${original.toFixed(1)} TON</b> целый месяц без вывода — это потрясающе!\n\n` +
-            `📊 <b>Как начислено:</b>\n` +
-            `• Базовая награда: 100 ⭐\n` +
-            `• Бонус за депозит (${Math.min(Math.floor(original - NWB_MIN_TON), NWB_MAX_EXTRA_TON)} TON × 10): +${Math.floor(extraTon) * NWB_STARS_PER_TON} ⭐\n` +
-            `• <b>Итого: ${starsEarned} ⭐ Stars</b>\n\n` +
-            `⭐ Stars уже зачислены на ваш баланс в TonPlay!\n\n` +
-            `👇 Откройте приложение, чтобы увидеть свой баланс`
-          : `🌟 <b>Congratulations! You've earned ${starsEarned} ⭐ Telegram Stars!</b>\n\n` +
-            `💎 You held <b>${original.toFixed(1)} TON</b> for a full month without withdrawing — incredible!\n\n` +
-            `📊 <b>How it's calculated:</b>\n` +
-            `• Base reward: 100 ⭐\n` +
-            `• Deposit bonus (${Math.min(Math.floor(original - NWB_MIN_TON), NWB_MAX_EXTRA_TON)} TON × 10): +${Math.floor(extraTon) * NWB_STARS_PER_TON} ⭐\n` +
-            `• <b>Total: ${starsEarned} ⭐ Stars</b>\n\n` +
-            `⭐ Stars have been credited to your TonPlay balance!\n\n` +
-            `👇 Open the app to see your Stars balance`;
-
-        await sendBotMessageWithButton(userId, starMsg, btnLabel, appUrl);
-
-        // In-app notification
-        await db.collection('users').doc(userId)
-          .collection('notifications').add({
-            type:    'nwb_stars_awarded',
-            depositId: depDoc.id,
-            starsEarned,
-            depositAmount: original,
-            read:    false,
-            createdAt: admin.firestore.FieldValue.serverTimestamp()
-          });
-
-        // Admin log
-        await sendBotMessage(
-          `⭐ <b>NWB Stars Awarded</b>\n` +
-          `👤 User: ${ud.userName ? '@'+ud.userName : userId}\n` +
-          `💰 Deposit: ${original.toFixed(2)} TON (held 4 weeks)\n` +
-          `⭐ Stars: ${starsEarned}`
-        );
-
-        console.log(`✅ NWB Stars: ${starsEarned} ⭐ → user ${userId} | deposit ${depDoc.id}`);
-      }
-    }
-  }
-}
 
 
 // ═══════════════════════════════════════════════════════════════════
@@ -485,8 +274,6 @@ async function creditUser(pending, tx) {
       earned:         0,
       autoDetected:   true,
       lastYieldAt:    null,
-      nwbWeek1NotifSent: false,
-      nwbStarsAwarded:   false,
       createdAt:      admin.firestore.FieldValue.serverTimestamp()
     });
 
