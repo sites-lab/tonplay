@@ -703,6 +703,27 @@ const T = {
     min_deposit: 'Min Deposit',
     payout_schedule: 'Payout Schedule',
     payout_value: 'Every 15 days',
+    notif_title: 'How does TonPlay work?',
+    notif_body: 'Deposit TON → earn +10% every 15 days. Invite friends → earn Stars. Withdraw anytime!',
+    notif_btn: 'Got it 👍',
+    wd_select_label: 'Select Deposit to Withdraw From',
+    wd_all: 'ALL',
+    wd_deposit_label: 'Deposit(s) #',
+    wd_yield_label: 'Yield:',
+    wd_multiple_rates: 'Multiple rates',
+    wd_deposits_selected: (n) => `${n} deposit${n!==1?'s':''} selected`,
+    dep_inline_deposited: 'TON deposited',
+    dep_inline_you_get: '→ You will get:',
+    dep_inline_deposit: 'Deposit #',
+    dep_inline_active: 'Active',
+    dep_inline_ready: 'Ready!',
+    dep_inline_countdown_label: 'Next yield in',
+    deposit_active: 'Active',
+    deposit_pending: 'Pending',
+    dep_rate_premium: '🌟 15% / 2 weeks',
+    dep_rate_standard: '10% / 15 days',
+    total_deposited_lbl: 'DEPOSITED',
+    total_earned_lbl: 'TOTAL EARNED',
     compounding: 'Compounding',
     yes: 'Yes',
     weekly_yield_tile: 'Per 15 Days',
@@ -878,6 +899,27 @@ const T = {
     min_deposit: 'Мин. депозит',
     payout_schedule: 'График выплат',
     payout_value: 'Каждые 15 дней',
+    notif_title: 'Как работает TonPlay?',
+    notif_body: 'Сделайте депозит → получайте +10% каждые 15 дней. Приглашайте друзей → зарабатывайте звёзды. Выводите в любое время!',
+    notif_btn: 'Понятно 👍',
+    wd_select_label: 'Выберите депозит для вывода',
+    wd_all: 'ВСЕ',
+    wd_deposit_label: 'Депозит(ы) №',
+    wd_yield_label: 'Доходность:',
+    wd_multiple_rates: 'Разные ставки',
+    wd_deposits_selected: (n) => `${n} депозит${n===1?'':n<5?'а':'ов'} выбрано`,
+    dep_inline_deposited: 'TON внесено',
+    dep_inline_you_get: '→ Вы получите:',
+    dep_inline_deposit: 'Депозит №',
+    dep_inline_active: 'Активный',
+    dep_inline_ready: 'Готово!',
+    dep_inline_countdown_label: 'Следующая выплата через',
+    deposit_active: 'Активный',
+    deposit_pending: 'В обработке',
+    dep_rate_premium: '🌟 15% / 2 нед.',
+    dep_rate_standard: '10% / 15 дней',
+    total_deposited_lbl: 'ВНЕСЕНО',
+    total_earned_lbl: 'ЗАРАБОТАНО ВСЕГО',
     compounding: 'Реинвестирование',
     yes: 'Да',
     weekly_yield_tile: 'За 15 дней',
@@ -1152,12 +1194,12 @@ window.LANG = LANG;
     </div>
     <!-- Select deposit card to withdraw from -->
     <div id="wd-deposit-select" style="display:none;margin-bottom:10px;">
-      <div class="sec-title" style="margin-bottom:6px;">Select Deposit to Withdraw From</div>
+      <div class="sec-title" style="margin-bottom:6px;" id="wd-select-label">Select Deposit to Withdraw From</div>
       <div id="wd-deposit-pills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
       <div id="wd-deposit-info" style="background:linear-gradient(135deg,rgba(245,158,11,0.10),rgba(217,119,6,0.05));border:1.5px solid rgba(245,158,11,0.3);border-radius:14px;padding:12px 14px;display:none;">
-        <div style="font-size:10px;font-weight:800;color:var(--gold2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">Deposit(s) #<span id="wd-sel-num">1</span></div>
+        <div style="font-size:10px;font-weight:800;color:var(--gold2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;" id="wd-deposit-label-el">Deposit(s) #<span id="wd-sel-num">1</span></div>
         <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--text);" id="wd-sel-amount">0.00 TON</div>
-        <div style="font-size:11px;color:var(--sub);margin-top:2px;">Yield: <span style="color:var(--green);font-weight:700;" id="wd-sel-yield">+0.00 TON</span> &nbsp;·&nbsp; <span id="wd-sel-rate">10% / 15d</span></div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px;"><span id="wd-yield-label-el">Yield:</span> <span style="color:var(--green);font-weight:700;" id="wd-sel-yield">+0.00 TON</span> &nbsp;·&nbsp; <span id="wd-sel-rate">10% / 15d</span></div>
         <div style="font-size:10px;color:var(--sub);margin-top:3px;" id="wd-sel-date"></div>
       </div>
     </div>
@@ -1758,6 +1800,18 @@ function renderMilestones() {
     `<svg class="ms-star-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M179.6 61.2L33.4 117.9c-9.9 3.9-9.8 9.5-.2 11.9l37.4 11.7 14.5 44.3c1.8 5.2 2.7 7.1 5.8 7.1 3.1 0 4.5-1.4 6.3-3.1l18.8-18.2 39.1 28.8c7.2 4 12.4 1.9 14.2-6.7l25.7-121.1c2.5-10-3.7-14.5-14.4-11.4z" fill="white"/></svg>`
   ];
   const tierLabels = ['Bronze','Silver','Gold','Diamond'];
+  // Apply withdraw label translations
+  const wdSelLabelEl = document.getElementById('wd-select-label');
+  if (wdSelLabelEl) wdSelLabelEl.textContent = t.wd_select_label;
+  const wdDepLabelEl = document.getElementById('wd-deposit-label-el');
+  if (wdDepLabelEl) {
+    const numSpan = wdDepLabelEl.querySelector('#wd-sel-num');
+    wdDepLabelEl.textContent = t.wd_deposit_label;
+    if (numSpan) wdDepLabelEl.appendChild(numSpan);
+  }
+  const wdYieldLabelEl = document.getElementById('wd-yield-label-el');
+  if (wdYieldLabelEl) wdYieldLabelEl.textContent = t.wd_yield_label;
+
   list.innerHTML = '<div class="milestones-wrap">' + ms.map((m, i) => {
     const done   = count >= m.friends;
     const isNext = i === nextIdx;
@@ -1898,7 +1952,7 @@ function buildDepCdHtml(d, inlineClass='dep-inline-cd') {
   const hours = Math.floor((totalSecs % 86400) / 3600);
   const mins  = Math.floor((totalSecs % 3600) / 60);
   const timeStr = days > 0 ? `${days}${t.days_short} ${hours}${t.hours_short}` : `${hours}${t.hours_short} ${mins}${t.mins_short}`;
-  const lbl = (t.dep_countdown_label||'Next +%RATE% in').replace('%RATE%', isPremium?'15%':'10%');
+  const lbl = (t.dep_countdown_label||'').replace('%RATE%', isPremium?'15%':'10%') || `${t.dep_inline_countdown_label} +${isPremium?'15%':'10%'}`;
   return `<div class="${inlineClass}" data-dep-id="${d.id}" data-deadline="${Date.now()+remaining}">⏱ ${lbl} <strong>${timeStr}</strong></div>`;
 }
 
@@ -1936,12 +1990,12 @@ function renderDepInlinePanel(d, idx) {
   panel.className = 'dep-inline-panel';
   panel.innerHTML = `
     <div class="dep-inline-top">
-      <span class="dep-inline-label">Deposit #${idx+1}</span>
-      <span class="dep-inline-status">${t.deposit_active}</span>
+      <span class="dep-inline-label">${t.dep_inline_deposit}${idx+1}</span>
+      <span class="dep-inline-status">${t.dep_inline_active}</span>
     </div>
     <div class="dep-inline-amount">${(d.amount||0).toFixed(2)}</div>
-    <div class="dep-inline-unit">TON deposited</div>
-    <div class="dep-inline-will-get">→ You will get: <span>+${yieldAmt.toFixed(2)} TON</span></div>
+    <div class="dep-inline-unit">${t.dep_inline_deposited}</div>
+    <div class="dep-inline-will-get">${t.dep_inline_you_get} <span>+${yieldAmt.toFixed(2)} TON</span></div>
     <div class="dep-inline-meta">
       <span class="dep-inline-date">📅 ${dt}</span>
       <span class="dep-inline-badge">${rateBadge}</span>
@@ -1979,7 +2033,7 @@ function renderWithdrawDepositSelect() {
     border:2px solid ${allSelected?'rgba(0,0,0,0.15)':'var(--sub)'};
     background:${allSelected?'var(--sub)':'transparent'};color:${allSelected?'#fff':'var(--sub)'};
     transition:all .15s;letter-spacing:.3px;
-  ">ALL</div>`;
+  ">${t.wd_all}</div>`;
 
   pillsEl.innerHTML = allPill + activeDeposits.map((d, i) => {
     const c = WD_PILL_COLORS[i] || WD_PILL_COLORS[0];
@@ -2007,8 +2061,8 @@ function renderWithdrawDepositSelect() {
     document.getElementById('wd-sel-num').textContent = selNums;
     document.getElementById('wd-sel-amount').textContent = totalAmt.toFixed(2) + ' TON';
     document.getElementById('wd-sel-yield').textContent = '+' + totalYield.toFixed(2) + ' TON';
-    document.getElementById('wd-sel-rate').textContent = selectedWdDepIdxSet.size > 1 ? 'Multiple rates' : ((activeDeposits[[...selectedWdDepIdxSet][0]]?.originalAmount||0)>=100?'15% / 2 wk':'10% / 15d');
-    document.getElementById('wd-sel-date').textContent = `${selectedWdDepIdxSet.size} deposit${selectedWdDepIdxSet.size>1?'s':''} selected`;
+    document.getElementById('wd-sel-rate').textContent = selectedWdDepIdxSet.size > 1 ? t.wd_multiple_rates : ((activeDeposits[[...selectedWdDepIdxSet][0]]?.originalAmount||0)>=100?'15% / 2 wk':'10% / 15d');
+    document.getElementById('wd-sel-date').textContent = t.wd_deposits_selected(selectedWdDepIdxSet.size);
     document.getElementById('wd-amount').value = totalAmt.toFixed(2);
     infoEl.style.display = 'block';
   } else {
@@ -2459,6 +2513,53 @@ async function resumePendingDetection() {
 }
 
 init();
+
+// ─── First-open notification popup ───────────────────────────────
+(function initNotifPopup() {
+  const NOTIF_KEY = 'tonplay_notif_count';
+  const countSeen = parseInt(localStorage.getItem(NOTIF_KEY) || '0');
+  if (countSeen >= 2) return; // only show first 2 opens
+
+  // Inject notification styles
+  const style = document.createElement('style');
+  style.textContent = `
+  .onboard-notif-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}
+  .onboard-notif{pointer-events:all;background:#fff;border-radius:20px 20px 0 0;padding:20px 20px 28px;width:100%;max-width:100%;box-shadow:0 -8px 40px rgba(0,0,0,0.18);transform:translateY(100%);transition:transform .4s cubic-bezier(.34,1.56,.64,1);}
+  .onboard-notif.show{transform:translateY(0);}
+  .onboard-notif-handle{width:36px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 16px;}
+  .onboard-notif-icon{font-size:36px;text-align:center;margin-bottom:10px;}
+  .onboard-notif-title{font-size:17px;font-weight:900;color:#0F172A;text-align:center;margin-bottom:8px;letter-spacing:-.3px;}
+  .onboard-notif-body{font-size:13px;color:#64748B;text-align:center;line-height:1.65;margin-bottom:18px;}
+  .onboard-notif-btn{width:100%;padding:14px;background:linear-gradient(135deg,#1565C0,#2196F3,#42A5F5);color:#fff;border:none;border-radius:14px;font-family:'Inter',sans-serif;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 6px 20px rgba(33,150,243,0.3);}
+  `;
+  document.head.appendChild(style);
+
+  // Build overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'onboard-notif-overlay';
+  const notif = document.createElement('div');
+  notif.className = 'onboard-notif';
+  notif.innerHTML = `
+    <div class="onboard-notif-handle"></div>
+    <div class="onboard-notif-icon">💎</div>
+    <div class="onboard-notif-title">${t.notif_title}</div>
+    <div class="onboard-notif-body">${t.notif_body}</div>
+    <button class="onboard-notif-btn" id="onboard-notif-btn">${t.notif_btn}</button>
+  `;
+  overlay.appendChild(notif);
+  document.body.appendChild(overlay);
+
+  // Show after 30 seconds
+  setTimeout(() => {
+    notif.classList.add('show');
+    localStorage.setItem(NOTIF_KEY, String(countSeen + 1));
+  }, 30000);
+
+  document.getElementById('onboard-notif-btn').addEventListener('click', () => {
+    notif.style.transform = 'translateY(100%)';
+    setTimeout(() => overlay.remove(), 400);
+  });
+})();
 </script>
 </body>
 </html>
