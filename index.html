@@ -269,40 +269,31 @@ html,body{
 .dep-inline-cd{font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:6px;display:flex;align-items:center;gap:4px;}
 .dep-inline-cd.ready{color:#86EFAC;}
 
-/* standalone coloured cards (kept below hero, still used for scrolling history) */
-.dep-slots{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
-.dep-slot-card{
-  border-radius:16px;padding:14px 16px;
-  position:relative;overflow:hidden;
-  box-shadow:0 4px 16px rgba(0,0,0,0.08);
-  cursor:default;transition:transform .15s;
+/* ─── DEPOSIT HISTORY TEXT LIST ─── */
+.dep-history-list{display:flex;flex-direction:column;gap:0;margin-bottom:10px;}
+.dep-history-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:1px solid var(--border);
+  gap:10px;
 }
-.dep-slot-card:active{transform:scale(0.98);}
-/* 10 slot colours */
-.dep-slot-1{background:linear-gradient(135deg,#1565C0,#2196F3,#42A5F5);box-shadow:0 4px 16px rgba(33,150,243,0.3);}
-.dep-slot-2{background:linear-gradient(135deg,#B45309,#D97706,#FBBF24);box-shadow:0 4px 16px rgba(217,119,6,0.3);}
-.dep-slot-3{background:linear-gradient(135deg,#065F46,#059669,#34D399);box-shadow:0 4px 16px rgba(16,185,129,0.3);}
-.dep-slot-4{background:linear-gradient(135deg,#374151,#6B7280,#9CA3AF);box-shadow:0 4px 16px rgba(107,114,128,0.3);}
-.dep-slot-5{background:linear-gradient(135deg,#5B21B6,#7C3AED,#A78BFA);box-shadow:0 4px 16px rgba(124,58,237,0.3);}
-.dep-slot-6{background:linear-gradient(135deg,#991B1B,#DC2626,#F87171);box-shadow:0 4px 16px rgba(220,38,38,0.3);}
-.dep-slot-7{background:linear-gradient(135deg,#831843,#DB2777,#F472B6);box-shadow:0 4px 16px rgba(219,39,119,0.3);}
-.dep-slot-8{background:linear-gradient(135deg,#134E4A,#0D9488,#2DD4BF);box-shadow:0 4px 16px rgba(13,148,136,0.3);}
-.dep-slot-9{background:linear-gradient(135deg,#7C2D12,#EA580C,#FB923C);box-shadow:0 4px 16px rgba(234,88,12,0.3);}
-.dep-slot-10{background:linear-gradient(135deg,#1E1B4B,#4338CA,#818CF8);box-shadow:0 4px 16px rgba(67,56,202,0.3);}
+.dep-history-row:last-child{border-bottom:none;}
+.dep-history-num{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:10px;font-weight:800;
+  flex-shrink:0;cursor:pointer;
+  transition:all .15s;
+}
+.dep-history-info{flex:1;min-width:0;}
+.dep-history-amount{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;color:var(--text);}
+.dep-history-meta{font-size:10px;color:var(--sub);margin-top:1px;}
+.dep-history-right{text-align:right;flex-shrink:0;}
+.dep-history-yield{font-size:12px;font-weight:800;}
+.dep-history-rate{font-size:9px;color:var(--sub);margin-top:1px;}
+.dep-history-cd{font-size:9px;font-weight:700;color:var(--ton);margin-top:2px;}
+.dep-history-cd.ready{color:var(--green);}
 
-.dep-slot-num{position:absolute;top:10px;right:12px;font-family:'DM Mono',monospace;font-size:22px;font-weight:900;color:rgba(255,255,255,0.18);line-height:1;pointer-events:none;}
-.dep-slot-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-.dep-slot-label{font-size:9px;font-weight:800;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase;}
-.dep-slot-status{font-size:8px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.35);letter-spacing:.4px;}
-.dep-slot-amount{font-family:'DM Mono',monospace;font-size:26px;font-weight:700;color:#fff;line-height:1;margin-bottom:2px;}
-.dep-slot-unit{font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;}
-.dep-slot-meta{display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
-.dep-slot-date{font-size:9px;color:rgba(255,255,255,0.65);font-weight:600;}
-.dep-slot-badge{font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.3);}
-.dep-slot-countdown{font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:6px;display:flex;align-items:center;gap:4px;}
-.dep-slot-countdown.ready{color:#86EFAC;}
-
-/* ─── DEPOSIT ITEMS (legacy, keep for fallback) ─── */
+/* ─── DEPOSIT ITEMS (legacy) ─── */
 .deposit-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);}
 .deposit-item:last-child{border:none;}
 .di-icon{width:40px;height:40px;border-radius:12px;background:var(--ton-light);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -1165,6 +1156,17 @@ window.LANG = LANG;
       <div class="wd-hero-sub" data-i18n="wd_avail">Available Balance</div>
       <div class="wd-hero-bal"><span id="wd-balance">0.00</span> TON</div>
     </div>
+    <!-- Select deposit card to withdraw from -->
+    <div id="wd-deposit-select" style="display:none;margin-bottom:10px;">
+      <div class="sec-title" style="margin-bottom:6px;">Select Deposit to Withdraw From</div>
+      <div id="wd-deposit-pills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
+      <div id="wd-deposit-info" style="background:linear-gradient(135deg,rgba(245,158,11,0.10),rgba(217,119,6,0.05));border:1.5px solid rgba(245,158,11,0.3);border-radius:14px;padding:12px 14px;display:none;">
+        <div style="font-size:10px;font-weight:800;color:var(--gold2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">Deposit #<span id="wd-sel-num">1</span></div>
+        <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--text);" id="wd-sel-amount">0.00 TON</div>
+        <div style="font-size:11px;color:var(--sub);margin-top:2px;">Yield: <span style="color:var(--green);font-weight:700;" id="wd-sel-yield">+0.00 TON</span> &nbsp;·&nbsp; <span id="wd-sel-rate">10% / 15d</span></div>
+        <div style="font-size:10px;color:var(--sub);margin-top:3px;" id="wd-sel-date"></div>
+      </div>
+    </div>
     <div class="wd-form-card">
       <div class="wd-form-title" data-i18n="wd_form_title">Request Withdrawal</div>
       <div class="wd-form-sub" data-i18n="wd_form_sub">Enter your TON wallet address and the amount you wish to withdraw.</div>
@@ -1917,6 +1919,62 @@ function renderDepInlinePanel(d, idx) {
   startCountdownTickers();
 }
 
+// Pill colour map for withdraw tab too
+const WD_PILL_COLORS = [
+  {bg:'#2196F3',text:'#fff'},{bg:'#D97706',text:'#fff'},{bg:'#059669',text:'#fff'},
+  {bg:'#6B7280',text:'#fff'},{bg:'#7C3AED',text:'#fff'},{bg:'#DC2626',text:'#fff'},
+  {bg:'#DB2777',text:'#fff'},{bg:'#0D9488',text:'#fff'},{bg:'#EA580C',text:'#fff'},{bg:'#4338CA',text:'#fff'}
+];
+
+let selectedWdDepIdx = -1; // -1 = no selection (full balance)
+
+function renderWithdrawDepositSelect() {
+  const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 10);
+  const wrap = document.getElementById('wd-deposit-select');
+  const pillsEl = document.getElementById('wd-deposit-pills');
+  const infoEl = document.getElementById('wd-deposit-info');
+  if (!wrap || !pillsEl) return;
+  if (!activeDeposits.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  pillsEl.innerHTML = activeDeposits.map((d, i) => {
+    const c = WD_PILL_COLORS[i] || WD_PILL_COLORS[0];
+    const isActive = i === selectedWdDepIdx;
+    const border = isActive ? `3px solid rgba(0,0,0,0.25)` : `2px solid ${c.bg}`;
+    const bg = isActive ? c.bg : 'transparent';
+    const txtColor = isActive ? c.text : c.bg;
+    return `<div onclick="selectWdDeposit(${i})" style="
+      width:32px;height:32px;border-radius:50%;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'DM Mono',monospace;font-size:11px;font-weight:800;
+      border:${border};background:${bg};color:${txtColor};
+      transition:all .15s;
+    ">${i+1}</div>`;
+  }).join('');
+  if (selectedWdDepIdx >= 0 && selectedWdDepIdx < activeDeposits.length) {
+    const d = activeDeposits[selectedWdDepIdx];
+    const isPremium = (d.originalAmount || d.amount || 0) >= 100;
+    const rate = isPremium ? 0.15 : 0.10;
+    const yieldAmt = (d.amount || 0) * rate;
+    const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '';
+    document.getElementById('wd-sel-num').textContent = selectedWdDepIdx + 1;
+    document.getElementById('wd-sel-amount').textContent = (d.amount||0).toFixed(2) + ' TON';
+    document.getElementById('wd-sel-yield').textContent = '+' + yieldAmt.toFixed(2) + ' TON';
+    document.getElementById('wd-sel-rate').textContent = isPremium ? '15% / 2 weeks' : '10% / 15 days';
+    document.getElementById('wd-sel-date').textContent = dt ? '📅 Deposited: ' + dt : '';
+    if (!document.getElementById('wd-amount').value) {
+      document.getElementById('wd-amount').value = (d.amount || 0).toFixed(2);
+    }
+    infoEl.style.display = 'block';
+  } else {
+    infoEl.style.display = 'none';
+  }
+}
+
+window.selectWdDeposit = function(idx) {
+  selectedWdDepIdx = selectedWdDepIdx === idx ? -1 : idx;
+  renderWithdrawDepositSelect();
+};
+
 function renderDeposits() {
   const list  = document.getElementById('deposits-list');
   const title = document.getElementById('deposits-title');
@@ -1936,7 +1994,6 @@ function renderDeposits() {
       return `<div class="dep-sw-pill ${pillCls} ${activeCls}" onclick="selectDepSlot(${i})">${i+1}</div>`;
     }).join('');
     inlinePanel.classList.remove('hidden');
-    // clamp index
     if (activeDepIdx >= activeDeposits.length) activeDepIdx = 0;
     renderDepInlinePanel(activeDeposits[activeDepIdx], activeDepIdx);
   } else {
@@ -1944,47 +2001,56 @@ function renderDeposits() {
     if (inlinePanel) inlinePanel.classList.add('hidden');
   }
 
-  // ── Deposits list section (standalone coloured cards below) ──
+  // ── Deposits list — simple text rows ──
   if (!depositsData.length) { list.style.display = 'none'; title.style.display = 'none'; return; }
   title.style.display = 'block'; list.style.display = 'block';
 
-  // Active deposits as full standalone cards below
-  const slotCards = activeDeposits.map((d, idx) => {
+  const allRows = depositsData.map((d, idx) => {
     const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
     const isPremium = (d.originalAmount || d.amount || 0) >= 100;
-    const rateBadge = isPremium ? t.dep_rate_premium : t.dep_rate_standard;
-    const yieldAmt = ((d.amount || 0) * (isPremium ? 0.15 : 0.10));
-    const cdHtml = buildDepCdHtml(d, 'dep-slot-countdown');
-    return `<div class="dep-slot-card ${SLOT_COLORS[idx] || 'dep-slot-1'}">
-      <div class="dep-slot-num">${idx+1}</div>
-      <div class="dep-slot-top">
-        <span class="dep-slot-label">Deposit #${idx+1}</span>
-        <span class="dep-slot-status">${t.deposit_active}</span>
+    const rate = isPremium ? 0.15 : 0.10;
+    const yieldAmt = (d.amount || 0) * rate;
+    const isActive = d.status === 'active';
+    const activeIdx = activeDeposits.findIndex(ad => ad.id === d.id);
+    const c = WD_PILL_COLORS[activeIdx >= 0 ? activeIdx : idx % WD_PILL_COLORS.length];
+    const clockTs = d.lastYieldAt?.toMillis ? d.lastYieldAt.toMillis() : (d.createdAt?.toMillis ? d.createdAt.toMillis() : null);
+    let cdStr = '';
+    if (isActive && clockTs) {
+      const rem = (clockTs + 15 * 24 * 3600 * 1000) - Date.now();
+      if (rem > 0) {
+        const totalSecs = Math.floor(rem / 1000);
+        const days2 = Math.floor(totalSecs / 86400);
+        const hours2 = Math.floor((totalSecs % 86400) / 3600);
+        const mins2 = Math.floor((totalSecs % 3600) / 60);
+        const timeStr2 = days2 > 0 ? `${days2}${t.days_short} ${hours2}${t.hours_short}` : `${hours2}${t.hours_short} ${mins2}${t.mins_short}`;
+        cdStr = `<div class="dep-history-cd">⏱ ${timeStr2}</div>`;
+      } else {
+        cdStr = `<div class="dep-history-cd ready">🎉 Ready!</div>`;
+      }
+    }
+    const numPill = activeIdx >= 0
+      ? `<div class="dep-history-num" style="background:${c.bg};color:${c.text};">${activeIdx+1}</div>`
+      : `<div class="dep-history-num" style="background:var(--border);color:var(--sub);">—</div>`;
+    return `<div class="dep-history-row">
+      ${numPill}
+      <div class="dep-history-info">
+        <div class="dep-history-amount">${(d.amount||0).toFixed(2)} TON</div>
+        <div class="dep-history-meta">${dt} · ${isActive ? t.deposit_active : t.deposit_pending}</div>
+        ${cdStr}
       </div>
-      <div class="dep-slot-amount">${(d.amount||0).toFixed(2)}</div>
-      <div class="dep-slot-unit">TON &nbsp;→&nbsp; <span style="color:#86EFAC;font-size:13px;font-weight:700;">+${yieldAmt.toFixed(2)} TON</span></div>
-      <div class="dep-slot-meta">
-        <span class="dep-slot-date">📅 ${dt}</span>
-        <span class="dep-slot-badge">${rateBadge}</span>
+      <div class="dep-history-right">
+        <div class="dep-history-yield" style="color:${isActive?'var(--green)':'var(--muted)'}">+${yieldAmt.toFixed(2)} TON</div>
+        <div class="dep-history-rate">${isPremium ? '15% / 2wk' : '10% / 15d'}</div>
       </div>
-      ${cdHtml}
     </div>`;
   }).join('');
 
-  const otherRows = otherDeposits.map(d => {
-    const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
-    return `<div class="deposit-item">
-      <div class="di-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
-      <div class="di-info">
-        <div class="di-amount">${(d.amount||0).toFixed(2)} TON</div>
-        <div class="di-date">${dt} · ${t.deposit_pending}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  list.innerHTML = `<div class="dep-slots">${slotCards}</div>${otherRows ? `<div class="card" style="margin-top:0;">${otherRows}</div>` : ''}`;
+  list.innerHTML = `<div class="dep-history-list">${allRows}</div>`;
   document.getElementById('info-deposits').textContent = depositsData.length;
   document.getElementById('info-weeks').textContent = Math.max(...depositsData.map(d => d.weeksActive || 0), 0);
+
+  // Also refresh withdraw deposit select
+  renderWithdrawDepositSelect();
   startCountdownTickers();
 }
 
