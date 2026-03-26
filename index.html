@@ -149,16 +149,16 @@ html,body{
 .card-pad{padding:16px;}
 
 /* ─── HERO BALANCE CARD ─── */
-.hero-card{background:linear-gradient(135deg,#1565C0 0%,#2196F3 50%,#42A5F5 100%);border-radius:20px;padding:20px 16px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 6px 24px rgba(33,150,243,0.3);width:100%;display:block;}
+.hero-card{background:linear-gradient(135deg,#1565C0 0%,#2196F3 50%,#42A5F5 100%);border-radius:20px;padding:16px;margin-bottom:12px;position:relative;overflow:hidden;box-shadow:0 6px 24px rgba(33,150,243,0.3);width:100%;display:block;transition:background .3s;}
 .hero-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.07);}
 .hero-card::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.05);}
 .hero-label{font-size:10px;font-weight:700;color:rgba(255,255,255,0.7);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px;}
 .hero-balance{font-family:'DM Mono',monospace;font-size:32px;font-weight:500;color:#fff;line-height:1.1;margin-bottom:2px;word-break:break-all;}
 .hero-balance-unit{font-size:14px;color:rgba(255,255,255,0.7);font-weight:500;}
 .hero-sub{font-size:11px;color:rgba(255,255,255,0.65);margin-bottom:16px;}
-.hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative;z-index:1;}
-.hero-stat{background:rgba(255,255,255,0.12);border-radius:12px;padding:10px 12px;}
-.hero-stat-val{font-family:'DM Mono',monospace;font-size:15px;font-weight:600;color:#fff;line-height:1;word-break:break-all;}
+.hero-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;position:relative;z-index:1;margin-top:10px;}
+.hero-stat{background:rgba(255,255,255,0.14);border-radius:12px;padding:10px 12px;}
+.hero-stat-val{font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:#fff;line-height:1;word-break:break-all;}
 .hero-stat-lbl{font-size:9px;color:rgba(255,255,255,0.65);margin-top:3px;font-weight:600;letter-spacing:.3px;}
 
 /* ─── 7-DAY PROJECTION BOX ─── */
@@ -220,18 +220,19 @@ html,body{
 
 /* ─── DEPOSIT SLOT CARDS ─── */
 /* Number-switcher pills inside hero card */
-.dep-switcher{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px;position:relative;z-index:2;}
+.dep-switcher{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;position:relative;z-index:2;}
 .dep-sw-pill{
-  width:28px;height:28px;border-radius:50%;
+  width:30px;height:30px;border-radius:50%;
   display:flex;align-items:center;justify-content:center;
   font-family:'DM Mono',monospace;font-size:11px;font-weight:800;
-  cursor:pointer;border:2px solid rgba(255,255,255,0.35);
-  background:rgba(255,255,255,0.15);color:#fff;
+  cursor:pointer;border:2px solid rgba(255,255,255,0.4);
+  background:rgba(255,255,255,0.18);color:#fff;
   transition:all .18s;flex-shrink:0;
 }
+.dep-sw-pill:active{transform:scale(0.9);}
 .dep-sw-pill.active{
   background:#fff;border-color:#fff;
-  box-shadow:0 2px 8px rgba(0,0,0,0.2);
+  box-shadow:0 2px 10px rgba(0,0,0,0.25);transform:scale(1.1);
 }
 /* pill active text colour matches the slot accent */
 .dep-sw-pill.active.sc1{color:#1565C0;}
@@ -245,28 +246,25 @@ html,body{
 .dep-sw-pill.active.sc9{color:#7C2D12;}
 .dep-sw-pill.active.sc10{color:#1E1B4B;}
 
-/* Inline deposit panel inside the hero card */
+/* Inline deposit panel inside the hero card — now the MAIN content when a deposit is selected */
 .dep-inline-panel{
-  background:rgba(255,255,255,0.12);
-  border:1.5px solid rgba(255,255,255,0.25);
-  border-radius:14px;
-  padding:12px 14px;
-  margin-top:10px;
+  margin-top:8px;
   position:relative;z-index:1;
-  transition:opacity .2s;
+  animation:fadeIn .2s ease;
 }
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 .dep-inline-panel.hidden{display:none;}
-.dep-inline-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.dep-inline-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
 .dep-inline-label{font-size:9px;font-weight:800;color:rgba(255,255,255,0.7);letter-spacing:1px;text-transform:uppercase;}
 .dep-inline-status{font-size:8px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.2);color:#fff;border:1px solid rgba(255,255,255,0.35);letter-spacing:.4px;}
-.dep-inline-amount{font-family:'DM Mono',monospace;font-size:28px;font-weight:700;color:#fff;line-height:1;}
-.dep-inline-unit{font-size:11px;color:rgba(255,255,255,0.7);font-weight:600;margin-bottom:6px;}
-.dep-inline-will-get{font-size:11px;color:rgba(255,255,255,0.85);font-weight:700;margin-bottom:8px;}
-.dep-inline-will-get span{color:#86EFAC;}
+.dep-inline-amount{font-family:'DM Mono',monospace;font-size:32px;font-weight:700;color:#fff;line-height:1;}
+.dep-inline-unit{font-size:12px;color:rgba(255,255,255,0.7);font-weight:600;margin-bottom:4px;}
+.dep-inline-will-get{font-size:13px;color:rgba(255,255,255,0.9);font-weight:800;margin-bottom:6px;}
+.dep-inline-will-get span{color:#86EFAC;font-size:18px;}
 .dep-inline-meta{display:flex;align-items:center;justify-content:space-between;}
 .dep-inline-date{font-size:9px;color:rgba(255,255,255,0.6);font-weight:600;}
 .dep-inline-badge{font-size:9px;font-weight:800;padding:2px 8px;border-radius:20px;background:rgba(255,255,255,0.18);color:#fff;border:1px solid rgba(255,255,255,0.3);}
-.dep-inline-cd{font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:6px;display:flex;align-items:center;gap:4px;}
+.dep-inline-cd{font-size:10px;font-weight:700;color:rgba(255,255,255,0.9);margin-top:5px;display:flex;align-items:center;gap:4px;}
 .dep-inline-cd.ready{color:#86EFAC;}
 
 /* ─── DEPOSIT HISTORY TEXT LIST ─── */
@@ -1007,25 +1005,21 @@ window.LANG = LANG;
 
     <div class="hero-card">
       <div style="position:relative;z-index:1;">
-        <button onclick="showHowItWorksModal()" style="position:absolute;top:0;right:0;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:2;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+
+        <!-- Info button -->
+        <button onclick="showHowItWorksModal()" style="position:absolute;top:0;right:0;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:3;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </button>
-        <div class="hero-label" data-i18n="total_balance">Total Balance</div>
-        <div class="hero-balance"><span id="hero-balance">0.00</span> <span class="hero-balance-unit">TON</span></div>
-        <div class="hero-sub" id="hero-sub">Start depositing to earn weekly rewards</div>
-        <div id="dep-switcher-wrap" style="display:none;"></div>
+        <!-- Default view: total balance + no deposits selected -->
+        <div id="hero-default-view">
+          <div class="hero-label" data-i18n="total_balance">Total Balance</div>
+          <div class="hero-balance"><span id="hero-balance">0.00</span> <span class="hero-balance-unit">TON</span></div>
+          <div class="hero-sub" id="hero-sub">Start depositing to earn rewards every 15 days</div>
+        </div>
+        <!-- Deposit-selected view: replaces balance area -->
         <div id="dep-inline-panel" class="dep-inline-panel hidden"></div>
-        <div class="hero-stats">
-        <div class="hero-stat" style="background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);">
-          <div class="hero-stat-lbl" style="color:rgba(255,255,255,0.75);" data-i18n="total_deposited">DEPOSITED</div>
-          <div class="hero-stat-val" id="hero-deposited">0.00</div>
-        </div>
-        <div class="hero-stat">
-          <div class="hero-stat-lbl" style="color:rgba(255,255,255,0.75);" id="hero-you-get-lbl" data-i18n="you_will_get">YOU WILL GET</div>
-          <div style="font-family:'DM Mono',monospace;font-size:18px;font-weight:700;color:#86EFAC;" id="hero-will-get">+0.00</div>
-          <div id="hero-earned" style="display:none;">+0.00</div>
-        </div>
-        </div>
+        <!-- Pill switcher (always shown when deposits exist) -->
+        <div id="dep-switcher-wrap" style="display:none;"></div>
       </div>
     </div>
 
@@ -1161,7 +1155,7 @@ window.LANG = LANG;
       <div class="sec-title" style="margin-bottom:6px;">Select Deposit to Withdraw From</div>
       <div id="wd-deposit-pills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
       <div id="wd-deposit-info" style="background:linear-gradient(135deg,rgba(245,158,11,0.10),rgba(217,119,6,0.05));border:1.5px solid rgba(245,158,11,0.3);border-radius:14px;padding:12px 14px;display:none;">
-        <div style="font-size:10px;font-weight:800;color:var(--gold2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">Deposit #<span id="wd-sel-num">1</span></div>
+        <div style="font-size:10px;font-weight:800;color:var(--gold2);letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px;">Deposit(s) #<span id="wd-sel-num">1</span></div>
         <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--text);" id="wd-sel-amount">0.00 TON</div>
         <div style="font-size:11px;color:var(--sub);margin-top:2px;">Yield: <span style="color:var(--green);font-weight:700;" id="wd-sel-yield">+0.00 TON</span> &nbsp;·&nbsp; <span id="wd-sel-rate">10% / 15d</span></div>
         <div style="font-size:10px;color:var(--sub);margin-top:3px;" id="wd-sel-date"></div>
@@ -1694,37 +1688,31 @@ function renderAll() {
   } else {
     _totalYield = dep * (dep >= 100 ? 0.15 : 0.10);
   }
-  document.getElementById('hero-deposited').textContent = dep.toFixed(2);
-  document.getElementById('hero-will-get').textContent = '+' + _totalYield.toFixed(2);
-  const _wLbl = document.getElementById('hero-weekly-lbl');
-  if (_wLbl) _wLbl.textContent = (t.lang === 'ru' || userData.lang === 'ru') ? 'ЧЕРЕЗ 1 НЕДЕЛЮ' : 'AFTER 1 WEEK';
-  document.getElementById('hero-earned').textContent    = '+' + earned.toFixed(2);
-
-  // hero-sub: show live countdown to next yield if deposits exist
+  // hero-sub: show live countdown
   const heroSubEl = document.getElementById('hero-sub');
-  if (dep > 0 && depositsData.length > 0) {
-    let minRemaining = Infinity;
-    for (const d of depositsData) {
-      if (d.status !== 'active') continue;
-      const clockTs = d.lastYieldAt?.toMillis
-        ? d.lastYieldAt.toMillis()
-        : (d.createdAt?.toMillis ? d.createdAt.toMillis() : null);
-      if (!clockTs) continue;
-      const rem = (clockTs + 15 * 24 * 3600 * 1000) - Date.now();
-      if (rem < minRemaining) minRemaining = rem;
-    }
-    if (minRemaining < Infinity && minRemaining > 0) {
-      const totalSecs = Math.floor(minRemaining / 1000);
-      const days  = Math.floor(totalSecs / 86400);
-      const hours = Math.floor((totalSecs % 86400) / 3600);
-      const mins  = Math.floor((totalSecs % 3600) / 60);
-      const timeStr = days > 0 ? `${days}${t.days_short} ${hours}${t.hours_short}` : `${hours}${t.hours_short} ${mins}${t.mins_short}`;
-      heroSubEl.textContent = `${t.next_yield_in} ${timeStr}`;
+  if (heroSubEl) {
+    if (dep > 0 && depositsData.length > 0) {
+      let minRemaining = Infinity;
+      for (const d of depositsData) {
+        if (d.status !== 'active') continue;
+        const clockTs = d.lastYieldAt?.toMillis ? d.lastYieldAt.toMillis() : (d.createdAt?.toMillis ? d.createdAt.toMillis() : null);
+        if (!clockTs) continue;
+        const rem = (clockTs + 15 * 24 * 3600 * 1000) - Date.now();
+        if (rem < minRemaining) minRemaining = rem;
+      }
+      if (minRemaining < Infinity && minRemaining > 0) {
+        const totalSecs = Math.floor(minRemaining / 1000);
+        const days  = Math.floor(totalSecs / 86400);
+        const hours = Math.floor((totalSecs % 86400) / 3600);
+        const mins  = Math.floor((totalSecs % 3600) / 60);
+        const timeStr = days > 0 ? `${days}${t.days_short} ${hours}${t.hours_short}` : `${hours}${t.hours_short} ${mins}${t.mins_short}`;
+        heroSubEl.textContent = `${t.next_yield_in} ${timeStr}`;
+      } else {
+        heroSubEl.textContent = minRemaining <= 0 ? t.yield_ready : t.hero_sub_active;
+      }
     } else {
-      heroSubEl.textContent = minRemaining <= 0 ? t.yield_ready : t.hero_sub_active;
+      heroSubEl.textContent = dep > 0 ? t.hero_sub_active : t.hero_sub_start;
     }
-  } else {
-    heroSubEl.textContent = dep > 0 ? t.hero_sub_active : t.hero_sub_start;
   }
 
   document.getElementById('wd-balance').textContent     = bal.toFixed(2);
@@ -1870,11 +1858,34 @@ function refreshHeroSubCountdown() {
   }
 }
 
-// 10-slot colour palette
-const SLOT_COLORS = ['dep-slot-1','dep-slot-2','dep-slot-3','dep-slot-4','dep-slot-5','dep-slot-6','dep-slot-7','dep-slot-8','dep-slot-9','dep-slot-10'];
+// 10 slot gradients matching pill colours
+const HERO_CARD_GRADIENTS = [
+  'linear-gradient(135deg,#1565C0 0%,#2196F3 50%,#42A5F5 100%)', // 1 blue (default)
+  'linear-gradient(135deg,#92400E 0%,#D97706 50%,#FBBF24 100%)', // 2 gold
+  'linear-gradient(135deg,#065F46 0%,#059669 50%,#34D399 100%)', // 3 green
+  'linear-gradient(135deg,#374151 0%,#6B7280 50%,#9CA3AF 100%)', // 4 grey
+  'linear-gradient(135deg,#5B21B6 0%,#7C3AED 50%,#A78BFA 100%)', // 5 purple
+  'linear-gradient(135deg,#991B1B 0%,#DC2626 50%,#F87171 100%)', // 6 red
+  'linear-gradient(135deg,#831843 0%,#DB2777 50%,#F472B6 100%)', // 7 pink
+  'linear-gradient(135deg,#134E4A 0%,#0D9488 50%,#2DD4BF 100%)', // 8 teal
+  'linear-gradient(135deg,#7C2D12 0%,#EA580C 50%,#FB923C 100%)', // 9 orange
+  'linear-gradient(135deg,#1E1B4B 0%,#4338CA 50%,#818CF8 100%)', // 10 indigo
+];
+const HERO_CARD_SHADOWS = [
+  '0 6px 24px rgba(33,150,243,0.3)',
+  '0 6px 24px rgba(217,119,6,0.3)',
+  '0 6px 24px rgba(16,185,129,0.3)',
+  '0 6px 24px rgba(107,114,128,0.3)',
+  '0 6px 24px rgba(124,58,237,0.3)',
+  '0 6px 24px rgba(220,38,38,0.3)',
+  '0 6px 24px rgba(219,39,119,0.3)',
+  '0 6px 24px rgba(13,148,136,0.3)',
+  '0 6px 24px rgba(234,88,12,0.3)',
+  '0 6px 24px rgba(67,56,202,0.3)',
+];
 const SLOT_PILL_CLS = ['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc8','sc9','sc10'];
 
-let activeDepIdx = 0; // currently selected deposit in hero switcher
+let activeDepIdx = -1; // -1 = no deposit selected (show total balance)
 
 function buildDepCdHtml(d, inlineClass='dep-inline-cd') {
   const isPremium = (d.originalAmount || d.amount || 0) >= 100;
@@ -1891,16 +1902,37 @@ function buildDepCdHtml(d, inlineClass='dep-inline-cd') {
   return `<div class="${inlineClass}" data-dep-id="${d.id}" data-deadline="${Date.now()+remaining}">⏱ ${lbl} <strong>${timeStr}</strong></div>`;
 }
 
+function setHeroCardColor(idx) {
+  const card = document.querySelector('.hero-card');
+  if (!card) return;
+  if (idx < 0 || idx >= HERO_CARD_GRADIENTS.length) {
+    card.style.background = HERO_CARD_GRADIENTS[0];
+    card.style.boxShadow = HERO_CARD_SHADOWS[0];
+  } else {
+    card.style.background = HERO_CARD_GRADIENTS[idx];
+    card.style.boxShadow = HERO_CARD_SHADOWS[idx];
+  }
+}
+
 function renderDepInlinePanel(d, idx) {
-  if (!d) return;
+  const panel = document.getElementById('dep-inline-panel');
+  const defaultView = document.getElementById('hero-default-view');
+  if (!panel) return;
+  if (!d) {
+    // Show total balance view
+    panel.className = 'dep-inline-panel hidden';
+    if (defaultView) defaultView.style.display = 'block';
+    setHeroCardColor(-1);
+    return;
+  }
   const isPremium = (d.originalAmount || d.amount || 0) >= 100;
   const rate = isPremium ? 0.15 : 0.10;
   const yieldAmt = (d.amount || 0) * rate;
   const rateBadge = isPremium ? t.dep_rate_premium : t.dep_rate_standard;
   const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
   const cdHtml = buildDepCdHtml(d, 'dep-inline-cd');
-  const panel = document.getElementById('dep-inline-panel');
-  if (!panel) return;
+  // Hide default view, show deposit panel
+  if (defaultView) defaultView.style.display = 'none';
   panel.className = 'dep-inline-panel';
   panel.innerHTML = `
     <div class="dep-inline-top">
@@ -1908,7 +1940,7 @@ function renderDepInlinePanel(d, idx) {
       <span class="dep-inline-status">${t.deposit_active}</span>
     </div>
     <div class="dep-inline-amount">${(d.amount||0).toFixed(2)}</div>
-    <div class="dep-inline-unit">TON</div>
+    <div class="dep-inline-unit">TON deposited</div>
     <div class="dep-inline-will-get">→ You will get: <span>+${yieldAmt.toFixed(2)} TON</span></div>
     <div class="dep-inline-meta">
       <span class="dep-inline-date">📅 ${dt}</span>
@@ -1916,17 +1948,18 @@ function renderDepInlinePanel(d, idx) {
     </div>
     ${cdHtml}
   `;
+  setHeroCardColor(idx);
   startCountdownTickers();
 }
 
-// Pill colour map for withdraw tab too
+// Pill colours (shared)
 const WD_PILL_COLORS = [
   {bg:'#2196F3',text:'#fff'},{bg:'#D97706',text:'#fff'},{bg:'#059669',text:'#fff'},
   {bg:'#6B7280',text:'#fff'},{bg:'#7C3AED',text:'#fff'},{bg:'#DC2626',text:'#fff'},
   {bg:'#DB2777',text:'#fff'},{bg:'#0D9488',text:'#fff'},{bg:'#EA580C',text:'#fff'},{bg:'#4338CA',text:'#fff'}
 ];
 
-let selectedWdDepIdx = -1; // -1 = no selection (full balance)
+let selectedWdDepIdxSet = new Set(); // multiple selection
 
 function renderWithdrawDepositSelect() {
   const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 10);
@@ -1936,42 +1969,67 @@ function renderWithdrawDepositSelect() {
   if (!wrap || !pillsEl) return;
   if (!activeDeposits.length) { wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
-  pillsEl.innerHTML = activeDeposits.map((d, i) => {
+
+  // "All" pill + numbered pills
+  const allSelected = selectedWdDepIdxSet.size === activeDeposits.length;
+  const allPill = `<div onclick="toggleAllWdDeposits()" style="
+    height:30px;padding:0 10px;border-radius:15px;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Inter',sans-serif;font-size:10px;font-weight:800;
+    border:2px solid ${allSelected?'rgba(0,0,0,0.15)':'var(--sub)'};
+    background:${allSelected?'var(--sub)':'transparent'};color:${allSelected?'#fff':'var(--sub)'};
+    transition:all .15s;letter-spacing:.3px;
+  ">ALL</div>`;
+
+  pillsEl.innerHTML = allPill + activeDeposits.map((d, i) => {
     const c = WD_PILL_COLORS[i] || WD_PILL_COLORS[0];
-    const isActive = i === selectedWdDepIdx;
-    const border = isActive ? `3px solid rgba(0,0,0,0.25)` : `2px solid ${c.bg}`;
-    const bg = isActive ? c.bg : 'transparent';
-    const txtColor = isActive ? c.text : c.bg;
+    const isActive = selectedWdDepIdxSet.has(i);
     return `<div onclick="selectWdDeposit(${i})" style="
       width:32px;height:32px;border-radius:50%;cursor:pointer;
       display:flex;align-items:center;justify-content:center;
       font-family:'DM Mono',monospace;font-size:11px;font-weight:800;
-      border:${border};background:${bg};color:${txtColor};
+      border:2px solid ${c.bg};
+      background:${isActive?c.bg:'transparent'};color:${isActive?c.text:c.bg};
       transition:all .15s;
+      ${isActive?'transform:scale(1.1);box-shadow:0 2px 8px rgba(0,0,0,0.2);':''}
     ">${i+1}</div>`;
   }).join('');
-  if (selectedWdDepIdx >= 0 && selectedWdDepIdx < activeDeposits.length) {
-    const d = activeDeposits[selectedWdDepIdx];
-    const isPremium = (d.originalAmount || d.amount || 0) >= 100;
-    const rate = isPremium ? 0.15 : 0.10;
-    const yieldAmt = (d.amount || 0) * rate;
-    const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '';
-    document.getElementById('wd-sel-num').textContent = selectedWdDepIdx + 1;
-    document.getElementById('wd-sel-amount').textContent = (d.amount||0).toFixed(2) + ' TON';
-    document.getElementById('wd-sel-yield').textContent = '+' + yieldAmt.toFixed(2) + ' TON';
-    document.getElementById('wd-sel-rate').textContent = isPremium ? '15% / 2 weeks' : '10% / 15 days';
-    document.getElementById('wd-sel-date').textContent = dt ? '📅 Deposited: ' + dt : '';
-    if (!document.getElementById('wd-amount').value) {
-      document.getElementById('wd-amount').value = (d.amount || 0).toFixed(2);
-    }
+
+  // Show summary of selected
+  if (selectedWdDepIdxSet.size > 0) {
+    const selectedDeps = [...selectedWdDepIdxSet].map(i => activeDeposits[i]);
+    const totalAmt = selectedDeps.reduce((s, d) => s + (d.amount||0), 0);
+    const totalYield = selectedDeps.reduce((s, d) => {
+      const rate = (d.originalAmount || d.amount || 0) >= 100 ? 0.15 : 0.10;
+      return s + (d.amount||0) * rate;
+    }, 0);
+    const selNums = [...selectedWdDepIdxSet].sort((a,b)=>a-b).map(i=>i+1).join(', ');
+    document.getElementById('wd-sel-num').textContent = selNums;
+    document.getElementById('wd-sel-amount').textContent = totalAmt.toFixed(2) + ' TON';
+    document.getElementById('wd-sel-yield').textContent = '+' + totalYield.toFixed(2) + ' TON';
+    document.getElementById('wd-sel-rate').textContent = selectedWdDepIdxSet.size > 1 ? 'Multiple rates' : ((activeDeposits[[...selectedWdDepIdxSet][0]]?.originalAmount||0)>=100?'15% / 2 wk':'10% / 15d');
+    document.getElementById('wd-sel-date').textContent = `${selectedWdDepIdxSet.size} deposit${selectedWdDepIdxSet.size>1?'s':''} selected`;
+    document.getElementById('wd-amount').value = totalAmt.toFixed(2);
     infoEl.style.display = 'block';
   } else {
     infoEl.style.display = 'none';
+    document.getElementById('wd-amount').value = '';
   }
 }
 
 window.selectWdDeposit = function(idx) {
-  selectedWdDepIdx = selectedWdDepIdx === idx ? -1 : idx;
+  if (selectedWdDepIdxSet.has(idx)) selectedWdDepIdxSet.delete(idx);
+  else selectedWdDepIdxSet.add(idx);
+  renderWithdrawDepositSelect();
+};
+
+window.toggleAllWdDeposits = function() {
+  const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 10);
+  if (selectedWdDepIdxSet.size === activeDeposits.length) {
+    selectedWdDepIdxSet.clear();
+  } else {
+    activeDeposits.forEach((_, i) => selectedWdDepIdxSet.add(i));
+  }
   renderWithdrawDepositSelect();
 };
 
@@ -1993,12 +2051,15 @@ function renderDeposits() {
       const activeCls = i === activeDepIdx ? 'active '+pillCls : '';
       return `<div class="dep-sw-pill ${pillCls} ${activeCls}" onclick="selectDepSlot(${i})">${i+1}</div>`;
     }).join('');
-    inlinePanel.classList.remove('hidden');
-    if (activeDepIdx >= activeDeposits.length) activeDepIdx = 0;
-    renderDepInlinePanel(activeDeposits[activeDepIdx], activeDepIdx);
+    // If no deposit selected yet, show default view; else show selected
+    if (activeDepIdx >= 0 && activeDepIdx < activeDeposits.length) {
+      renderDepInlinePanel(activeDeposits[activeDepIdx], activeDepIdx);
+    } else {
+      renderDepInlinePanel(null, -1);
+    }
   } else {
     if (switcherWrap) switcherWrap.style.display = 'none';
-    if (inlinePanel) inlinePanel.classList.add('hidden');
+    renderDepInlinePanel(null, -1);
   }
 
   // ── Deposits list — simple text rows ──
@@ -2057,8 +2118,17 @@ function renderDeposits() {
 window.selectDepSlot = function(idx) {
   const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 10);
   if (idx >= activeDeposits.length) return;
+  // Toggle: clicking the active pill again deselects (shows total balance)
+  if (activeDepIdx === idx) {
+    activeDepIdx = -1;
+    document.querySelectorAll('.dep-sw-pill').forEach((el, i) => {
+      const pillCls = SLOT_PILL_CLS[i] || 'sc1';
+      el.className = `dep-sw-pill ${pillCls}`;
+    });
+    renderDepInlinePanel(null, -1);
+    return;
+  }
   activeDepIdx = idx;
-  // update pills
   document.querySelectorAll('.dep-sw-pill').forEach((el, i) => {
     const pillCls = SLOT_PILL_CLS[i] || 'sc1';
     el.className = `dep-sw-pill ${pillCls}${i === idx ? ' active '+pillCls : ''}`;
