@@ -1123,6 +1123,177 @@ window.showToast = function(msg) {
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2800);
 };
+
+// ════════════════════════════════════════════════════════════
+// ── Telegram Callback Query Poller (Withdrawal Confirm/Cancel)
+// ════════════════════════════════════════════════════════════
+const CB_BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
+let cbLastUpdateId = 0;
+let cbPolling = false;
+
+async function pollCallbackQueries() {
+  if (!document.getElementById('admin-app')?.classList.contains('visible')) return;
+  try {
+    const url = `https://api.telegram.org/bot${CB_BOT_TOKEN}/getUpdates?offset=${cbLastUpdateId + 1}&timeout=5&allowed_updates=["callback_query"]`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.ok || !data.result?.length) return;
+    for (const update of data.result) {
+      cbLastUpdateId = update.update_id;
+      const cq = update.callback_query;
+      if (!cq) continue;
+      const cbData = cq.data || '';
+      const msgId  = cq.message?.message_id;
+      const chatId = cq.message?.chat?.id;
+
+      if (cbData.startsWith('wd_confirm_') || cbData.startsWith('wd_cancel_')) {
+        await handleWithdrawalCallback(cbData, cq.id, msgId, chatId);
+      }
+    }
+  } catch(e) { console.warn('CB poll error:', e); }
+}
+
+async function handleWithdrawalCallback(cbData, queryId, msgId, chatId) {
+  // callback_data format: wd_confirm_{wdDocId}_{userId}  or  wd_cancel_{wdDocId}_{userId}
+  const parts = cbData.split('_');
+  // parts: ['wd', 'confirm'|'cancel', wdDocId, userId]
+  // wdDocId might contain underscores itself, so join from index 2 up to last
+  const action = parts[1]; // 'confirm' or 'cancel'
+  const userId = parts[parts.length - 1];
+  const wdDocId = parts.slice(2, parts.length - 1).join('_');
+
+  try {
+    const wdSnap = await getDoc(doc(db, 'withdrawals', wdDocId));
+    if (!wdSnap.exists()) {
+      await answerCbQuery(queryId, '❌ Withdrawal not found');
+      return;
+    }
+    const wd = wdSnap.data();
+    if (wd.status !== 'pending') {
+      await answerCbQuery(queryId, `Already ${wd.status}`);
+      await editBotMessage(chatId, msgId, `✅ Already processed (${wd.status})`, null);
+      return;
+    }
+
+    if (action === 'confirm') {
+      // 1. Mark withdrawal as done
+      await updateDoc(doc(db, 'withdrawals', wdDocId), { status: 'done', confirmedAt: serverTimestamp() });
+
+      // 2. Deduct amount from user balance
+      const userSnap = await getDoc(doc(db, 'users', userId));
+      let newBal = 0;
+      if (userSnap.exists()) {
+        const ud = userSnap.data();
+        newBal = Math.max(0, parseFloat(((ud.balance || 0) - (wd.amount || 0)).toFixed(6)));
+        await updateDoc(doc(db, 'users', userId), { balance: newBal });
+      }
+
+      // 3. Deduct from selected deposit cards (zero them out or reduce amount)
+      const selectedDeposits = wd.selectedDeposits || [];
+      for (const dep of selectedDeposits) {
+        if (!dep.id) continue;
+        try {
+          const depRef = doc(db, 'users', userId, 'deposits', dep.id);
+          const depSnap = await getDoc(depRef);
+          if (depSnap.exists()) {
+            // If the deposit amount equals the withdrawal portion, close it; else reduce
+            const depData = depSnap.data();
+            const remainingAmt = parseFloat(((depData.amount || 0) - dep.amount).toFixed(6));
+            if (remainingAmt <= 0.001) {
+              await updateDoc(depRef, { status: 'withdrawn', amount: 0, withdrawnAt: serverTimestamp() });
+            } else {
+              await updateDoc(depRef, { amount: remainingAmt });
+            }
+          }
+        } catch(e2) { console.warn('Deposit update error:', e2); }
+      }
+
+      // 4. Answer + edit the bot message
+      await answerCbQuery(queryId, '✅ Confirmed & balance deducted!');
+      const depSummary = selectedDeposits.length
+        ? `\n💳 Deducted from: ${selectedDeposits.map(d=>'#'+d.idx).join(', ')}`
+        : '';
+      await editBotMessage(chatId, msgId,
+        `✅ <b>CONFIRMED</b> — ${wd.amount?.toFixed(2)} TON sent to:\n<code>${wd.walletAddress}</code>` +
+        `\n👤 @${wd.userName || userId}` +
+        depSummary +
+        `\n📊 New balance: ${newBal.toFixed(4)} TON`, null);
+
+      // 5. Notify user
+      const numericId = parseInt(userId);
+      if (!isNaN(numericId) && numericId > 0) {
+        await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: numericId,
+            parse_mode: 'HTML',
+            text: `✅ <b>Withdrawal Confirmed!</b>\n\n💰 <b>${(wd.amount||0).toFixed(2)} TON</b> has been sent to:\n<code>${wd.walletAddress}</code>\n\n📊 Your new balance: <b>${newBal.toFixed(4)} TON</b>`
+          })
+        });
+      }
+
+      showToast(`✅ Confirmed withdrawal for @${wd.userName || userId}`);
+      await loadWithdrawals();
+
+    } else if (action === 'cancel') {
+      await updateDoc(doc(db, 'withdrawals', wdDocId), { status: 'cancelled', cancelledAt: serverTimestamp() });
+      await answerCbQuery(queryId, '❌ Withdrawal cancelled');
+      await editBotMessage(chatId, msgId,
+        `❌ <b>CANCELLED</b> — Withdrawal of ${wd.amount?.toFixed(2)} TON for @${wd.userName || userId} was rejected.`, null);
+
+      // Notify user of cancellation
+      const numericId = parseInt(userId);
+      if (!isNaN(numericId) && numericId > 0) {
+        await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: numericId,
+            parse_mode: 'HTML',
+            text: `❌ <b>Withdrawal Rejected</b>\n\nYour withdrawal request of <b>${(wd.amount||0).toFixed(2)} TON</b> was cancelled by the admin. Please contact support if you have questions.`
+          })
+        });
+      }
+
+      showToast(`❌ Cancelled withdrawal for @${wd.userName || userId}`);
+      await loadWithdrawals();
+    }
+  } catch(e) {
+    console.error('handleWithdrawalCallback error:', e);
+    await answerCbQuery(queryId, '⚠️ Error processing request');
+  }
+}
+
+async function answerCbQuery(queryId, text) {
+  try {
+    await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/answerCallbackQuery`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ callback_query_id: queryId, text, show_alert: true })
+    });
+  } catch(e) {}
+}
+
+async function editBotMessage(chatId, messageId, text, replyMarkup) {
+  try {
+    await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/editMessageText`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId, message_id: messageId,
+        text, parse_mode: 'HTML',
+        reply_markup: replyMarkup || { inline_keyboard: [] }
+      })
+    });
+  } catch(e) {}
+}
+
+// Start polling when admin is logged in — check every 4 seconds
+const _origLoadPlayers = window.loadPlayers || (() => {});
+(function startCbPolling() {
+  setInterval(async () => {
+    if (document.getElementById('admin-app')?.classList.contains('visible')) {
+      await pollCallbackQueries();
+    }
+  }, 4000);
+})();
 </script>
 </body>
 </html>

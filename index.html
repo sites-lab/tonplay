@@ -1971,14 +1971,17 @@ function setHeroCardColor(idx) {
 function renderDepInlinePanel(d, idx) {
   const panel = document.getElementById('dep-inline-panel');
   const defaultView = document.getElementById('hero-default-view');
+  const infoBtn = document.querySelector('.hero-card > div > button[onclick="showHowItWorksModal()"]');
   if (!panel) return;
   if (!d) {
     // Show total balance view
     panel.className = 'dep-inline-panel hidden';
     if (defaultView) defaultView.style.display = 'block';
+    if (infoBtn) infoBtn.style.display = 'flex';
     setHeroCardColor(-1);
     return;
   }
+  if (infoBtn) infoBtn.style.display = 'none';
   const isPremium = (d.originalAmount || d.amount || 0) >= 100;
   const rate = isPremium ? 0.15 : 0.10;
   const yieldAmt = (d.amount || 0) * rate;
@@ -2285,30 +2288,80 @@ window.submitWithdraw = async function() {
   if (!wallet) { showToast(t.enter_wallet_warn); return; }
   if (!wallet.startsWith('EQ') && !wallet.startsWith('UQ')) { showToast(t.wallet_format_warn); return; }
   if (amount > bal) { showToast(t.insufficient); return; }
+
+  // Collect selected deposit info
+  const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 10);
+  const selectedDepositsList = [...selectedWdDepIdxSet].sort((a,b)=>a-b).map(i => ({
+    idx: i + 1,
+    id: activeDeposits[i]?.id || '',
+    amount: activeDeposits[i]?.amount || 0,
+    originalAmount: activeDeposits[i]?.originalAmount || activeDeposits[i]?.amount || 0,
+  }));
+  const depositNums = selectedDepositsList.map(d => `#${d.idx}`).join(', ');
+  const depositIdsStr = selectedDepositsList.map(d => d.id).join(',');
+
   openModal(t.confirm_withdrawal,
-    `<div style="font-size:13px;color:var(--sub);line-height:1.7;">Withdraw <strong style="color:var(--text);">${amount.toFixed(2)} TON</strong> to:<br><code style="font-size:10px;word-break:break-all;">${wallet}</code></div>`,
+    `<div style="font-size:13px;color:var(--sub);line-height:1.7;">Withdraw <strong style="color:var(--text);">${amount.toFixed(2)} TON</strong> to:<br><code style="font-size:10px;word-break:break-all;">${wallet}</code>${depositNums ? `<br><br>From deposits: <strong style="color:var(--ton);">${depositNums}</strong>` : ''}</div>`,
     async () => {
       try {
         const uid = String(currentUser.id);
         const displayName = ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim();
         const userName = currentUser.username || '';
-        await addDoc(collection(db, 'withdrawals'), {
+
+        // Save withdrawal request with deposit info
+        const wdRef = await addDoc(collection(db, 'withdrawals'), {
           userId: uid, userName, displayName,
-          amount, walletAddress: wallet, status: 'pending', createdAt: serverTimestamp()
+          amount, walletAddress: wallet, status: 'pending',
+          selectedDepositIds: depositIdsStr,
+          selectedDepositNums: depositNums,
+          selectedDeposits: selectedDepositsList,
+          createdAt: serverTimestamp()
         });
-        await sendBotMessage(
-          `💸 <b>New Withdrawal Request!</b>\n\n` +
-          `👤 <b>User:</b> ${userName ? '@' + userName : uid} (${displayName})\n` +
-          `🆔 <b>Telegram ID:</b> <code>${uid}</code>\n` +
-          `💰 <b>Amount:</b> ${amount.toFixed(2)} TON\n` +
-          `📊 <b>Current Balance:</b> ${bal.toFixed(2)} TON\n` +
-          `🏦 <b>Send TON to:</b>\n<code>${wallet}</code>\n` +
-          `📋 <i>(tap address above to copy)</i>\n` +
-          `📅 <b>Time:</b> ${new Date().toLocaleString()}`
-        );
+
+        // Build deposit breakdown for bot message
+        let depBreakdown = '';
+        if (selectedDepositsList.length > 0) {
+          depBreakdown = `\n💳 <b>From Deposits:</b> ${depositNums}\n`;
+          selectedDepositsList.forEach(d => {
+            const rate = d.originalAmount >= 100 ? '15% / 2wk' : '10% / 15d';
+            depBreakdown += `   · Deposit #${d.idx}: ${d.amount.toFixed(2)} TON (${rate})\n`;
+          });
+        }
+
+        // Send bot message WITH Confirm/Cancel inline buttons
+        const callbackConfirm = `wd_confirm_${wdRef.id}_${uid}`;
+        const callbackCancel  = `wd_cancel_${wdRef.id}_${uid}`;
+
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: ADMIN_CHAT,
+            parse_mode: 'HTML',
+            text:
+              `💸 <b>New Withdrawal Request!</b>\n\n` +
+              `👤 <b>User:</b> ${userName ? '@' + userName : uid} (${displayName})\n` +
+              `🆔 <b>Telegram ID:</b> <code>${uid}</code>\n` +
+              `💰 <b>Amount:</b> <b>${amount.toFixed(2)} TON</b>\n` +
+              `📊 <b>Balance before:</b> ${bal.toFixed(2)} TON\n` +
+              depBreakdown +
+              `🏦 <b>Send TON to:</b>\n<code>${wallet}</code>\n` +
+              `📋 <i>(tap address above to copy)</i>\n` +
+              `📅 <b>Time:</b> ${new Date().toLocaleString()}\n\n` +
+              `<i>Press ✅ Confirm after you send the TON, or ❌ Cancel to reject.</i>`,
+            reply_markup: {
+              inline_keyboard: [[
+                { text: '✅ Confirm & Deduct', callback_data: callbackConfirm },
+                { text: '❌ Cancel', callback_data: callbackCancel }
+              ]]
+            }
+          })
+        });
+
         showToast(t.wd_submitted);
         document.getElementById('wd-amount').value = '';
         document.getElementById('wd-wallet-input').value = '';
+        selectedWdDepIdxSet.clear();
+        renderWithdrawDepositSelect();
         await loadWithdrawals();
       } catch(e) { showToast('❌ ' + e.message); }
     }
