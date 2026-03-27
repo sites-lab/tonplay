@@ -18,7 +18,8 @@ const VAULT_ADDRESS  = 'UQBnGPixB1lrqOvhgaJNEzOuI_mLkVlq49i3wBysTE8WZJFE';
 const TONCENTER_URL  = 'https://toncenter.com/api/v2';
 const TONCENTER_KEY  = '';
 const BOT_TOKEN      = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
-const ADMIN_CHAT     = '5222030484';
+const SUPER_ADMIN_CHAT = '8671373607';  // receives ALL notifications
+const ADMIN_CHAT       = '5222030484';  // receives WITHDRAW notifications only
 const BOT_USERNAME   = 'Ton_Play_tbot';
 const APP_PATH       = 'get_ton';
 
@@ -331,15 +332,112 @@ function extractComment(tx) {
 }
 
 
+// ═══════════════════════════════════════════════════════════════════
+// 5.  WITHDRAWAL REQUEST HANDLER  (HTTP trigger from app)
+// ═══════════════════════════════════════════════════════════════════
+exports.requestWithdrawal = functions.https.onRequest(async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') { res.status(204).send(''); return; }
+
+  try {
+    const { userId, userName, amount, walletAddress, selectedDeposits } = req.body || {};
+    if (!userId || !amount || !walletAddress) {
+      return res.status(400).json({ ok: false, error: 'Missing fields' });
+    }
+
+    // Check user exists and balance is sufficient
+    const userSnap = await db.collection('users').doc(String(userId)).get();
+    if (!userSnap.exists) return res.status(404).json({ ok: false, error: 'User not found' });
+    const ud = userSnap.data();
+    if ((ud.balance || 0) < amount) return res.status(400).json({ ok: false, error: 'Insufficient balance' });
+    if (!ud.withdrawUnlocked) return res.status(403).json({ ok: false, error: 'Withdrawals locked' });
+
+    // Create withdrawal document
+    const wdRef = await db.collection('withdrawals').add({
+      userId:           String(userId),
+      userName:         userName || '',
+      amount:           parseFloat(amount),
+      walletAddress:    walletAddress,
+      selectedDeposits: selectedDeposits || [],
+      status:           'pending',
+      createdAt:        admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    // Build deposit breakdown for message
+    let depLines = '';
+    const deps = selectedDeposits || [];
+    if (deps.length) {
+      depLines = '\n💳 <b>Deposits:</b>\n' + deps.map(d => {
+        const rate = (d.originalAmount || d.amount || 0) >= 100 ? '15%' : '10%';
+        return `  • Deposit #${d.idx}: ${parseFloat(d.amount).toFixed(2)} TON (${rate})`;
+      }).join('\n');
+    }
+
+    const msgText =
+      `💸 <b>New Withdrawal Request</b>\n\n` +
+      `👤 <b>User:</b> @${userName || userId} (<code>${userId}</code>)\n` +
+      `💰 <b>Amount:</b> ${parseFloat(amount).toFixed(2)} TON\n` +
+      `📤 <b>Wallet:</b> <code>${walletAddress}</code>` +
+      depLines +
+      `\n\n⚡ Tap a button to process:`;
+
+    const inlineKeyboard = {
+      inline_keyboard: [[
+        { text: '✅ Confirm & Deduct', callback_data: `wd_confirm_${wdRef.id}_${userId}` },
+        { text: '❌ Cancel',           callback_data: `wd_cancel_${wdRef.id}_${userId}` }
+      ]]
+    };
+
+    // Send to BOTH admins with action buttons
+    for (const chatId of [SUPER_ADMIN_CHAT, ADMIN_CHAT]) {
+      try {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            chat_id:      chatId,
+            text:         msgText,
+            parse_mode:   'HTML',
+            reply_markup: inlineKeyboard
+          })
+        });
+      } catch(e) { console.error(`Failed to notify admin ${chatId}:`, e.message); }
+    }
+
+    console.log(`✅ Withdrawal request created: ${wdRef.id} for user ${userId}`);
+    res.json({ ok: true, withdrawalId: wdRef.id });
+  } catch(err) {
+    console.error('requestWithdrawal error:', err);
+    res.status(500).json({ ok: false, error: err.message });
+  }
+});
+
+
 // ─── Telegram Bot helpers ──────────────────────────────────────────
+// Sends to SUPER_ADMIN only (all events: deposits, yield, etc.)
 async function sendBotMessage(text) {
   try {
     await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ chat_id: ADMIN_CHAT, text, parse_mode: 'HTML' })
+      body:    JSON.stringify({ chat_id: SUPER_ADMIN_CHAT, text, parse_mode: 'HTML' })
     });
-  } catch(e) { console.error('Bot admin msg failed:', e.message); }
+  } catch(e) { console.error('Bot super admin msg failed:', e.message); }
+}
+
+// Sends to BOTH admins – used for withdraw notifications
+async function sendBotMessageWithdraw(text) {
+  for (const chatId of [SUPER_ADMIN_CHAT, ADMIN_CHAT]) {
+    try {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
+      });
+    } catch(e) { console.error(`Bot withdraw msg failed (${chatId}):`, e.message); }
+  }
 }
 
 async function sendBotMessageToUser(chatId, text) {

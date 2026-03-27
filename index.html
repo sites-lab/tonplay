@@ -700,9 +700,15 @@ const T = {
     how_it_works_modal_close: 'Got it!',
     how_it_works: '📈 How TonPlay Works',
     weekly_return: 'Standard Return',
+    premium_return_lbl: 'Premium (100+ TON)',
+    days_label: 'days',
     min_deposit: 'Min Deposit',
     payout_schedule: 'Payout Schedule',
     payout_value: 'Every 15 days',
+    my_balance_lbl: 'My Balance',
+    my_deposited_lbl: 'Total Deposited',
+    total_earned_info: 'Total Earned',
+    withdrawals_locked: 'Locked',
     notif_title: 'How does TonPlay work?',
     notif_body: 'Deposit TON → earn +10% every 15 days. Invite friends → earn Stars. Withdraw anytime!',
     notif_btn: 'Got it 👍',
@@ -727,7 +733,7 @@ const T = {
     compounding: 'Compounding',
     yes: 'Yes',
     weekly_yield_tile: 'Per 15 Days',
-    annual_est: 'Annual Est.',
+    annual_est: 'Annual Est. (std)',
     my_deposits: 'My Deposits',
     weeks_active: 'Weeks Active',
     example_returns: 'Example Returns',
@@ -740,6 +746,7 @@ const T = {
     not_connected: 'Not connected',
     withdrawals_lbl: 'Withdrawals',
     withdrawals_open: 'Open',
+    withdrawals_locked: 'Locked',
     stars_lbl: 'Stars',
     ref_notice: '<strong>🎁 Referral System:</strong> Every player gets a unique referral code. Share your link — when a friend joins and uses your code, you earn Stars!',
     cancel_btn: 'Cancel',
@@ -896,9 +903,15 @@ const T = {
     how_it_works_modal_close: 'Понятно!',
     how_it_works: '📈 Как работает TonPlay',
     weekly_return: 'Стандартная доходность',
+    premium_return_lbl: 'Премиум (от 100 TON)',
+    days_label: 'дней',
     min_deposit: 'Мин. депозит',
     payout_schedule: 'График выплат',
     payout_value: 'Каждые 15 дней',
+    my_balance_lbl: 'Мой баланс',
+    my_deposited_lbl: 'Всего внесено',
+    total_earned_info: 'Всего заработано',
+    withdrawals_locked: 'Заблокировано',
     notif_title: 'Как работает TonPlay?',
     notif_body: 'Сделайте депозит → получайте +10% каждые 15 дней. Приглашайте друзей → зарабатывайте звёзды. Выводите в любое время!',
     notif_btn: 'Понятно 👍',
@@ -923,7 +936,7 @@ const T = {
     compounding: 'Реинвестирование',
     yes: 'Да',
     weekly_yield_tile: 'За 15 дней',
-    annual_est: 'Годовая оценка',
+    annual_est: 'Годовая (стандарт)',
     my_deposits: 'Мои депозиты',
     weeks_active: 'Недель активно',
     example_returns: 'Примеры доходности',
@@ -936,6 +949,7 @@ const T = {
     not_connected: 'Не подключён',
     withdrawals_lbl: 'Выводы',
     withdrawals_open: 'Открыто',
+    withdrawals_locked: 'Заблокировано',
     stars_lbl: 'Звёзды',
     ref_notice: '<strong>🎁 Реферальная система:</strong> Каждый игрок получает уникальный код. Поделитесь ссылкой — когда друг вступит и введёт ваш код, вы получите звёзды!',
     cancel_btn: 'Отмена',
@@ -1223,26 +1237,28 @@ window.LANG = LANG;
   <div class="tab-content" id="tab-info">
     <div class="info-box">
       <div class="info-box-title" data-i18n="how_it_works">📈 How TonPlay Works</div>
-      <div class="info-row"><span class="ir-l" data-i18n="weekly_return">Standard Return</span><span class="ir-r" style="color:var(--green);">+10% / 15 days</span></div>
+      <div class="info-row"><span class="ir-l" data-i18n="weekly_return">Standard Return</span><span class="ir-r" style="color:var(--green);">+10% / 15 <span data-i18n="days_label">days</span></span></div>
+      <div class="info-row"><span class="ir-l" data-i18n="premium_return_lbl">Premium (100+ TON)</span><span class="ir-r" style="color:#7C3AED;">+15% / 14 <span data-i18n="days_label">days</span></span></div>
       <div class="info-row"><span class="ir-l" data-i18n="min_deposit">Min Deposit</span><span class="ir-r">0.5 TON</span></div>
       <div class="info-row"><span class="ir-l" data-i18n="payout_schedule">Payout Schedule</span><span class="ir-r" data-i18n="payout_value">Every 15 days</span></div>
       <div class="info-row"><span class="ir-l" data-i18n="compounding">Compounding</span><span class="ir-r" style="color:var(--ton);" data-i18n="yes">Yes</span></div>
     </div>
     <div class="info-grid">
       <div class="info-tile"><div class="info-tile-val">10%</div><div class="info-tile-lbl" data-i18n="weekly_yield_tile">Per 15 Days</div></div>
-      <div class="info-tile"><div class="info-tile-val">26%</div><div class="info-tile-lbl" data-i18n="annual_est">Annual Est.</div></div>
-      <div class="info-tile"><div class="info-tile-val" id="info-deposits">0</div><div class="info-tile-lbl" data-i18n="my_deposits">My Deposits</div></div>
-      <div class="info-tile"><div class="info-tile-val" id="info-weeks">0</div><div class="info-tile-lbl" data-i18n="weeks_active">Weeks Active</div></div>
+      <div class="info-tile"><div class="info-tile-val" style="color:var(--green);">~243%</div><div class="info-tile-lbl" data-i18n="annual_est">Annual Est.</div></div>
+      <div class="info-tile"><div class="info-tile-val" id="info-balance" style="font-size:14px;">0.00 TON</div><div class="info-tile-lbl" data-i18n="my_balance_lbl">My Balance</div></div>
+      <div class="info-tile"><div class="info-tile-val" id="info-deposited" style="font-size:14px;">0.00 TON</div><div class="info-tile-lbl" data-i18n="my_deposited_lbl">Total Deposited</div></div>
     </div>
     <div class="card">
       <div class="card-pad">
         <div class="sec-title" data-i18n="example_returns">Example Returns</div>
-        <div class="info-row"><span class="ir-l">1 TON · 15 days</span><span class="ir-r" style="color:var(--green);">1.10 TON</span></div>
-        <div class="info-row"><span class="ir-l">10 TON · 30 days</span><span class="ir-r" style="color:var(--green);">12.10 TON</span></div>
-        <div class="info-row"><span class="ir-l">100 TON · 28 days (15%)</span><span class="ir-r" style="color:var(--green);">132.25 TON</span></div>
+        <div class="info-row"><span class="ir-l">1 TON · 15 <span data-i18n="days_label">days</span></span><span class="ir-r" style="color:var(--green);">→ 1.10 TON (+0.10)</span></div>
+        <div class="info-row"><span class="ir-l">10 TON · 30 <span data-i18n="days_label">days</span></span><span class="ir-r" style="color:var(--green);">→ 12.10 TON (+2.10)</span></div>
+        <div class="info-row"><span class="ir-l">100 TON · 14 <span data-i18n="days_label">days</span> ✨</span><span class="ir-r" style="color:#7C3AED;">→ 115.00 TON (+15)</span></div>
+        <div class="info-row"><span class="ir-l">100 TON · 28 <span data-i18n="days_label">days</span> ✨</span><span class="ir-r" style="color:#7C3AED;">→ 132.25 TON (+32.25)</span></div>
       </div>
     </div>
-    <div class="notice" data-i18n-html="compound_notice"><strong>💡 Compound Growth:</strong> Each week your balance grows by 5%.</div>
+    <div class="notice" data-i18n-html="compound_notice"><strong>💡 Compound Growth:</strong> Every 15 days your balance grows by 10%.</div>
     <div class="card">
       <div class="card-pad">
         <div class="sec-title" data-i18n="my_account">My Account</div>
@@ -1250,6 +1266,7 @@ window.LANG = LANG;
         <div class="info-row"><span class="ir-l" data-i18n="username_lbl">Username</span><span class="ir-r" id="info-username">—</span></div>
         <div class="info-row"><span class="ir-l" data-i18n="ref_code_info">Referral Code</span><span class="ir-r" id="info-ref-code" style="color:var(--green);font-weight:700;">—</span></div>
         <div class="info-row"><span class="ir-l" data-i18n="ton_wallet_lbl">TON Wallet</span><span class="ir-r" id="info-wallet" style="max-width:150px;overflow:hidden;text-overflow:ellipsis;" data-i18n-default="not_connected">Not connected</span></div>
+        <div class="info-row"><span class="ir-l" data-i18n="total_earned_info">Total Earned</span><span class="ir-r" id="info-earned" style="color:var(--green);">0.00 TON</span></div>
         <div class="info-row"><span class="ir-l" data-i18n="withdrawals_lbl">Withdrawals</span><span class="ir-r" id="info-wd-status">—</span></div>
         <div class="info-row"><span class="ir-l" data-i18n="stars_lbl">Stars</span><span class="ir-r" id="info-stars">0 ⭐</span></div>
       </div>
@@ -1762,14 +1779,14 @@ function renderAll() {
   document.getElementById('header-stars').textContent   = stars;
   document.getElementById('info-stars').textContent     = stars + ' ⭐';
 
-  // Auto-fill withdraw wallet: prefer connected TON wallet, else saved Firestore address
+  // Auto-fill withdraw wallet: prefer user's saved Firestore address, then connected wallet
   (function fillWdWallet() {
   const wdInput = document.getElementById('wd-wallet-input');
   if (!wdInput) return;
-  if (connectedWalletFriendly) {
-  wdInput.value = connectedWalletFriendly;
-  } else if (userData && userData.walletAddress && !wdInput.value) {
-  wdInput.value = userData.walletAddress;
+  if (userData && userData.walletAddress) {
+    wdInput.value = userData.walletAddress;
+  } else if (connectedWalletFriendly) {
+    wdInput.value = connectedWalletFriendly;
   }
   })();
 
@@ -1782,7 +1799,11 @@ function renderAll() {
   document.getElementById('info-tgid').textContent    = userData.userId || '—';
   document.getElementById('info-username').textContent = userData.userName ? '@' + userData.userName : '—';
   document.getElementById('info-ref-code').textContent = refCode || '—';
-  document.getElementById('info-wd-status').textContent = t.withdrawals_open;
+  document.getElementById('info-wd-status').textContent = userData.withdrawUnlocked ? t.withdrawals_open : (t.withdrawals_locked || (LANG==='ru'?'Заблокировано':'Locked'));
+  // Update info tab live stats
+  document.getElementById('info-balance').textContent  = (userData.balance||0).toFixed(2) + ' TON';
+  document.getElementById('info-deposited').textContent= (userData.totalDeposited||0).toFixed(2) + ' TON';
+  document.getElementById('info-earned').textContent   = (userData.totalEarned||0).toFixed(2) + ' TON';
 
   const refUsed = document.getElementById('ref-used-display');
   if (userData.referredBy) {
@@ -2130,15 +2151,39 @@ function renderDeposits() {
   if (!depositsData.length) { list.style.display = 'none'; title.style.display = 'none'; return; }
   title.style.display = 'block'; list.style.display = 'block';
 
+  // ── Snapshot deposit history amounts to localStorage so they never shrink after withdrawal ──
+  const historyKey = `tonplay_dep_history_${String(currentUser.id)}`;
+  let savedHistory = {};
+  try { savedHistory = JSON.parse(localStorage.getItem(historyKey) || '{}'); } catch(e) {}
+
+  depositsData.forEach(d => {
+    if (!savedHistory[d.id]) {
+      // First time we see this deposit — snapshot the deposited & earned amounts
+      savedHistory[d.id] = {
+        deposited: d.originalAmount || d.amount || 0,
+        earned: d.earned || 0,
+        date: d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—'
+      };
+    } else {
+      // Always keep the highest earned seen (it only grows, never shrinks in history)
+      if ((d.earned || 0) > (savedHistory[d.id].earned || 0)) {
+        savedHistory[d.id].earned = d.earned || 0;
+      }
+    }
+  });
+  try { localStorage.setItem(historyKey, JSON.stringify(savedHistory)); } catch(e) {}
+
   const allRows = depositsData.map((d, idx) => {
-    const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
-    const earnedAmt = d.earned || 0;
+    const snap = savedHistory[d.id] || {};
+    const dt = snap.date || (d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—');
+    const depositedAmt = snap.deposited || d.originalAmount || d.amount || 0;
+    const earnedAmt = snap.earned || 0;
     const depositedLabel = LANG === 'ru' ? 'внесено' : 'deposited';
     const earnedLabel = LANG === 'ru' ? 'заработано' : 'earned';
     return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);gap:10px;">
       <div style="font-size:11px;color:var(--muted);flex-shrink:0;min-width:60px;">${dt}</div>
       <div style="flex:1;text-align:center;">
-        <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--text);">${(d.amount||0).toFixed(2)} TON</div>
+        <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--text);">${depositedAmt.toFixed(2)} TON</div>
         <div style="font-size:9px;color:var(--muted);margin-top:1px;">${depositedLabel}</div>
       </div>
       <div style="text-align:right;flex-shrink:0;">
