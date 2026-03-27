@@ -2132,40 +2132,18 @@ function renderDeposits() {
 
   const allRows = depositsData.map((d, idx) => {
     const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
-    const isPremium = (d.originalAmount || d.amount || 0) >= 100;
-    const rate = isPremium ? 0.15 : 0.10;
-    const yieldAmt = (d.amount || 0) * rate;
-    const isActive = d.status === 'active';
-    const activeIdx = activeDeposits.findIndex(ad => ad.id === d.id);
-    const c = WD_PILL_COLORS[activeIdx >= 0 ? activeIdx : idx % WD_PILL_COLORS.length];
-    const clockTs = d.lastYieldAt?.toMillis ? d.lastYieldAt.toMillis() : (d.createdAt?.toMillis ? d.createdAt.toMillis() : null);
-    let cdStr = '';
-    if (isActive && clockTs) {
-      const rem = (clockTs + 15 * 24 * 3600 * 1000) - Date.now();
-      if (rem > 0) {
-        const totalSecs = Math.floor(rem / 1000);
-        const days2 = Math.floor(totalSecs / 86400);
-        const hours2 = Math.floor((totalSecs % 86400) / 3600);
-        const mins2 = Math.floor((totalSecs % 3600) / 60);
-        const timeStr2 = days2 > 0 ? `${days2}${t.days_short} ${hours2}${t.hours_short}` : `${hours2}${t.hours_short} ${mins2}${t.mins_short}`;
-        cdStr = `<div class="dep-history-cd">⏱ ${timeStr2}</div>`;
-      } else {
-        cdStr = `<div class="dep-history-cd ready">🎉 Ready!</div>`;
-      }
-    }
-    const numPill = activeIdx >= 0
-      ? `<div class="dep-history-num" style="background:${c.bg};color:${c.text};">${activeIdx+1}</div>`
-      : `<div class="dep-history-num" style="background:var(--border);color:var(--sub);">—</div>`;
-    return `<div class="dep-history-row">
-      ${numPill}
-      <div class="dep-history-info">
-        <div class="dep-history-amount">${(d.amount||0).toFixed(2)} TON</div>
-        <div class="dep-history-meta">${dt} · ${isActive ? t.deposit_active : t.deposit_pending}</div>
-        ${cdStr}
+    const earnedAmt = d.earned || 0;
+    const depositedLabel = LANG === 'ru' ? 'внесено' : 'deposited';
+    const earnedLabel = LANG === 'ru' ? 'заработано' : 'earned';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);gap:10px;">
+      <div style="font-size:11px;color:var(--muted);flex-shrink:0;min-width:60px;">${dt}</div>
+      <div style="flex:1;text-align:center;">
+        <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--text);">${(d.amount||0).toFixed(2)} TON</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:1px;">${depositedLabel}</div>
       </div>
-      <div class="dep-history-right">
-        <div class="dep-history-yield" style="color:${isActive?'var(--green)':'var(--muted)'}">+${yieldAmt.toFixed(2)} TON</div>
-        <div class="dep-history-rate">${isPremium ? '15% / 2wk' : '10% / 15d'}</div>
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--text);">+${earnedAmt.toFixed(2)} TON</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:1px;">${earnedLabel}</div>
       </div>
     </div>`;
   }).join('');
