@@ -630,7 +630,7 @@ const T = {
     pay_opening: 'Opening wallet…',
     detecting: '⏳ Confirming on blockchain…',
     pay_confirmed: '✅ Payment confirmed!\nYour balance has been updated.',
-    active_deposits: 'Active Deposits',
+    active_deposits: 'Deposit History',
     deposit_active: 'Active',
     deposit_pending: 'Pending',
     deposit_week: 'Week',
@@ -826,7 +826,7 @@ const T = {
     pay_opening: 'Открываем кошелёк…',
     detecting: '⏳ Подтверждение в блокчейне…',
     pay_confirmed: '✅ Платёж подтверждён!\nВаш баланс обновлён.',
-    active_deposits: 'Активные депозиты',
+    active_deposits: 'История депозитов',
     deposit_active: 'Активный',
     deposit_pending: 'В обработке',
     deposit_week: 'Неделя',
@@ -1141,7 +1141,7 @@ window.LANG = LANG;
       </div>
     </div>
 
-    <div class="sec-title" id="deposits-title" style="display:none;" data-i18n="active_deposits">Active Deposits</div>
+    <div class="sec-title" id="deposits-title" style="display:none;" data-i18n="active_deposits">Deposit History</div>
     <div class="card" id="deposits-list" style="display:none;"></div>
   </div>
 
@@ -1369,7 +1369,7 @@ tonConnectUI.onStatusChange(wallet => {
     document.getElementById('wallet-addr-display').textContent = connectedWalletFriendly;
     document.getElementById('info-wallet').textContent = short;
     document.getElementById('btn-pay').disabled = false;
-    // Auto-fill withdraw wallet input with connected wallet address
+    // Always overwrite the withdraw wallet input with the connected wallet address
     const wdInput = document.getElementById('wd-wallet-input');
     if (wdInput) wdInput.value = connectedWalletFriendly;
   } else {
@@ -1764,13 +1764,13 @@ function renderAll() {
 
   // Auto-fill withdraw wallet: prefer connected TON wallet, else saved Firestore address
   (function fillWdWallet() {
-    const wdInput = document.getElementById('wd-wallet-input');
-    if (!wdInput) return;
-    if (connectedWalletFriendly) {
-      wdInput.value = connectedWalletFriendly;
-    } else if (userData.walletAddress && !wdInput.value) {
-      wdInput.value = userData.walletAddress;
-    }
+  const wdInput = document.getElementById('wd-wallet-input');
+  if (!wdInput) return;
+  if (connectedWalletFriendly) {
+  wdInput.value = connectedWalletFriendly;
+  } else if (userData && userData.walletAddress && !wdInput.value) {
+  wdInput.value = userData.walletAddress;
+  }
   })();
 
   const refCode = userData.referralCode || '';
