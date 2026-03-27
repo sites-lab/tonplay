@@ -1389,6 +1389,8 @@ tonConnectUI.onStatusChange(wallet => {
     // Always overwrite the withdraw wallet input with the connected wallet address
     const wdInput = document.getElementById('wd-wallet-input');
     if (wdInput) wdInput.value = connectedWalletFriendly;
+    // Also refresh the withdraw deposit pills now that we know the wallet
+    renderWithdrawDepositSelect();
   } else {
     connectedWalletAddr     = null;
     connectedWalletFriendly = null;
@@ -1779,14 +1781,14 @@ function renderAll() {
   document.getElementById('header-stars').textContent   = stars;
   document.getElementById('info-stars').textContent     = stars + ' ⭐';
 
-  // Auto-fill withdraw wallet: prefer user's saved Firestore address, then connected wallet
+  // Auto-fill withdraw wallet: always prefer the connected TON wallet (user's own), fallback to saved address
   (function fillWdWallet() {
   const wdInput = document.getElementById('wd-wallet-input');
   if (!wdInput) return;
-  if (userData && userData.walletAddress) {
-    wdInput.value = userData.walletAddress;
-  } else if (connectedWalletFriendly) {
+  if (connectedWalletFriendly) {
     wdInput.value = connectedWalletFriendly;
+  } else if (userData && userData.walletAddress) {
+    wdInput.value = userData.walletAddress;
   }
   })();
 
@@ -2543,10 +2545,13 @@ window.switchTab = function(name, btn) {
   // Auto-fill wallet address whenever user opens the Withdraw tab
   if (name === 'withdraw') {
     const wdInput = document.getElementById('wd-wallet-input');
-    if (wdInput && !wdInput.value) {
+    if (wdInput) {
+      // Always prefer connected wallet over anything else
       if (connectedWalletFriendly) wdInput.value = connectedWalletFriendly;
       else if (userData?.walletAddress) wdInput.value = userData.walletAddress;
     }
+    // Refresh deposit selection pills
+    renderWithdrawDepositSelect();
   }
 };
 
