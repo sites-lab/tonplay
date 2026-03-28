@@ -237,12 +237,11 @@ tr:hover td{background:rgba(33,150,243,0.02);}
       <button class="atab" data-tab="settings" onclick="switchAdminTab('settings',this)">⚙️ Settings</button>
       <button class="atab" data-tab="addplayer" onclick="switchAdminTab('addplayer',this)">➕ Add Player</button>
       <button class="atab" data-tab="broadcast" onclick="switchAdminTab('broadcast',this)">📢 Broadcast</button>
+      <button class="atab" data-tab="support" onclick="switchAdminTab('support',this)">💬 Support <span id="support-badge" style="display:none;background:var(--red);color:#fff;font-size:9px;font-weight:800;padding:1px 6px;border-radius:20px;margin-left:3px;">0</span></button>
     </div>
 
     <!-- PLAYERS -->
     <div class="atab-content active" id="tab-players">
-
-      <!-- Leaderboard -->
       <div class="leaderboard" id="leaderboard-row">
         <div class="lb-card gold-card">
           <span class="lb-crown">👑</span>
@@ -266,7 +265,6 @@ tr:hover td{background:rgba(33,150,243,0.02);}
           <div class="lb-sub">TON deposited</div>
         </div>
       </div>
-
       <div class="panel">
         <div class="panel-head"><div class="panel-title">Players</div></div>
         <div class="search-bar">
@@ -276,14 +274,7 @@ tr:hover td{background:rgba(33,150,243,0.02);}
         <div class="tbl-wrap">
           <table>
             <thead><tr>
-              <th>Name / Username</th>
-              <th>ID</th>
-              <th>Balance (TON)</th>
-              <th>Deposited</th>
-              <th>Wallet</th>
-              <th>Refs</th>
-              <th>Withdraw</th>
-              <th>Actions</th>
+              <th>Name / Username</th><th>ID</th><th>Balance (TON)</th><th>Deposited</th><th>Wallet</th><th>Refs</th><th>Withdraw</th><th>Actions</th>
             </tr></thead>
             <tbody id="players-tbody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
           </table>
@@ -319,16 +310,13 @@ tr:hover td{background:rgba(33,150,243,0.02);}
               <input class="set-input" type="number" id="ref-bonus-ton" step="0.001" min="0" value="0.05" placeholder="0.05" style="max-width:180px;">
               <div style="font-size:10px;color:var(--sub);margin-top:4px;">Credited instantly to the referrer when someone uses their code.</div>
             </div>
-
             <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
             <div class="sec-title">⭐ Referral Milestones</div>
-            <div style="font-size:11px;color:var(--sub);margin-bottom:14px;line-height:1.6;">Configure TG Stars rewards for reaching friend milestones. The last milestone can also include a TON bonus.</div>
-
+            <div style="font-size:11px;color:var(--sub);margin-bottom:14px;line-height:1.6;">Configure TG Stars rewards for reaching friend milestones.</div>
             <div id="ref-milestones-editor" style="margin-bottom:12px;"></div>
             <div style="display:flex;gap:8px;margin-bottom:16px;">
               <button class="btn-add-ms" onclick="addMilestone()">+ Add Milestone</button>
             </div>
-
             <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
             <div class="sec-title">📈 Weekly Yield Rate</div>
             <div style="margin-bottom:16px;">
@@ -336,7 +324,6 @@ tr:hover td{background:rgba(33,150,243,0.02);}
               <input class="set-input" type="number" id="yield-rate" step="0.1" min="0" max="100" value="5" placeholder="5" style="max-width:180px;">
               <div style="font-size:10px;color:var(--sub);margin-top:4px;">Default: 10%. Shown to users as weekly return.</div>
             </div>
-
             <button class="btn-save" onclick="saveSettings()">💾 Save All Settings</button>
             <div class="status-msg" id="settings-msg"></div>
           </div>
@@ -349,9 +336,7 @@ tr:hover td{background:rgba(33,150,243,0.02);}
       <div class="panel" style="max-width:620px;">
         <div class="panel-head"><div class="panel-title">📢 Broadcast to All Users</div></div>
         <div style="padding:20px;">
-          <div style="font-size:11px;color:var(--sub);margin-bottom:16px;line-height:1.6;">Send a message (with optional photo) to all users. Photos are uploaded once to Telegram and reused — fast and reliable.</div>
-
-          <!-- EN photo -->
+          <div style="font-size:11px;color:var(--sub);margin-bottom:16px;line-height:1.6;">Send a message (with optional photo) to all users.</div>
           <div style="margin-bottom:14px;">
             <label class="set-label">📷 🇬🇧 English Photo (optional)</label>
             <input type="file" id="bc-photo-en" accept="image/*" style="display:none;" onchange="handleBcPhoto(this,'en')">
@@ -359,12 +344,8 @@ tr:hover td{background:rgba(33,150,243,0.02);}
               <span id="bc-photo-label-en">🖼️ Click to select English photo</span>
               <img id="bc-photo-img-en" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;">
             </div>
-            <div style="display:flex;gap:8px;margin-top:5px;">
-              <button class="btn-act red" id="bc-remove-photo-en" style="display:none;" onclick="removeBcPhoto('en')">✕ Remove</button>
-            </div>
+            <div style="display:flex;gap:8px;margin-top:5px;"><button class="btn-act red" id="bc-remove-photo-en" style="display:none;" onclick="removeBcPhoto('en')">✕ Remove</button></div>
           </div>
-
-          <!-- RU photo -->
           <div style="margin-bottom:14px;">
             <label class="set-label">📷 🇷🇺 Russian Photo (optional)</label>
             <input type="file" id="bc-photo-ru" accept="image/*" style="display:none;" onchange="handleBcPhoto(this,'ru')">
@@ -372,32 +353,25 @@ tr:hover td{background:rgba(33,150,243,0.02);}
               <span id="bc-photo-label-ru">🖼️ Click to select Russian photo</span>
               <img id="bc-photo-img-ru" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;">
             </div>
-            <div style="display:flex;gap:8px;margin-top:5px;">
-              <button class="btn-act red" id="bc-remove-photo-ru" style="display:none;" onclick="removeBcPhoto('ru')">✕ Remove</button>
-            </div>
+            <div style="display:flex;gap:8px;margin-top:5px;"><button class="btn-act red" id="bc-remove-photo-ru" style="display:none;" onclick="removeBcPhoto('ru')">✕ Remove</button></div>
             <div style="font-size:10px;color:var(--sub);margin-top:4px;">If not set, the English photo will be used for Russian users too.</div>
           </div>
-
           <div style="margin-bottom:14px;">
             <label class="set-label">🇬🇧 English Message *</label>
-            <textarea id="bc-text-en" placeholder="Write English message here…\nHTML supported: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;" style="width:100%;min-height:90px;padding:11px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;transition:border-color .2s;" onfocus="this.style.borderColor='var(--ton)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <textarea id="bc-text-en" placeholder="Write English message here…" style="width:100%;min-height:90px;padding:11px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;" onfocus="this.style.borderColor='var(--ton)'" onblur="this.style.borderColor='var(--border)'"></textarea>
           </div>
-
           <div style="margin-bottom:14px;">
             <label class="set-label">🇷🇺 Russian Message</label>
-            <textarea id="bc-text-ru" placeholder="Напишите сообщение на русском…\nПоддерживается HTML: &lt;b&gt;жирный&lt;/b&gt;, &lt;i&gt;курсив&lt;/i&gt;" style="width:100%;min-height:90px;padding:11px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;transition:border-color .2s;" onfocus="this.style.borderColor='var(--ton)'" onblur="this.style.borderColor='var(--border)'"></textarea>
-            <div style="font-size:10px;color:var(--sub);margin-top:4px;">If left empty, English message will be sent to all users regardless of language.</div>
+            <textarea id="bc-text-ru" placeholder="Напишите сообщение на русском…" style="width:100%;min-height:90px;padding:11px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;" onfocus="this.style.borderColor='var(--ton)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <div style="font-size:10px;color:var(--sub);margin-top:4px;">If left empty, English message will be sent to all users.</div>
           </div>
-
           <div style="background:var(--gold-light);border:1.5px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:11px;color:var(--gold2);line-height:1.6;">
-            ⚠️ This will send the message to <strong id="bc-user-count">…</strong> users. Only users who have ever started the bot will receive it.
+            ⚠️ This will send the message to <strong id="bc-user-count">…</strong> users.
           </div>
-
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
             <button class="btn-save" id="bc-send-btn" onclick="sendBroadcast()">📢 Send Broadcast</button>
             <button class="btn-act blue" onclick="loadBroadcastCount()">🔄 Refresh count</button>
           </div>
-
           <div id="bc-progress" style="margin-top:14px;display:none;">
             <div style="font-size:12px;font-weight:700;margin-bottom:6px;" id="bc-progress-label">Sending…</div>
             <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden;">
@@ -405,9 +379,25 @@ tr:hover td{background:rgba(33,150,243,0.02);}
             </div>
             <div style="font-size:10px;color:var(--sub);margin-top:5px;" id="bc-progress-detail"></div>
           </div>
-
           <div id="bc-result" style="margin-top:12px;font-size:12px;min-height:16px;"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- SUPPORT -->
+    <div class="atab-content" id="tab-support">
+      <div class="panel" style="max-width:780px;">
+        <div class="panel-head">
+          <div class="panel-title">💬 Support Messages</div>
+          <button class="btn-refresh" onclick="loadSupportMessages()">🔄 Refresh</button>
+        </div>
+        <div style="padding:14px 18px 10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border);">
+          <span style="font-size:11px;font-weight:700;color:var(--sub);">Filter:</span>
+          <button class="btn-act blue" onclick="filterSupport('all',this)" id="sf-all" style="background:var(--ton-light);border-color:rgba(33,150,243,0.4);">All</button>
+          <button class="btn-act blue" onclick="filterSupport('open',this)" id="sf-open">Open</button>
+          <button class="btn-act blue" onclick="filterSupport('replied',this)" id="sf-replied">Replied</button>
+        </div>
+        <div id="support-list"><div class="empty-state"><div class="spinner"></div></div></div>
       </div>
     </div>
 
@@ -417,30 +407,12 @@ tr:hover td{background:rgba(33,150,243,0.02);}
         <div class="panel-head"><div class="panel-title">➕ Add Player Manually</div></div>
         <div style="padding:20px;">
           <div class="add-player-grid">
-            <div>
-              <label class="set-label">Telegram User ID *</label>
-              <input class="set-input" id="np-userid" type="text" placeholder="e.g. 123456789">
-            </div>
-            <div>
-              <label class="set-label">Username *</label>
-              <input class="set-input" id="np-username" type="text" placeholder="e.g. johndoe">
-            </div>
-            <div>
-              <label class="set-label">Display Name</label>
-              <input class="set-input" id="np-displayname" type="text" placeholder="e.g. John Doe">
-            </div>
-            <div>
-              <label class="set-label">Balance (TON)</label>
-              <input class="set-input" id="np-balance" type="number" step="0.01" value="0" placeholder="0">
-            </div>
-            <div>
-              <label class="set-label">Total Deposited (TON)</label>
-              <input class="set-input" id="np-deposited" type="number" step="0.01" value="0" placeholder="0">
-            </div>
-            <div>
-              <label class="set-label">Wallet Address</label>
-              <input class="set-input" id="np-wallet" type="text" placeholder="EQ...">
-            </div>
+            <div><label class="set-label">Telegram User ID *</label><input class="set-input" id="np-userid" type="text" placeholder="e.g. 123456789"></div>
+            <div><label class="set-label">Username *</label><input class="set-input" id="np-username" type="text" placeholder="e.g. johndoe"></div>
+            <div><label class="set-label">Display Name</label><input class="set-input" id="np-displayname" type="text" placeholder="e.g. John Doe"></div>
+            <div><label class="set-label">Balance (TON)</label><input class="set-input" id="np-balance" type="number" step="0.01" value="0" placeholder="0"></div>
+            <div><label class="set-label">Total Deposited (TON)</label><input class="set-input" id="np-deposited" type="number" step="0.01" value="0" placeholder="0"></div>
+            <div><label class="set-label">Wallet Address</label><input class="set-input" id="np-wallet" type="text" placeholder="EQ..."></div>
           </div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
             <label class="set-label" style="margin:0;">Withdrawals Unlocked:</label>
@@ -475,6 +447,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, addDoc, getDocs, query, orderBy, limit, where, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// ── ORIGINAL WORKING Firebase config (appId with 791) ──
 const firebaseConfig = {
   apiKey: "AIzaSyAml8c0QPKlbEmXG7C4eXd-WYbbOvOHtP8",
   authDomain: "miniapp-ton.firebaseapp.com",
@@ -519,6 +492,9 @@ function loadAll() {
   loadDeposits();
   loadWithdrawals();
   loadSettings();
+  loadSupportMessages();
+  // Auto-refresh support badge every 15s
+  setInterval(loadSupportMessages, 15000);
 }
 
 // ── Players ──
@@ -537,15 +513,12 @@ async function loadPlayers() {
 
 function renderLeaderboard(list) {
   if (!list.length) return;
-  // Top referrer
   const topRef = [...list].sort((a,b) => (b.referralCount||0) - (a.referralCount||0))[0];
   document.getElementById('lb-ref-name').textContent = topRef.displayName || ('@' + (topRef.userName || topRef.id));
   document.getElementById('lb-ref-val').textContent = topRef.referralCount || 0;
-  // Highest balance
   const topBal = [...list].sort((a,b) => (b.balance||0) - (a.balance||0))[0];
   document.getElementById('lb-bal-name').textContent = topBal.displayName || ('@' + (topBal.userName || topBal.id));
   document.getElementById('lb-bal-val').textContent = (topBal.balance||0).toFixed(2);
-  // Most deposited
   const topDep = [...list].sort((a,b) => (b.totalDeposited||0) - (a.totalDeposited||0))[0];
   document.getElementById('lb-dep-name').textContent = topDep.displayName || ('@' + (topDep.userName || topDep.id));
   document.getElementById('lb-dep-val').textContent = (topDep.totalDeposited||0).toFixed(2);
@@ -633,18 +606,11 @@ window.confirmDeposit = async function(docId, userId, amount) {
   if (!confirm(`Confirm deposit of ${amount} TON for user ${userId}?`)) return;
   try {
     await updateDoc(doc(db, 'depositNotifications', docId), { status: 'done', processedAt: serverTimestamp() });
-    // Also update the deposit doc and user balance
-    const depositsSnap = await getDocs(query(
-      collection(db, 'deposits'),
-      where('userId', '==', userId),
-      where('status', '==', 'pending'),
-      limit(5)
-    ));
+    const depositsSnap = await getDocs(query(collection(db, 'deposits'), where('userId', '==', userId), where('status', '==', 'pending'), limit(5)));
     for (const d of depositsSnap.docs) {
       const da = d.data();
       if (Math.abs((da.amount || 0) - amount) < 0.001) {
         await updateDoc(doc(db, 'deposits', d.id), { status: 'active', activatedAt: serverTimestamp() });
-        // Add to user balance and totalDeposited
         const userSnap = await getDoc(doc(db, 'users', userId));
         if (userSnap.exists()) {
           const ud = userSnap.data();
@@ -674,14 +640,10 @@ async function loadWithdrawals() {
     list.innerHTML = docs.map(d => {
       const ts = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleString() : '—';
       const isPending = d.status === 'pending';
-      const isCancelled = d.status === 'cancelled';
-
       let statusChip = '';
       if (d.status === 'done') statusChip = '<span class="chip done">✅ Paid</span>';
-      else if (isCancelled) statusChip = '<span class="chip red">❌ Cancelled</span>';
+      else if (d.status === 'cancelled') statusChip = '<span class="chip red">❌ Cancelled</span>';
       else statusChip = '<span class="chip pending">⏳ Pending</span>';
-
-      // Deposit breakdown
       let depHtml = '';
       const deps = d.selectedDeposits || [];
       if (deps.length) {
@@ -692,14 +654,6 @@ async function loadWithdrawals() {
         });
         depHtml += `</div>`;
       }
-
-      const confirmBtn = `<button class="btn-act green" style="padding:7px 14px;font-size:11px;" onclick="adminConfirmWithdrawal('${d.docId}','${d.userId}')">
-        ✅ Confirm &amp; Deduct
-      </button>`;
-      const cancelBtn = `<button class="btn-act red" style="padding:7px 14px;font-size:11px;" onclick="adminCancelWithdrawal('${d.docId}','${d.userId}')">
-        ❌ Cancel
-      </button>`;
-
       return `<div class="notif-row" style="${isPending ? 'background:linear-gradient(90deg,rgba(245,158,11,0.04),transparent);border-left:3px solid var(--gold);' : ''}">
         <div class="notif-info" style="flex:1;">
           <div class="notif-user" style="display:flex;align-items:center;gap:8px;">
@@ -714,7 +668,10 @@ async function loadWithdrawals() {
           <div class="notif-addr" style="margin-top:3px;">📤 <span onclick="navigator.clipboard?.writeText('${d.walletAddress||''}')" style="cursor:pointer;" title="Click to copy">${d.walletAddress || '—'}</span></div>
           ${depHtml}
         </div>
-        ${isPending ? `<div class="notif-actions" style="flex-direction:column;gap:6px;align-items:stretch;min-width:140px;">${confirmBtn}${cancelBtn}</div>` : ''}
+        ${isPending ? `<div class="notif-actions" style="flex-direction:column;gap:6px;align-items:stretch;min-width:140px;">
+          <button class="btn-act green" style="padding:7px 14px;font-size:11px;" onclick="adminConfirmWithdrawal('${d.docId}','${d.userId}')">✅ Confirm &amp; Deduct</button>
+          <button class="btn-act red" style="padding:7px 14px;font-size:11px;" onclick="adminCancelWithdrawal('${d.docId}','${d.userId}')">❌ Cancel</button>
+        </div>` : ''}
       </div>`;
     }).join('');
   } catch(e) { list.innerHTML = `<div class="empty-state"><div style="color:var(--red);">${e.message}</div></div>`; }
@@ -727,11 +684,7 @@ window.adminConfirmWithdrawal = async function(docId, userId) {
     if (!wdSnap.exists()) { showToast('❌ Not found'); return; }
     const wd = wdSnap.data();
     if (wd.status !== 'pending') { showToast('Already processed'); await loadWithdrawals(); return; }
-
-    // 1. Mark done
     await updateDoc(doc(db, 'withdrawals', docId), { status: 'done', confirmedAt: serverTimestamp() });
-
-    // 2. Deduct user balance
     const userSnap = await getDoc(doc(db, 'users', userId));
     let newBal = 0;
     if (userSnap.exists()) {
@@ -739,8 +692,6 @@ window.adminConfirmWithdrawal = async function(docId, userId) {
       newBal = Math.max(0, parseFloat(((ud.balance || 0) - (wd.amount || 0)).toFixed(6)));
       await updateDoc(doc(db, 'users', userId), { balance: newBal });
     }
-
-    // 3. Deduct from deposit cards
     const selectedDeposits = wd.selectedDeposits || [];
     for (const dep of selectedDeposits) {
       if (!dep.id) continue;
@@ -750,27 +701,18 @@ window.adminConfirmWithdrawal = async function(docId, userId) {
         if (depSnap.exists()) {
           const depData = depSnap.data();
           const remainingAmt = parseFloat(((depData.amount || 0) - dep.amount).toFixed(6));
-          if (remainingAmt <= 0.001) {
-            await updateDoc(depRef, { status: 'withdrawn', amount: 0, withdrawnAt: serverTimestamp() });
-          } else {
-            await updateDoc(depRef, { amount: remainingAmt });
-          }
+          if (remainingAmt <= 0.001) await updateDoc(depRef, { status: 'withdrawn', amount: 0, withdrawnAt: serverTimestamp() });
+          else await updateDoc(depRef, { amount: remainingAmt });
         }
-      } catch(e2) { console.warn('Deposit update error:', e2); }
+      } catch(e2) {}
     }
-
-    // 4. Notify user
     const numericId = parseInt(userId);
     if (!isNaN(numericId) && numericId > 0) {
       await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: numericId, parse_mode: 'HTML',
-          text: `✅ <b>Withdrawal Confirmed!</b>\n\n💰 <b>${(wd.amount||0).toFixed(2)} TON</b> has been sent to:\n<code>${wd.walletAddress}</code>\n\n📊 Your new balance: <b>${newBal.toFixed(4)} TON</b>`
-        })
+        body: JSON.stringify({ chat_id: numericId, parse_mode: 'HTML', text: `✅ <b>Withdrawal Confirmed!</b>\n\n💰 <b>${(wd.amount||0).toFixed(2)} TON</b> has been sent to:\n<code>${wd.walletAddress}</code>\n\n📊 Your new balance: <b>${newBal.toFixed(4)} TON</b>` })
       });
     }
-
     showToast(`✅ Confirmed! New balance: ${newBal.toFixed(4)} TON`);
     await loadWithdrawals(); await loadPlayers();
   } catch(e) { showToast('❌ ' + e.message); }
@@ -783,19 +725,13 @@ window.adminCancelWithdrawal = async function(docId, userId) {
     if (!wdSnap.exists()) { showToast('❌ Not found'); return; }
     const wd = wdSnap.data();
     await updateDoc(doc(db, 'withdrawals', docId), { status: 'cancelled', cancelledAt: serverTimestamp() });
-
-    // Notify user
     const numericId = parseInt(userId);
     if (!isNaN(numericId) && numericId > 0) {
       await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: numericId, parse_mode: 'HTML',
-          text: `❌ <b>Withdrawal Rejected</b>\n\nYour withdrawal request of <b>${(wd.amount||0).toFixed(2)} TON</b> was cancelled by the admin. Please contact support if you have questions.`
-        })
+        body: JSON.stringify({ chat_id: numericId, parse_mode: 'HTML', text: `❌ <b>Withdrawal Rejected</b>\n\nYour withdrawal request of <b>${(wd.amount||0).toFixed(2)} TON</b> was cancelled by the admin.` })
       });
     }
-
     showToast('❌ Withdrawal cancelled');
     await loadWithdrawals();
   } catch(e) { showToast('❌ ' + e.message); }
@@ -823,7 +759,6 @@ async function loadSettings() {
 }
 
 function syncMilestonesFromDOM() {
-  // Read current input values back into the array before any re-render
   referralMilestonesAdmin = referralMilestonesAdmin.map((_, i) => ({
     friends:  parseInt(document.getElementById(`ms-friends-${i}`)?.value)  || 0,
     stars:    parseInt(document.getElementById(`ms-stars-${i}`)?.value)    || 0,
@@ -835,22 +770,15 @@ function renderMilestonesEditor() {
   const c = document.getElementById('ref-milestones-editor');
   const total = referralMilestonesAdmin.length;
   c.innerHTML = referralMilestonesAdmin.map((m, i) => `
-    <div class="ms-card" id="ms-card-${i}" draggable="true"
-      ondragstart="msDragStart(event,${i})"
-      ondragover="msDragOver(event)"
-      ondrop="msDrop(event,${i})"
-      ondragend="msDragEnd()"
-      style="cursor:grab;">
+    <div class="ms-card" id="ms-card-${i}" draggable="true" ondragstart="msDragStart(event,${i})" ondragover="msDragOver(event)" ondrop="msDrop(event,${i})" ondragend="msDragEnd()" style="cursor:grab;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;">
         <div style="display:flex;align-items:center;gap:8px;">
-          <!-- drag handle -->
           <div title="Drag to reorder" style="color:var(--muted);font-size:16px;line-height:1;cursor:grab;user-select:none;">⠿</div>
           <div style="font-size:10px;font-weight:800;color:var(--gold2);letter-spacing:.4px;">MILESTONE ${i + 1}</div>
         </div>
         <div style="display:flex;align-items:center;gap:5px;">
-          <!-- up/down buttons -->
-          <button class="btn-act blue" style="padding:3px 8px;font-size:11px;" ${i === 0 ? 'disabled style="opacity:.35;padding:3px 8px;font-size:11px;"' : ''} onclick="moveMilestone(${i},-1)">▲</button>
-          <button class="btn-act blue" style="padding:3px 8px;font-size:11px;" ${i === total-1 ? 'disabled style="opacity:.35;padding:3px 8px;font-size:11px;"' : ''} onclick="moveMilestone(${i},1)">▼</button>
+          <button class="btn-act blue" style="padding:3px 8px;font-size:11px;" ${i === 0 ? 'disabled' : ''} onclick="moveMilestone(${i},-1)">▲</button>
+          <button class="btn-act blue" style="padding:3px 8px;font-size:11px;" ${i === total-1 ? 'disabled' : ''} onclick="moveMilestone(${i},1)">▼</button>
           ${total > 1 ? `<button class="btn-act red" style="padding:3px 8px;font-size:10px;" onclick="removeMilestone(${i})">✕</button>` : ''}
         </div>
       </div>
@@ -863,78 +791,24 @@ function renderMilestonesEditor() {
   `).join('');
 }
 
-// ── Drag-and-drop reorder ──
 let msDragIdx = null;
-
-window.msDragStart = function(e, i) {
-  syncMilestonesFromDOM();
-  msDragIdx = i;
-  e.dataTransfer.effectAllowed = 'move';
-  setTimeout(() => document.getElementById(`ms-card-${i}`)?.style && (document.getElementById(`ms-card-${i}`).style.opacity = '0.45'), 0);
-};
-window.msDragOver = function(e) {
-  e.preventDefault();
-  e.dataTransfer.dropEffect = 'move';
-  // highlight drop target
-  const card = e.currentTarget;
-  document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over'));
-  if (card) card.classList.add('drag-over');
-};
-window.msDrop = function(e, targetIdx) {
-  e.preventDefault();
-  document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over'));
-  if (msDragIdx === null || msDragIdx === targetIdx) return;
-  const moved = referralMilestonesAdmin.splice(msDragIdx, 1)[0];
-  referralMilestonesAdmin.splice(targetIdx, 0, moved);
-  msDragIdx = null;
-  renderMilestonesEditor();
-};
-window.msDragEnd = function() {
-  document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over'));
-  msDragIdx = null;
-  renderMilestonesEditor();
-};
-
-// ── Arrow button reorder ──
-window.moveMilestone = function(i, dir) {
-  syncMilestonesFromDOM();
-  const j = i + dir;
-  if (j < 0 || j >= referralMilestonesAdmin.length) return;
-  [referralMilestonesAdmin[i], referralMilestonesAdmin[j]] = [referralMilestonesAdmin[j], referralMilestonesAdmin[i]];
-  renderMilestonesEditor();
-};
-
-window.addMilestone = function() {
-  syncMilestonesFromDOM();
-  referralMilestonesAdmin.push({ friends: 0, stars: 0, bonusTon: 0 });
-  renderMilestonesEditor();
-  // Scroll to the new card
-  setTimeout(() => {
-    const last = document.getElementById(`ms-card-${referralMilestonesAdmin.length - 1}`);
-    last?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, 50);
-};
-window.removeMilestone = function(i) {
-  syncMilestonesFromDOM();
-  referralMilestonesAdmin.splice(i, 1);
-  renderMilestonesEditor();
-};
+window.msDragStart = function(e, i) { syncMilestonesFromDOM(); msDragIdx = i; e.dataTransfer.effectAllowed = 'move'; setTimeout(() => { if(document.getElementById(`ms-card-${i}`)) document.getElementById(`ms-card-${i}`).style.opacity = '0.45'; }, 0); };
+window.msDragOver = function(e) { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over')); e.currentTarget?.classList.add('drag-over'); };
+window.msDrop = function(e, targetIdx) { e.preventDefault(); document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over')); if (msDragIdx === null || msDragIdx === targetIdx) return; const moved = referralMilestonesAdmin.splice(msDragIdx, 1)[0]; referralMilestonesAdmin.splice(targetIdx, 0, moved); msDragIdx = null; renderMilestonesEditor(); };
+window.msDragEnd = function() { document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over')); msDragIdx = null; renderMilestonesEditor(); };
+window.moveMilestone = function(i, dir) { syncMilestonesFromDOM(); const j = i + dir; if (j < 0 || j >= referralMilestonesAdmin.length) return; [referralMilestonesAdmin[i], referralMilestonesAdmin[j]] = [referralMilestonesAdmin[j], referralMilestonesAdmin[i]]; renderMilestonesEditor(); };
+window.addMilestone = function() { syncMilestonesFromDOM(); referralMilestonesAdmin.push({ friends: 0, stars: 0, bonusTon: 0 }); renderMilestonesEditor(); setTimeout(() => document.getElementById(`ms-card-${referralMilestonesAdmin.length - 1}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50); };
+window.removeMilestone = function(i) { syncMilestonesFromDOM(); referralMilestonesAdmin.splice(i, 1); renderMilestonesEditor(); };
 
 window.saveSettings = async function() {
   const msg = document.getElementById('settings-msg');
   msg.textContent = 'Saving…';
-  // Sync inputs → array, then save in the current admin-defined order (no auto-sort)
   syncMilestonesFromDOM();
   const ms = referralMilestonesAdmin;
   const refBonus = parseFloat(document.getElementById('ref-bonus-ton').value) || 0.05;
   const yieldRate = parseFloat(document.getElementById('yield-rate').value) || 10;
   try {
-    await setDoc(doc(db, 'settings', 'global'), {
-      referralBonus: refBonus,
-      yieldRate,
-      referralMilestones: ms,
-      updatedAt: serverTimestamp()
-    }, { merge: true });
+    await setDoc(doc(db, 'settings', 'global'), { referralBonus: refBonus, yieldRate, referralMilestones: ms, updatedAt: serverTimestamp() }, { merge: true });
     referralMilestonesAdmin = ms;
     msg.textContent = '✅ Saved!';
     setTimeout(() => msg.textContent = '', 2500);
@@ -949,6 +823,7 @@ function openModal(title, body, action) {
   document.getElementById('modal-body').innerHTML = body;
   modalAction = action;
   document.getElementById('modal-bg').classList.add('open');
+  document.getElementById('modal-confirm').style.display = '';
 }
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); modalAction = null; }
 document.getElementById('modal-cancel').addEventListener('click', closeModal);
@@ -969,8 +844,7 @@ window.editBalance = function(uid, name, currentBal) {
 
 window.addDeposit = function(uid, name) {
   openModal(`💰 Add Deposit — @${name}`,
-    `<div class="modal-field"><label class="modal-label">Deposit Amount (TON)</label><input class="modal-input" id="m-dep" type="number" step="0.01" min="0.5" placeholder="e.g. 10"></div>
-     <div style="font-size:11px;color:var(--sub);margin-top:6px;line-height:1.5;">This will add the amount to the user's balance AND totalDeposited. A deposit record will be created.</div>`,
+    `<div class="modal-field"><label class="modal-label">Deposit Amount (TON)</label><input class="modal-input" id="m-dep" type="number" step="0.01" min="0.5" placeholder="e.g. 10"></div>`,
     async () => {
       const amt = parseFloat(document.getElementById('m-dep').value);
       if (isNaN(amt) || amt < 0.5) { showToast('❌ Min 0.5 TON'); return; }
@@ -982,18 +856,7 @@ window.addDeposit = function(uid, name) {
         totalDeposited: parseFloat(((ud.totalDeposited || 0) + amt).toFixed(6)),
         withdrawUnlocked: true
       });
-      await addDoc(collection(db, 'deposits'), {
-        userId: uid,
-        userName: ud.userName || '',
-        displayName: ud.displayName || '',
-        amount: amt,
-        walletAddress: ud.walletAddress || '',
-        status: 'active',
-        weeksActive: 0,
-        earned: 0,
-        addedByAdmin: true,
-        createdAt: serverTimestamp()
-      });
+      await addDoc(collection(db, 'deposits'), { userId: uid, userName: ud.userName || '', displayName: ud.displayName || '', amount: amt, walletAddress: ud.walletAddress || '', status: 'active', weeksActive: 0, earned: 0, addedByAdmin: true, createdAt: serverTimestamp() });
       showToast(`✅ Added ${amt} TON deposit for @${name}`); await loadPlayers();
     }
   );
@@ -1003,22 +866,14 @@ window.toggleWithdraw = function(uid, name, currentlyUnlocked) {
   const newVal = !currentlyUnlocked;
   openModal(`${newVal ? '🔓 Unlock' : '🔒 Lock'} Withdraw — @${name}`,
     `<div style="font-size:12px;color:var(--sub);line-height:1.6;">${newVal ? 'This will <strong style="color:var(--green);">unlock</strong>' : 'This will <strong style="color:var(--red);">lock</strong>'} withdrawals for <strong>@${name}</strong>.</div>`,
-    async () => {
-      await updateDoc(doc(db, 'users', uid), { withdrawUnlocked: newVal });
-      showToast(newVal ? '🔓 Unlocked!' : '🔒 Locked!'); await loadPlayers();
-    }
+    async () => { await updateDoc(doc(db, 'users', uid), { withdrawUnlocked: newVal }); showToast(newVal ? '🔓 Unlocked!' : '🔒 Locked!'); await loadPlayers(); }
   );
 };
 
 window.deletePlayer = function(uid, name) {
   openModal(`🗑️ Delete Player — @${name}`,
     `<div style="font-size:12px;color:var(--red);line-height:1.6;"><strong>⚠️ Warning:</strong> Permanently deletes @${name}. Cannot be undone!</div>`,
-    async () => {
-      await deleteDoc(doc(db, 'users', uid));
-      showToast(`🗑️ Deleted @${name}`);
-      allPlayers = allPlayers.filter(p => p.id !== uid);
-      renderPlayers(allPlayers); updateSummary();
-    }
+    async () => { await deleteDoc(doc(db, 'users', uid)); showToast(`🗑️ Deleted @${name}`); allPlayers = allPlayers.filter(p => p.id !== uid); renderPlayers(allPlayers); updateSummary(); }
   );
 };
 
@@ -1044,15 +899,7 @@ window.createNewPlayer = async function() {
   if (!userName) { err.textContent = '❌ Username is required'; return; }
   const code = userId.slice(-6).toUpperCase() + Math.random().toString(36).slice(-2).toUpperCase();
   try {
-    await setDoc(doc(db, 'users', userId), {
-      userId, userName, displayName: displayName || userName,
-      balance, totalDeposited, totalEarned: 0,
-      walletAddress: wallet,
-      referralCode: code, referredBy: null,
-      referralCount: 0, referralEarned: 0,
-      withdrawUnlocked: npWd,
-      createdAt: serverTimestamp()
-    });
+    await setDoc(doc(db, 'users', userId), { userId, userName, displayName: displayName || userName, balance, totalDeposited, totalEarned: 0, walletAddress: wallet, referralCode: code, referredBy: null, referralCount: 0, referralEarned: 0, withdrawUnlocked: npWd, createdAt: serverTimestamp() });
     showToast('✅ Player @' + userName + ' created!');
     ['np-userid','np-username','np-displayname','np-wallet'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('np-balance').value = '0';
@@ -1068,6 +915,8 @@ window.switchAdminTab = function(name, btn) {
   document.querySelectorAll('.atab').forEach(el => el.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
+  if (name === 'broadcast' && !allUserIds.length) loadBroadcastCount();
+  if (name === 'support') loadSupportMessages();
 };
 
 // ── Refresh buttons ──
@@ -1075,38 +924,24 @@ document.getElementById('refresh-players').addEventListener('click', loadPlayers
 document.getElementById('refresh-deposits').addEventListener('click', loadDeposits);
 document.getElementById('refresh-withdrawals').addEventListener('click', loadWithdrawals);
 
-// ── DM (direct message to single user) ──
+// ── DM ──
 window.openDM = function(uid, userName) {
   openModal(`📨 Send DM — @${userName}`,
-    `<div class="modal-field">
-      <label class="modal-label">Message (HTML supported)</label>
-      <textarea class="dm-textarea" id="dm-text" placeholder="Write your message…
-<b>bold</b>, <i>italic</i>, <a href='...'>link</a>"></textarea>
-    </div>
-    <div style="font-size:10px;color:var(--sub);margin-top:-6px;">Sends directly to this user's Telegram chat.</div>`,
+    `<div class="modal-field"><label class="modal-label">Message (HTML supported)</label><textarea class="dm-textarea" id="dm-text" placeholder="Write your message…"></textarea></div>`,
     async () => {
       const text = document.getElementById('dm-text')?.value?.trim();
       if (!text) { showToast('❌ Message is empty'); return; }
-      const BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
       try {
-        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: uid, text, parse_mode: 'HTML' })
-        });
+        const res = await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: uid, text, parse_mode: 'HTML' }) });
         const json = await res.json();
-        if (json.ok) {
-          showToast(`✅ Message sent to @${userName}!`);
-        } else {
-          showToast(`❌ Failed: ${json.description}`);
-        }
+        if (json.ok) showToast(`✅ Message sent to @${userName}!`);
+        else showToast(`❌ Failed: ${json.description}`);
       } catch(e) { showToast('❌ ' + e.message); }
     }
   );
 };
 
 // ── Broadcast ──
-// Per-language photo storage: { base64, mime, fileId }
 let bcPhotos = { en: { base64: null, mime: null, fileId: null }, ru: { base64: null, mime: null, fileId: null } };
 let allUserIds = [];
 const BC_BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
@@ -1114,31 +949,23 @@ const BC_BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
 async function loadBroadcastCount() {
   try {
     const snap = await getDocs(collection(db, 'users'));
-    allUserIds = snap.docs.map(d => ({
-      id: d.data().userId || d.id,
-      lang: d.data().lang || 'ru'
-    })).filter(u => u.id);
+    allUserIds = snap.docs.map(d => ({ id: d.data().userId || d.id, lang: d.data().lang || 'ru' })).filter(u => u.id);
     document.getElementById('bc-user-count').textContent = allUserIds.length + ' users';
   } catch(e) { document.getElementById('bc-user-count').textContent = '? (error)'; }
 }
 
 window.handleBcPhoto = function(input, lang) {
-  const file = input.files[0];
-  if (!file) return;
+  const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
     const dataUrl = e.target.result;
-    bcPhotos[lang].mime = file.type;
-    bcPhotos[lang].base64 = dataUrl.split(',')[1];
-    bcPhotos[lang].fileId = null; // reset cached file_id
+    bcPhotos[lang].mime = file.type; bcPhotos[lang].base64 = dataUrl.split(',')[1]; bcPhotos[lang].fileId = null;
     document.getElementById(`bc-photo-label-${lang}`).style.display = 'none';
-    const img = document.getElementById(`bc-photo-img-${lang}`);
-    img.src = dataUrl; img.style.display = 'block';
+    const img = document.getElementById(`bc-photo-img-${lang}`); img.src = dataUrl; img.style.display = 'block';
     document.getElementById(`bc-remove-photo-${lang}`).style.display = '';
   };
   reader.readAsDataURL(file);
 };
-
 window.removeBcPhoto = function(lang) {
   bcPhotos[lang] = { base64: null, mime: null, fileId: null };
   document.getElementById(`bc-photo-${lang}`).value = '';
@@ -1147,62 +974,29 @@ window.removeBcPhoto = function(lang) {
   document.getElementById(`bc-remove-photo-${lang}`).style.display = 'none';
 };
 
-// Upload photo file once → get Telegram file_id to reuse for all sends
 async function uploadPhotoOnce(lang) {
-  const p = bcPhotos[lang];
-  if (!p.base64) return null;
-  if (p.fileId) return p.fileId; // already uploaded
-  const byteChars = atob(p.base64);
-  const byteArr = new Uint8Array(byteChars.length);
+  const p = bcPhotos[lang]; if (!p.base64) return null; if (p.fileId) return p.fileId;
+  const byteChars = atob(p.base64); const byteArr = new Uint8Array(byteChars.length);
   for (let b = 0; b < byteChars.length; b++) byteArr[b] = byteChars.charCodeAt(b);
   const blob = new Blob([byteArr], { type: p.mime || 'image/jpeg' });
-  const fd = new FormData();
-  // Use a dummy chat that definitely exists — we send to SUPER_ADMIN to get file_id
-  fd.append('chat_id', '8671373607'); // SUPER_ADMIN_CHAT
-  fd.append('photo', blob, 'photo.jpg');
-  fd.append('caption', '(upload probe — ignore)');
+  const fd = new FormData(); fd.append('chat_id', '8671373607'); fd.append('photo', blob, 'photo.jpg'); fd.append('caption', '(upload probe)');
   const res = await fetch(`https://api.telegram.org/bot${BC_BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd });
-  const json = await res.json();
-  if (!json.ok) throw new Error('Photo upload failed: ' + json.description);
-  const photos = json.result.photo;
-  const fileId = photos[photos.length - 1].file_id; // largest size
-  bcPhotos[lang].fileId = fileId;
-  return fileId;
+  const json = await res.json(); if (!json.ok) throw new Error('Photo upload failed: ' + json.description);
+  const fileId = json.result.photo[json.result.photo.length - 1].file_id;
+  bcPhotos[lang].fileId = fileId; return fileId;
 }
 
-// Send one message with retry on 429 rate-limit
 async function sendOneMsg(chatId, text, fileId) {
-  const maxRetries = 3;
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
       let res;
-      if (fileId) {
-        res = await fetch(`https://api.telegram.org/bot${BC_BOT_TOKEN}/sendPhoto`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: chatId, photo: fileId, caption: text, parse_mode: 'HTML' })
-        });
-      } else {
-        res = await fetch(`https://api.telegram.org/bot${BC_BOT_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
-        });
-      }
+      if (fileId) res = await fetch(`https://api.telegram.org/bot${BC_BOT_TOKEN}/sendPhoto`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, photo: fileId, caption: text, parse_mode: 'HTML' }) });
+      else res = await fetch(`https://api.telegram.org/bot${BC_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' }) });
       const json = await res.json();
       if (json.ok) return true;
-      // 429 = rate limited — wait and retry
-      if (json.error_code === 429) {
-        const wait = ((json.parameters && json.parameters.retry_after) || 2) * 1000;
-        await new Promise(r => setTimeout(r, wait));
-        continue;
-      }
-      // Other error (blocked bot, user not found, etc.) — don't retry
+      if (json.error_code === 429) { await new Promise(r => setTimeout(r, ((json.parameters?.retry_after) || 2) * 1000)); continue; }
       return false;
-    } catch(e) {
-      if (attempt === maxRetries - 1) return false;
-      await new Promise(r => setTimeout(r, 1000));
-    }
+    } catch(e) { if (attempt === 2) return false; await new Promise(r => setTimeout(r, 1000)); }
   }
   return false;
 }
@@ -1212,85 +1006,38 @@ window.sendBroadcast = async function() {
   const textRu = document.getElementById('bc-text-ru').value.trim();
   if (!textEn) { showToast('❌ English message is required'); return; }
   if (!allUserIds.length) { showToast('❌ No users loaded — click Refresh count first'); return; }
-
-  const hasRu = !!textRu;
-  const hasPhotoEn = !!bcPhotos.en.base64;
-  const hasPhotoRu = !!bcPhotos.ru.base64;
-  const ruCount = allUserIds.filter(u => (u.lang || 'ru') === 'ru').length;
-  const enCount = allUserIds.length - ruCount;
-  const confirmMsg = hasRu
-    ? `Send to ${allUserIds.length} users?\n🇬🇧 English → ${enCount} users${hasPhotoEn?' (with photo)':''}\n🇷🇺 Russian → ${ruCount} users${(hasPhotoRu||hasPhotoEn)?' (with photo)':''}`
-    : `Send to all ${allUserIds.length} users? (English message for everyone)`;
-  if (!confirm(confirmMsg)) return;
-
+  if (!confirm(`Send to ${allUserIds.length} users?`)) return;
   const btn = document.getElementById('bc-send-btn');
   btn.disabled = true; btn.textContent = '⏳ Uploading photos…';
-  const progress = document.getElementById('bc-progress');
+  const progress = document.getElementById('bc-progress'); progress.style.display = 'block';
   const progressBar = document.getElementById('bc-progress-bar');
   const progressLabel = document.getElementById('bc-progress-label');
   const progressDetail = document.getElementById('bc-progress-detail');
-  const result = document.getElementById('bc-result');
-  progress.style.display = 'block'; result.textContent = '';
-
-  // Step 1: Upload photos once → get reusable file_id
+  const result = document.getElementById('bc-result'); result.textContent = '';
   let fileIdEn = null, fileIdRu = null;
   try {
-    if (hasPhotoEn) {
-      progressLabel.textContent = '📤 Uploading EN photo…';
-      fileIdEn = await uploadPhotoOnce('en');
-    }
-    if (hasPhotoRu) {
-      progressLabel.textContent = '📤 Uploading RU photo…';
-      fileIdRu = await uploadPhotoOnce('ru');
-    }
-  } catch(e) {
-    showToast('❌ Photo upload failed: ' + e.message);
-    btn.disabled = false; btn.textContent = '📢 Send Broadcast';
-    return;
-  }
-
-  // Step 2: Send to all users in parallel batches of 25
-  let sent = 0, failed = 0;
-  const BATCH = 25; // Telegram allows ~30 msg/sec; 25 concurrent is safe
-
+    if (bcPhotos.en.base64) { progressLabel.textContent = '📤 Uploading EN photo…'; fileIdEn = await uploadPhotoOnce('en'); }
+    if (bcPhotos.ru.base64) { progressLabel.textContent = '📤 Uploading RU photo…'; fileIdRu = await uploadPhotoOnce('ru'); }
+  } catch(e) { showToast('❌ Photo upload failed: ' + e.message); btn.disabled = false; btn.textContent = '📢 Send Broadcast'; return; }
+  let sent = 0, failed = 0; const BATCH = 25;
   for (let i = 0; i < allUserIds.length; i += BATCH) {
     const batch = allUserIds.slice(i, i + BATCH);
-    const pct = Math.round((i / allUserIds.length) * 100);
-    progressBar.style.width = pct + '%';
+    progressBar.style.width = Math.round((i / allUserIds.length) * 100) + '%';
     progressLabel.textContent = `Sending… ${Math.min(i + BATCH, allUserIds.length)} / ${allUserIds.length}`;
     progressDetail.textContent = `✅ ${sent} sent · ❌ ${failed} failed`;
-
     const results = await Promise.all(batch.map(user => {
       const userLang = user.lang || 'ru';
-      const text = (hasRu && userLang === 'ru') ? textRu : textEn;
-      // Use RU photo for RU users if available, else fall back to EN photo
+      const text = (textRu && userLang === 'ru') ? textRu : textEn;
       const fileId = (userLang === 'ru' && fileIdRu) ? fileIdRu : fileIdEn;
       return sendOneMsg(user.id, text, fileId);
     }));
-
     results.forEach(ok => ok ? sent++ : failed++);
-
-    // Respect rate limit: wait 1 second between batches
-    if (i + BATCH < allUserIds.length) {
-      await new Promise(r => setTimeout(r, 1000));
-    }
+    if (i + BATCH < allUserIds.length) await new Promise(r => setTimeout(r, 1000));
   }
-
-  progressLabel.textContent = '✅ Done!';
-  progressBar.style.width = '100%';
-  const langNote = hasRu
-    ? ` <span style="font-size:10px;color:var(--sub);">( ${allUserIds.filter(u=>(u.lang||'ru')==='en').length} 🇬🇧 EN + ${allUserIds.filter(u=>(u.lang||'ru')==='ru').length} 🇷🇺 RU)</span>`
-    : '';
-  result.innerHTML = `<span style="color:var(--green);font-weight:700;">✅ Sent: ${sent}</span>${langNote} &nbsp; <span style="color:var(--red);font-weight:700;">❌ Failed: ${failed}</span>`;
+  progressLabel.textContent = '✅ Done!'; progressBar.style.width = '100%';
+  result.innerHTML = `<span style="color:var(--green);font-weight:700;">✅ Sent: ${sent}</span> &nbsp; <span style="color:var(--red);font-weight:700;">❌ Failed: ${failed}</span>`;
   btn.disabled = false; btn.textContent = '📢 Send Broadcast';
   showToast(`✅ Broadcast done! ${sent} sent, ${failed} failed`);
-};
-
-// Auto-load count when broadcast tab opens
-const _origSwitchAdminTab = window.switchAdminTab;
-window.switchAdminTab = function(name, btn) {
-  _origSwitchAdminTab(name, btn);
-  if (name === 'broadcast' && !allUserIds.length) loadBroadcastCount();
 };
 
 // ── Toast ──
@@ -1300,29 +1047,153 @@ window.showToast = function(msg) {
   setTimeout(() => t.classList.remove('show'), 2800);
 };
 
-// ════════════════════════════════════════════════════════════
-// ── Telegram Callback Query Poller (Withdrawal Confirm/Cancel)
-// ════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// ── SUPPORT TAB
+// ══════════════════════════════════════════════════════════════
+const FIREBASE_API_KEY = 'AIzaSyAml8c0QPKlbEmXG7C4eXd-WYbbOvOHtP8';
+const FIRESTORE_URL = 'https://firestore.googleapis.com/v1/projects/miniapp-ton/databases/(default)/documents';
+
+async function firestoreAddDoc(col, data) {
+  const fields = {};
+  for (const [k, v] of Object.entries(data)) {
+    if (typeof v === 'string') fields[k] = {stringValue: v};
+    else if (typeof v === 'boolean') fields[k] = {booleanValue: v};
+    else if (typeof v === 'number') fields[k] = {doubleValue: v};
+  }
+  try {
+    await fetch(`${FIRESTORE_URL}/${col}?key=${FIREBASE_API_KEY}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({fields}) });
+  } catch(e) {}
+}
+
+let allSupportMsgs = [];
+let supportFilter = 'all';
+
+async function loadSupportMessages() {
+  const listEl = document.getElementById('support-list');
+  if (!listEl) return;
+  try {
+    const snap = await getDocs(query(collection(db, 'supportMessages'), where('direction','==','inbound'), orderBy('createdAt','desc'), limit(100)));
+    const byUser = {};
+    for (const d of snap.docs) {
+      const dd = d.data(); if (!byUser[dd.userId]) byUser[dd.userId] = { id: d.id, ...dd };
+    }
+    allSupportMsgs = Object.values(byUser);
+    const repliedSnap = await getDocs(query(collection(db,'supportMessages'), where('direction','==','outbound')));
+    const repliedUsers = new Set(repliedSnap.docs.map(d => d.data().userId));
+    allSupportMsgs.forEach(m => m._replied = repliedUsers.has(m.userId));
+
+    // Badge + browser notification
+    const openCount = allSupportMsgs.filter(m => !m._replied).length;
+    const badge = document.getElementById('support-badge');
+    if (badge) {
+      const prevCount = parseInt(badge.textContent) || 0;
+      badge.textContent = openCount;
+      badge.style.display = openCount > 0 ? '' : 'none';
+      if (openCount > prevCount) {
+        document.title = `(${openCount}) 💬 New Message — TonPlay Admin`;
+        setTimeout(() => { document.title = 'TonPlay Admin'; }, 5000);
+        if (Notification?.permission === 'granted') new Notification('TonPlay Support', { body: `${openCount} open message(s) waiting` });
+        else if (Notification?.permission !== 'denied') Notification.requestPermission();
+      }
+    }
+    renderSupportMessages();
+  } catch(e) { if(listEl) listEl.innerHTML = `<div class="empty-state" style="color:var(--red);">${e.message}</div>`; }
+}
+
+function renderSupportMessages() {
+  const listEl = document.getElementById('support-list');
+  let msgs = allSupportMsgs;
+  if (supportFilter === 'open')    msgs = msgs.filter(m => !m._replied);
+  if (supportFilter === 'replied') msgs = msgs.filter(m => m._replied);
+  if (!msgs.length) { listEl.innerHTML = '<div class="empty-state"><div class="emoji">📬</div>No messages</div>'; return; }
+  listEl.innerHTML = msgs.map(m => {
+    const ts = m.createdAt ? (m.createdAt.toDate ? m.createdAt.toDate().toLocaleString() : new Date(m.createdAt).toLocaleString()) : '—';
+    const statusChip = m._replied ? '<span class="chip green">✅ Replied</span>' : '<span class="chip gold">⏳ Open</span>';
+    const cat = m.category ? `<span class="chip blue">${m.category}</span>` : '';
+    const lang = m.lang === 'ru' ? '🇷🇺' : '🇬🇧';
+    return `<div class="notif-row">
+      <div class="notif-info">
+        <div class="notif-user">${m.displayName || m.userName || m.userId} ${lang}</div>
+        <div class="notif-sub" style="margin-top:3px;max-width:400px;white-space:normal;">${m.text}</div>
+        <div style="margin-top:5px;display:flex;gap:5px;flex-wrap:wrap;">${statusChip}${cat}<span style="font-size:10px;color:var(--muted);">${ts}</span></div>
+      </div>
+      <div class="notif-actions" style="flex-direction:column;gap:5px;">
+        <button class="btn-act blue" onclick="openSupportReply('${m.userId}','${(m.displayName||m.userName||m.userId).replace(/'/g,'')}','${(m.text||'').slice(0,40).replace(/'/g,'').replace(/\n/g,' ')}')">↩️ Reply</button>
+        <button class="btn-act purple" onclick="openSupportThread('${m.userId}')">🗨️ Thread</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.filterSupport = function(f, btn) {
+  supportFilter = f;
+  ['sf-all','sf-open','sf-replied'].forEach(id => { const el = document.getElementById(id); if(el){el.style.background='';el.style.borderColor='';} });
+  if (btn) { btn.style.background='var(--ton-light)'; btn.style.borderColor='rgba(33,150,243,0.4)'; }
+  renderSupportMessages();
+};
+
+window.openSupportReply = function(userId, userName, preview) {
+  openModal(`💬 Reply to ${userName}`,
+    `<div style="background:var(--card2);border:1px solid var(--border);border-radius:9px;padding:9px 12px;margin-bottom:10px;font-size:11px;color:var(--sub);">"${preview}…"</div>
+     <div class="modal-field"><label class="modal-label">Your Reply</label><textarea class="dm-textarea" id="supp-reply-text" placeholder="Type your reply..."></textarea></div>
+     <div style="font-size:10px;color:var(--sub);margin-top:-4px;">Saved to Firestore + sent via Telegram bot.</div>`,
+    async () => {
+      const text = document.getElementById('supp-reply-text')?.value?.trim();
+      if (!text) { showToast('❌ Empty reply'); return; }
+      await firestoreAddDoc('supportMessages', { userId, userName: '', displayName: '', direction: 'outbound', text, repliedBy: 'admin', createdAt: new Date().toISOString() });
+      // Mark thread replied
+      try {
+        const snap = await getDocs(query(collection(db,'supportThreads'), where('userId','==',userId), where('status','==','open'), limit(1)));
+        for (const d of snap.docs) await updateDoc(doc(db,'supportThreads',d.id), { status:'replied', repliedAt: serverTimestamp() });
+      } catch(e) {}
+      // Send via bot
+      let ok = false;
+      try {
+        const r = await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id: userId, text: `📩 <b>Message from support:</b>\n\n${text}`, parse_mode:'HTML' }) });
+        ok = (await r.json()).ok;
+      } catch(e) {}
+      showToast(ok ? `✅ Reply sent to ${userName}!` : `✅ Saved (Telegram delivery may have failed)`);
+      await loadSupportMessages();
+    }
+  );
+};
+
+window.openSupportThread = async function(userId) {
+  openModal(`🗨️ Conversation Thread`, `<div style="font-size:11px;color:var(--sub);">Loading…</div>`, null);
+  document.getElementById('modal-confirm').style.display = 'none';
+  document.getElementById('modal-cancel').textContent = 'Close';
+  try {
+    const snap = await getDocs(query(collection(db,'supportMessages'), where('userId','==',userId), orderBy('createdAt','asc'), limit(50)));
+    const msgs = snap.docs.map(d => d.data());
+    const html = msgs.map(m => {
+      const isOut = m.direction === 'outbound';
+      const t = m.createdAt ? (m.createdAt.toDate ? m.createdAt.toDate().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) : new Date(m.createdAt).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})) : '';
+      return `<div style="display:flex;justify-content:${isOut?'flex-end':'flex-start'};margin-bottom:8px;">
+        <div style="max-width:80%;padding:7px 11px;border-radius:12px;font-size:12px;line-height:1.4;background:${isOut?'linear-gradient(135deg,var(--ton),var(--ton2))':'var(--card2)'};color:${isOut?'#fff':'var(--text)'};border:${isOut?'none':'1px solid var(--border)'}">
+          ${m.text}<div style="font-size:9px;opacity:.6;margin-top:3px;text-align:right;">${t}</div>
+        </div></div>`;
+    }).join('');
+    document.getElementById('modal-body').innerHTML = `<div style="max-height:320px;overflow-y:auto;padding:4px 0;">${html || '<div style="color:var(--sub);font-size:11px;">No messages yet</div>'}</div>`;
+  } catch(e) { document.getElementById('modal-body').innerHTML = `<div style="color:var(--red);font-size:11px;">${e.message}</div>`; }
+};
+
+// ══════════════════════════════════════════════════════════════
+// ── TELEGRAM CALLBACK POLLER (withdrawal + reply)
+// ══════════════════════════════════════════════════════════════
 const CB_BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
 const SUPER_ADMIN_CHAT_ID = '8671373607';
 let cbLastUpdateId = 0;
-let cbPolling = false;
-
-// Track pending admin reply: { userId, userName } or null
 let adminPendingReply = null;
 
 async function pollCallbackQueries() {
   if (!document.getElementById('admin-app')?.classList.contains('visible')) return;
   try {
-    // Listen for both callback_query AND message updates
     const url = `https://api.telegram.org/bot${CB_BOT_TOKEN}/getUpdates?offset=${cbLastUpdateId + 1}&timeout=5&allowed_updates=["callback_query","message"]`;
     const res = await fetch(url);
     const data = await res.json();
     if (!data.ok || !data.result?.length) return;
     for (const update of data.result) {
       cbLastUpdateId = update.update_id;
-
-      // ── Callback query (withdrawal buttons + reply button) ──
       const cq = update.callback_query;
       if (cq) {
         const cbData = cq.data || '';
@@ -1331,152 +1202,70 @@ async function pollCallbackQueries() {
         if (cbData.startsWith('wd_confirm_') || cbData.startsWith('wd_cancel_')) {
           await handleWithdrawalCallback(cbData, cq.id, msgId, chatId);
         } else if (cbData.startsWith('reply_to_user_')) {
-          const parts   = cbData.replace('reply_to_user_', '').split('|');
-          const rUserId = parts[0];
-          const rName   = parts[1] || rUserId;
-          adminPendingReply = { userId: rUserId, userName: rName };
-          await answerCbQuery(cq.id, `✏️ Type your reply — it will be sent to ${rName}`);
-          showToast(`✏️ Reply mode: next message goes to ${rName}`);
+          const parts = cbData.replace('reply_to_user_', '').split('|');
+          adminPendingReply = { userId: parts[0], userName: parts[1] || parts[0] };
+          await answerCbQuery(cq.id, `✏️ Type your reply — goes to ${adminPendingReply.userName}`);
+          showToast(`✏️ Reply mode: next message goes to ${adminPendingReply.userName}`);
         }
         continue;
       }
-
-      // ── Incoming message ──
       const msg = update.message;
       if (!msg) continue;
-      const fromId   = String(msg.from?.id || '');
-      const fromName = msg.from?.first_name || '';
-      const fromUser = msg.from?.username ? '@' + msg.from.username : fromName;
-      const text     = msg.text || msg.caption || '';
+      const fromId = String(msg.from?.id || '');
+      const text   = msg.text || msg.caption || '';
       const ADMIN_IDS = [SUPER_ADMIN_CHAT_ID, '5222030484'];
-
-      // ── Admin sent a message → forward as reply if pending ──
       if (ADMIN_IDS.includes(fromId)) {
         if (adminPendingReply && text) {
           const { userId: targetId, userName: targetName } = adminPendingReply;
           adminPendingReply = null;
           let ok = false;
           try {
-            const r = await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                chat_id: targetId,
-                text: `📩 <b>Message from support:</b>\n\n${text}`,
-                parse_mode: 'HTML'
-              })
-            });
+            const r = await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id: targetId, text: `📩 <b>Message from support:</b>\n\n${text}`, parse_mode:'HTML' }) });
             ok = (await r.json()).ok;
           } catch(e) {}
-          // Confirm to admin in Telegram
-          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: fromId,
-              text: ok ? `✅ Reply delivered to ${targetName}!` : `❌ Could not deliver to ${targetName} (may have blocked the bot).`,
-              parse_mode: 'HTML'
-            })
-          });
+          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id: fromId, text: ok ? `✅ Reply delivered to ${targetName}!` : `❌ Could not deliver to ${targetName}.`, parse_mode:'HTML' }) });
+          // Save reply to Firestore
+          await firestoreAddDoc('supportMessages', { userId: targetId, userName: '', displayName: '', direction: 'outbound', text, repliedBy: 'admin', createdAt: new Date().toISOString() });
           showToast(ok ? `✅ Reply sent to ${targetName}` : `❌ Delivery failed`);
+          await loadSupportMessages();
         }
-        continue; // don't forward admin messages to themselves
+        continue;
       }
-
-      // ── Regular user message → forward to admin in Telegram ──
-      // Look up user profile in already-loaded allPlayers list first
+      // Regular user message → forward to admin
       const knownPlayer = allPlayers.find(p => String(p.userId || p.id) === fromId);
       const balance  = knownPlayer ? `${(knownPlayer.balance||0).toFixed(2)} TON` : '?';
       const totalDep = knownPlayer ? `${(knownPlayer.totalDeposited||0).toFixed(2)} TON` : '?';
-      const displayName = knownPlayer?.displayName || fromName;
-      const userName    = knownPlayer?.userName ? '@' + knownPlayer.userName : fromUser;
-
-      const header =
-        `💬 <b>User Message</b>\n` +
-        `👤 ${displayName} (${userName})\n` +
-        `🆔 <code>${fromId}</code>\n` +
-        `💰 Balance: <b>${balance}</b> · Deposited: <b>${totalDep}</b>\n` +
-        `─────────────────\n`;
-
-      const replyMarkup = {
-        inline_keyboard: [[
-          { text: '↩️ Reply', callback_data: `reply_to_user_${fromId}|${userName}` }
-        ]]
-      };
-
+      const displayName = knownPlayer?.displayName || (msg.from?.first_name || '');
+      const userName    = knownPlayer?.userName ? '@' + knownPlayer.userName : (msg.from?.username ? '@'+msg.from.username : fromId);
+      const header = `💬 <b>User Message</b>\n👤 ${displayName} (${userName})\n🆔 <code>${fromId}</code>\n💰 Balance: <b>${balance}</b> · Deposited: <b>${totalDep}</b>\n─────────────────\n`;
+      const replyMarkup = { inline_keyboard: [[{ text: '↩️ Reply', callback_data: `reply_to_user_${fromId}|${userName}` }]] };
       try {
         if (msg.photo) {
-          const fileId = msg.photo[msg.photo.length - 1].file_id;
-          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendPhoto`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, photo: fileId, caption: header + (text||''), parse_mode: 'HTML', reply_markup: replyMarkup })
-          });
-        } else if (msg.voice) {
-          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendVoice`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, voice: msg.voice.file_id })
-          });
-          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, text: header + '🎤 <i>(voice above)</i>', parse_mode: 'HTML', reply_markup: replyMarkup })
-          });
-        } else if (msg.sticker) {
-          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendSticker`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, sticker: msg.sticker.file_id })
-          });
-          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, text: header + '🎭 <i>(sticker above)</i>', parse_mode: 'HTML', reply_markup: replyMarkup })
-          });
+          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendPhoto`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, photo: msg.photo[msg.photo.length-1].file_id, caption: header+(text||''), parse_mode:'HTML', reply_markup: replyMarkup }) });
         } else if (text) {
-          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, text: header + text, parse_mode: 'HTML', reply_markup: replyMarkup })
-          });
+          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, text: header+text, parse_mode:'HTML', reply_markup: replyMarkup }) });
         }
-        // Auto-ack to user
         const isRu = knownPlayer?.lang === 'ru';
-        await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: fromId,
-            text: isRu
-              ? '✅ Ваше сообщение получено! Поддержка ответит вам в ближайшее время.'
-              : '✅ Your message has been received! Support will reply to you shortly.',
-            parse_mode: 'HTML'
-          })
-        });
-      } catch(e) { console.warn('Forward msg error:', e); }
+        await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id: fromId, text: isRu ? '✅ Ваше сообщение получено! Поддержка ответит вам в ближайшее время.' : '✅ Your message has been received! Support will reply shortly.', parse_mode:'HTML' }) });
+        await firestoreAddDoc('supportMessages', { userId: fromId, userName: knownPlayer?.userName||'', displayName, text: text||'[media]', direction:'inbound', createdAt: new Date().toISOString() });
+        await loadSupportMessages();
+      } catch(e) {}
     }
   } catch(e) { console.warn('CB poll error:', e); }
 }
 
 async function handleWithdrawalCallback(cbData, queryId, msgId, chatId) {
-  // callback_data format: wd_confirm_{wdDocId}_{userId}  or  wd_cancel_{wdDocId}_{userId}
   const parts = cbData.split('_');
-  // parts: ['wd', 'confirm'|'cancel', wdDocId, userId]
-  // wdDocId might contain underscores itself, so join from index 2 up to last
-  const action = parts[1]; // 'confirm' or 'cancel'
+  const action = parts[1];
   const userId = parts[parts.length - 1];
   const wdDocId = parts.slice(2, parts.length - 1).join('_');
-
   try {
     const wdSnap = await getDoc(doc(db, 'withdrawals', wdDocId));
-    if (!wdSnap.exists()) {
-      await answerCbQuery(queryId, '❌ Withdrawal not found');
-      return;
-    }
+    if (!wdSnap.exists()) { await answerCbQuery(queryId, '❌ Withdrawal not found'); return; }
     const wd = wdSnap.data();
-    if (wd.status !== 'pending') {
-      await answerCbQuery(queryId, `Already ${wd.status}`);
-      await editBotMessage(chatId, msgId, `✅ Already processed (${wd.status})`, null);
-      return;
-    }
-
+    if (wd.status !== 'pending') { await answerCbQuery(queryId, `Already ${wd.status}`); await editBotMessage(chatId, msgId, `✅ Already processed (${wd.status})`, null); return; }
     if (action === 'confirm') {
-      // 1. Mark withdrawal as done
       await updateDoc(doc(db, 'withdrawals', wdDocId), { status: 'done', confirmedAt: serverTimestamp() });
-
-      // 2. Deduct amount from user balance
       const userSnap = await getDoc(doc(db, 'users', userId));
       let newBal = 0;
       if (userSnap.exists()) {
@@ -1484,8 +1273,6 @@ async function handleWithdrawalCallback(cbData, queryId, msgId, chatId) {
         newBal = Math.max(0, parseFloat(((ud.balance || 0) - (wd.amount || 0)).toFixed(6)));
         await updateDoc(doc(db, 'users', userId), { balance: newBal });
       }
-
-      // 3. Deduct from selected deposit cards (zero them out or reduce amount)
       const selectedDeposits = wd.selectedDeposits || [];
       for (const dep of selectedDeposits) {
         if (!dep.id) continue;
@@ -1493,102 +1280,44 @@ async function handleWithdrawalCallback(cbData, queryId, msgId, chatId) {
           const depRef = doc(db, 'users', userId, 'deposits', dep.id);
           const depSnap = await getDoc(depRef);
           if (depSnap.exists()) {
-            // If the deposit amount equals the withdrawal portion, close it; else reduce
             const depData = depSnap.data();
             const remainingAmt = parseFloat(((depData.amount || 0) - dep.amount).toFixed(6));
-            if (remainingAmt <= 0.001) {
-              await updateDoc(depRef, { status: 'withdrawn', amount: 0, withdrawnAt: serverTimestamp() });
-            } else {
-              await updateDoc(depRef, { amount: remainingAmt });
-            }
+            if (remainingAmt <= 0.001) await updateDoc(depRef, { status: 'withdrawn', amount: 0, withdrawnAt: serverTimestamp() });
+            else await updateDoc(depRef, { amount: remainingAmt });
           }
-        } catch(e2) { console.warn('Deposit update error:', e2); }
+        } catch(e2) {}
       }
-
-      // 4. Answer + edit the bot message
       await answerCbQuery(queryId, '✅ Confirmed & balance deducted!');
-      const depSummary = selectedDeposits.length
-        ? `\n💳 Deducted from: ${selectedDeposits.map(d=>'#'+d.idx).join(', ')}`
-        : '';
-      await editBotMessage(chatId, msgId,
-        `✅ <b>CONFIRMED</b> — ${wd.amount?.toFixed(2)} TON sent to:\n<code>${wd.walletAddress}</code>` +
-        `\n👤 @${wd.userName || userId}` +
-        depSummary +
-        `\n📊 New balance: ${newBal.toFixed(4)} TON`, null);
-
-      // 5. Notify user
+      const depSummary = selectedDeposits.length ? `\n💳 Deducted from: ${selectedDeposits.map(d=>'#'+d.idx).join(', ')}` : '';
+      await editBotMessage(chatId, msgId, `✅ <b>CONFIRMED</b> — ${wd.amount?.toFixed(2)} TON sent to:\n<code>${wd.walletAddress}</code>\n👤 @${wd.userName || userId}${depSummary}\n📊 New balance: ${newBal.toFixed(4)} TON`, null);
       const numericId = parseInt(userId);
-      if (!isNaN(numericId) && numericId > 0) {
-        await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: numericId,
-            parse_mode: 'HTML',
-            text: `✅ <b>Withdrawal Confirmed!</b>\n\n💰 <b>${(wd.amount||0).toFixed(2)} TON</b> has been sent to:\n<code>${wd.walletAddress}</code>\n\n📊 Your new balance: <b>${newBal.toFixed(4)} TON</b>`
-          })
-        });
-      }
-
+      if (!isNaN(numericId) && numericId > 0) await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id: numericId, parse_mode:'HTML', text: `✅ <b>Withdrawal Confirmed!</b>\n\n💰 <b>${(wd.amount||0).toFixed(2)} TON</b> has been sent to:\n<code>${wd.walletAddress}</code>\n\n📊 Your new balance: <b>${newBal.toFixed(4)} TON</b>` }) });
       showToast(`✅ Confirmed withdrawal for @${wd.userName || userId}`);
       await loadWithdrawals();
-
     } else if (action === 'cancel') {
       await updateDoc(doc(db, 'withdrawals', wdDocId), { status: 'cancelled', cancelledAt: serverTimestamp() });
       await answerCbQuery(queryId, '❌ Withdrawal cancelled');
-      await editBotMessage(chatId, msgId,
-        `❌ <b>CANCELLED</b> — Withdrawal of ${wd.amount?.toFixed(2)} TON for @${wd.userName || userId} was rejected.`, null);
-
-      // Notify user of cancellation
+      await editBotMessage(chatId, msgId, `❌ <b>CANCELLED</b> — Withdrawal of ${wd.amount?.toFixed(2)} TON for @${wd.userName || userId} was rejected.`, null);
       const numericId = parseInt(userId);
-      if (!isNaN(numericId) && numericId > 0) {
-        await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: numericId,
-            parse_mode: 'HTML',
-            text: `❌ <b>Withdrawal Rejected</b>\n\nYour withdrawal request of <b>${(wd.amount||0).toFixed(2)} TON</b> was cancelled by the admin. Please contact support if you have questions.`
-          })
-        });
-      }
-
+      if (!isNaN(numericId) && numericId > 0) await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id: numericId, parse_mode:'HTML', text: `❌ <b>Withdrawal Rejected</b>\n\nYour withdrawal request of <b>${(wd.amount||0).toFixed(2)} TON</b> was cancelled by the admin.` }) });
       showToast(`❌ Cancelled withdrawal for @${wd.userName || userId}`);
       await loadWithdrawals();
     }
-  } catch(e) {
-    console.error('handleWithdrawalCallback error:', e);
-    await answerCbQuery(queryId, '⚠️ Error processing request');
-  }
+  } catch(e) { await answerCbQuery(queryId, '⚠️ Error processing request'); }
 }
 
 async function answerCbQuery(queryId, text) {
-  try {
-    await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/answerCallbackQuery`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ callback_query_id: queryId, text, show_alert: true })
-    });
-  } catch(e) {}
+  try { await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/answerCallbackQuery`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ callback_query_id: queryId, text, show_alert: true }) }); } catch(e) {}
 }
 
 async function editBotMessage(chatId, messageId, text, replyMarkup) {
-  try {
-    await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/editMessageText`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId, message_id: messageId,
-        text, parse_mode: 'HTML',
-        reply_markup: replyMarkup || { inline_keyboard: [] }
-      })
-    });
-  } catch(e) {}
+  try { await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/editMessageText`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chat_id: chatId, message_id: messageId, text, parse_mode:'HTML', reply_markup: replyMarkup || { inline_keyboard: [] } }) }); } catch(e) {}
 }
 
-// Start polling when admin is logged in — check every 4 seconds
-const _origLoadPlayers = window.loadPlayers || (() => {});
+// Poll every 4 seconds
 (function startCbPolling() {
   setInterval(async () => {
-    if (document.getElementById('admin-app')?.classList.contains('visible')) {
-      await pollCallbackQueries();
-    }
+    if (document.getElementById('admin-app')?.classList.contains('visible')) await pollCallbackQueries();
   }, 4000);
 })();
 </script>
