@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TonPlay — Support Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#F0F4FF;--surf:#FFFFFF;--card2:#F7F9FF;
+  --ton:#2196F3;--ton2:#1565C0;--ton-light:#E3F0FF;
+  --green:#10B981;--green-light:#D1FAE5;
+  --red:#EF4444;--red-light:#FEE2E2;
+  --gold:#F59E0B;--gold-light:#FEF3C7;
+  --purple:#7C3AED;--purple-light:#EDE9FE;
+  --text:#0F172A;--sub:#64748B;--muted:#94A3B8;--border:#E2E8F0;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 12px rgba(0,0,0,0.04);
+  --r:14px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;}
+
+/* ── LOGIN ─────────────────────────────────────────── */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
+#login-screen.gone{display:none;}
+.login-box{background:var(--surf);border:1px solid var(--border);border-radius:24px;padding:36px 32px;width:100%;max-width:380px;text-align:center;box-shadow:var(--shadow);}
+.login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;}
+.login-logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#2196F3,#1565C0);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(33,150,243,0.3);}
+.login-logo-name{font-size:22px;font-weight:900;}.login-logo-name span{color:var(--ton);}
+.login-title{font-size:18px;font-weight:800;margin-bottom:6px;}
+.login-sub{font-size:12px;color:var(--sub);margin-bottom:24px;}
+.lf{margin-bottom:14px;text-align:left;}
+.ll{font-size:11px;color:var(--sub);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;display:block;}
+.li{width:100%;padding:12px 14px;background:var(--card2);border:1.5px solid var(--border);border-radius:11px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.li:focus{border-color:var(--ton);box-shadow:0 0 0 3px rgba(33,150,243,0.1);}
+.li::placeholder{color:var(--muted);}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;box-shadow:0 4px 16px rgba(33,150,243,0.25);transition:all .18s;}
+.btn-login:hover{transform:translateY(-1px);}
+.btn-login:active{transform:scale(0.98);}
+.login-err{font-size:11px;color:var(--red);margin-top:10px;min-height:16px;}
+
+/* ── APP SHELL ─────────────────────────────────────────── */
+#app{display:none;height:100vh;flex-direction:column;}
+#app.visible{display:flex;}
+
+/* Topbar */
+.topbar{background:var(--surf);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0;box-shadow:var(--shadow);}
+.topbar-logo{display:flex;align-items:center;gap:8px;}
+.topbar-logo-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--ton),var(--ton2));border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.topbar-logo-icon svg{width:16px;height:16px;}
+.topbar-name{font-size:15px;font-weight:900;}.topbar-name span{color:var(--ton);}
+.topbar-badge{background:var(--purple-light);color:var(--purple);border:1px solid rgba(124,58,237,0.25);font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;}
+.new-badge{background:var(--red-light);color:var(--red);border:1px solid rgba(239,68,68,0.25);font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;display:none;margin-left:4px;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px;}
+.btn-logout{padding:7px 14px;background:var(--red-light);border:1px solid rgba(239,68,68,0.22);color:var(--red);border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+.btn-refresh-all{padding:7px 12px;background:var(--ton-light);border:1px solid rgba(33,150,243,0.25);color:var(--ton);border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+
+/* Stats bar */
+.stats-bar{display:flex;gap:12px;padding:8px 16px;border-bottom:1px solid var(--border);background:var(--card2);flex-shrink:0;}
+.stat-pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.stat-pill.total{background:var(--ton-light);color:var(--ton);}
+.stat-pill.open{background:var(--gold-light);color:#92400e;}
+.stat-pill.replied{background:var(--green-light);color:#065f46;}
+
+/* Main layout */
+.main{flex:1;display:flex;overflow:hidden;min-height:0;}
+
+/* ── SIDEBAR ─────────────────────────────────────────── */
+.sidebar{width:290px;flex-shrink:0;border-right:1px solid var(--border);background:var(--surf);display:flex;flex-direction:column;overflow:hidden;}
+.sidebar-head{padding:12px 14px 8px;border-bottom:1px solid var(--border);background:var(--card2);}
+.sidebar-head-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.sidebar-title{font-size:12px;font-weight:800;}
+.sidebar-filters{display:flex;gap:4px;}
+.filter-btn{padding:3px 9px;border-radius:7px;font-family:'Inter',sans-serif;font-size:10px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--surf);color:var(--sub);transition:all .14s;}
+.filter-btn.active{background:var(--ton-light);border-color:rgba(33,150,243,0.35);color:var(--ton);}
+.search-box{padding:8px 12px;border-bottom:1px solid var(--border);}
+.search-input{width:100%;padding:7px 11px;background:var(--card2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;outline:none;}
+.search-input:focus{border-color:var(--ton);}
+.search-input::placeholder{color:var(--muted);}
+.thread-list{flex:1;overflow-y:auto;}
+.thread-item{padding:11px 13px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;display:flex;align-items:flex-start;gap:9px;}
+.thread-item:hover{background:rgba(33,150,243,0.03);}
+.thread-item.active{background:var(--ton-light);border-right:3px solid var(--ton);}
+.thread-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.thread-info{flex:1;min-width:0;}
+.thread-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.thread-preview{font-size:10px;color:var(--sub);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.thread-meta{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+.thread-time{font-size:9px;color:var(--muted);}
+.thread-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--ton);}
+.thread-status-chip{padding:1px 5px;border-radius:20px;font-size:9px;font-weight:700;}
+.thread-status-chip.open{background:var(--gold-light);color:#92400e;}
+.thread-status-chip.replied{background:var(--green-light);color:#065f46;}
+
+/* ── CHAT AREA ───────────────────────────────────────── */
+.chat-area{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;}
+.chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted);gap:10px;}
+.chat-empty-icon{font-size:48px;}
+.chat-empty-text{font-size:13px;font-weight:600;}
+.chat-empty-sub{font-size:11px;}
+
+.chat-header{padding:11px 16px;border-bottom:1px solid var(--border);background:var(--surf);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.chat-header-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.chat-header-info{flex:1;min-width:0;}
+.chat-header-name{font-size:13px;font-weight:800;}
+.chat-header-sub{font-size:10px;color:var(--sub);margin-top:1px;}
+.chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.chip.open{background:var(--gold-light);color:#92400e;}
+.chip.replied{background:var(--green-light);color:#065f46;}
+
+.chat-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:8px;background:var(--bg);}
+.msg{display:flex;flex-direction:column;max-width:68%;}
+.msg.out{align-self:flex-end;align-items:flex-end;}
+.msg.in{align-self:flex-start;align-items:flex-start;}
+.msg-bubble{padding:9px 13px;border-radius:15px;font-size:13px;line-height:1.5;word-break:break-word;}
+.msg.out .msg-bubble{background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;border-bottom-right-radius:4px;}
+.msg.in .msg-bubble{background:var(--surf);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:4px;box-shadow:var(--shadow);}
+.msg-meta{font-size:9.5px;color:var(--muted);margin-top:3px;padding:0 2px;}
+.day-sep{text-align:center;font-size:10px;color:var(--muted);padding:6px 0;font-weight:600;}
+
+.chat-input-area{padding:10px 14px;border-top:1px solid var(--border);background:var(--surf);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;}
+.reply-textarea{flex:1;padding:10px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:13px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:none;min-height:40px;max-height:120px;line-height:1.4;transition:border-color .2s;}
+.reply-textarea:focus{border-color:var(--ton);}
+.reply-textarea::placeholder{color:var(--muted);}
+.send-btn{width:40px;height:40px;border-radius:11px;background:linear-gradient(135deg,var(--ton),var(--ton2));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 3px 10px rgba(33,150,243,0.25);transition:all .15s;}
+.send-btn:hover{transform:translateY(-1px);}
+.send-btn:active{transform:scale(0.93);}
+.send-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.send-btn svg{width:19px;height:19px;fill:white;}
+
+.spinner{width:18px;height:18px;border:2px solid rgba(33,150,243,0.2);border-top-color:var(--ton);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-row{display:flex;align-items:center;justify-content:center;padding:24px;}
+
+.toast{position:fixed;bottom:20px;right:20px;background:var(--text);color:#fff;padding:10px 16px;border-radius:12px;font-size:12px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:999;}
+.toast.show{opacity:1;}
+
+@media(max-width:680px){
+  .sidebar{width:100%;position:fixed;top:0;left:0;bottom:0;z-index:20;transform:translateX(-100%);transition:transform .25s;}
+  .sidebar.mob-open{transform:none;}
+  .mob-back{display:flex!important;}
+}
+.mob-back{display:none;padding:5px 10px;background:var(--card2);border:1px solid var(--border);border-radius:9px;font-size:11px;font-weight:700;color:var(--sub);cursor:pointer;align-items:center;gap:5px;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6L12 2z"/></svg></div>
+      <div class="login-logo-name">Ton<span>Play</span></div>
+    </div>
+    <div class="login-title">💬 Support Admin</div>
+    <div class="login-sub">Sign in to manage support conversations</div>
+    <div class="lf"><label class="ll">Email</label><input class="li" type="email" id="login-email" placeholder="admin@example.com" autocomplete="email"></div>
+    <div class="lf"><label class="ll">Password</label><input class="li" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-login" id="login-btn">Sign In</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6L12 2z"/></svg></div>
+      <div class="topbar-name">Ton<span>Play</span></div>
+      <div class="topbar-badge">SUPPORT ADMIN</div>
+      <div class="new-badge" id="new-badge">● NEW</div>
+    </div>
+    <div class="topbar-right">
+      <button class="btn-refresh-all" onclick="loadThreads()">🔄 Refresh</button>
+      <button class="btn-logout" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <span class="stat-pill total" id="stat-total">Total: 0</span>
+    <span class="stat-pill open"  id="stat-open">Open: 0</span>
+    <span class="stat-pill replied" id="stat-replied">Replied: 0</span>
+  </div>
+
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <div class="sidebar-head-row">
+          <div class="sidebar-title">Conversations</div>
+          <div class="sidebar-filters">
+            <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
+            <button class="filter-btn"        onclick="setFilter('open',this)">Open</button>
+            <button class="filter-btn"        onclick="setFilter('replied',this)">Replied</button>
+          </div>
+        </div>
+      </div>
+      <div class="search-box">
+        <input class="search-input" id="thread-search" placeholder="Search user…" oninput="filterThreads()">
+      </div>
+      <div class="thread-list" id="thread-list">
+        <div class="loading-row"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <!-- Chat area -->
+    <div class="chat-area">
+      <div class="chat-empty" id="chat-empty">
+        <div class="chat-empty-icon">💬</div>
+        <div class="chat-empty-text">Select a conversation</div>
+        <div class="chat-empty-sub">Choose a user from the list to view their messages</div>
+      </div>
+
+      <div id="active-chat" style="display:none;flex:1;flex-direction:column;overflow:hidden;min-height:0;">
+        <div class="chat-header">
+          <button class="mob-back" onclick="closeMobileChat()">← Back</button>
+          <div class="chat-header-avatar" id="ch-avatar">?</div>
+          <div class="chat-header-info">
+            <div class="chat-header-name" id="ch-name">—</div>
+            <div class="chat-header-sub"  id="ch-sub">—</div>
+          </div>
+          <span class="chip" id="ch-chip"></span>
+        </div>
+        <div class="chat-messages" id="chat-messages"></div>
+        <div class="chat-input-area">
+          <textarea class="reply-textarea" id="reply-input" placeholder="Type your reply…" rows="1"
+            oninput="autoResizeReply(this)" onkeydown="replyKeyDown(event)"></textarea>
+          <button class="send-btn" id="send-btn" onclick="sendReply()">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit,
+         onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ── Config ────────────────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyAml8c0QPKlbEmXG7C4eXd-WYbbOvOHtP8",
+  authDomain: "miniapp-ton.firebaseapp.com",
+  projectId: "miniapp-ton",
+  storageBucket: "miniapp-ton.firebasestorage.app",
+  messagingSenderId: "991105630391",
+  appId: "1:991105630791:web:551166c522317fad980d32"
+};
+
+// Only this chat ID gets Telegram notifications
+const SUPPORT_BOT_TOKEN = '8512101964:AAEGRe9tsb-6NOuXYpE1DJe0l6zHVvY1bqs';
+const ADMIN_CHAT_ID     = '5222030484';
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db   = getFirestore(firebaseApp);
+
+// ── Auth ──────────────────────────────────────────────────────────────
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const err   = document.getElementById('login-err');
+  err.textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) {
+    err.textContent = '❌ ' + (e.code === 'auth/invalid-credential' ? 'Wrong email or password' : e.message);
+  }
+});
+document.getElementById('login-password').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('login-btn').click();
+});
+window.logout = () => signOut(auth);
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    document.getElementById('login-screen').classList.add('gone');
+    document.getElementById('app').classList.add('visible');
+    init();
+  } else {
+    document.getElementById('login-screen').classList.remove('gone');
+    document.getElementById('app').classList.remove('visible');
+    if (threadUnsub) { threadUnsub(); threadUnsub = null; }
+  }
+});
+
+// ── State ─────────────────────────────────────────────────────────────
+let allThreads    = [];
+let activeUserId  = null;
+let currentFilter = 'all';
+let threadUnsub   = null;
+let prevOpenCount = 0;
+
+function init() {
+  loadThreads();
+  setInterval(loadThreads, 15000);
+}
+
+// ── Load threads ──────────────────────────────────────────────────────
+window.loadThreads = async function() {
+  try {
+    const inboundSnap = await getDocs(query(
+      collection(db, 'supportMessages'),
+      where('direction', '==', 'inbound'),
+      orderBy('createdAt', 'desc'),
+      limit(300)
+    ));
+    const outboundSnap = await getDocs(query(
+      collection(db, 'supportMessages'),
+      where('direction', '==', 'outbound')
+    ));
+    const repliedUsers = new Set(outboundSnap.docs.map(d => d.data().userId));
+
+    const byUser = {};
+    inboundSnap.docs.forEach(d => {
+      const dd = d.data();
+      if (!byUser[dd.userId]) {
+        byUser[dd.userId] = {
+          userId:      dd.userId,
+          displayName: dd.displayName || dd.userName || dd.userId,
+          userName:    dd.userName || '',
+          lang:        dd.lang || 'en',
+          lastMsg:     dd.text || '',
+          lastTs:      dd.createdAt,
+          status:      repliedUsers.has(dd.userId) ? 'replied' : 'open',
+          unread:      !repliedUsers.has(dd.userId)
+        };
+      }
+    });
+
+    allThreads = Object.values(byUser).sort((a, b) => {
+      const ta = a.lastTs?.toDate ? a.lastTs.toDate() : new Date(a.lastTs || 0);
+      const tb = b.lastTs?.toDate ? b.lastTs.toDate() : new Date(b.lastTs || 0);
+      return tb - ta;
+    });
+
+    const openCount = allThreads.filter(t => t.status === 'open').length;
+    const badge = document.getElementById('new-badge');
+
+    if (openCount > prevOpenCount) {
+      badge.style.display = '';
+      document.title = `(${openCount}) 💬 New — TonPlay Support`;
+      setTimeout(() => { document.title = 'TonPlay — Support Admin'; }, 6000);
+      if (Notification?.permission === 'granted') {
+        new Notification('TonPlay Support', { body: `${openCount} open conversation(s)` });
+      } else if (Notification?.permission !== 'denied') {
+        Notification.requestPermission();
+      }
+    } else {
+      badge.style.display = openCount > 0 ? '' : 'none';
+    }
+    prevOpenCount = openCount;
+
+    updateStats();
+    renderThreadList();
+
+    // Re-open active thread if one was selected
+    if (activeUserId) {
+      const t = allThreads.find(t => t.userId === activeUserId);
+      if (t) updateChatHeader(t);
+    }
+  } catch(e) {
+    console.error('loadThreads error:', e);
+  }
+};
+
+function updateStats() {
+  const open    = allThreads.filter(t => t.status === 'open').length;
+  const replied = allThreads.filter(t => t.status === 'replied').length;
+  document.getElementById('stat-total').textContent   = `Total: ${allThreads.length}`;
+  document.getElementById('stat-open').textContent    = `Open: ${open}`;
+  document.getElementById('stat-replied').textContent = `Replied: ${replied}`;
+}
+
+// ── Filter / render sidebar ───────────────────────────────────────────
+window.setFilter = function(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderThreadList();
+};
+
+window.filterThreads = function() { renderThreadList(); };
+
+function renderThreadList() {
+  const q  = (document.getElementById('thread-search').value || '').toLowerCase();
+  const list = document.getElementById('thread-list');
+
+  let threads = allThreads;
+  if (currentFilter === 'open')    threads = threads.filter(t => t.status === 'open');
+  if (currentFilter === 'replied') threads = threads.filter(t => t.status === 'replied');
+  if (q) threads = threads.filter(t =>
+    (t.displayName || '').toLowerCase().includes(q) ||
+    (t.userName    || '').toLowerCase().includes(q) ||
+    (t.userId      || '').toLowerCase().includes(q)
+  );
+
+  if (!threads.length) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;font-size:11px;color:var(--muted);">No conversations found</div>';
+    return;
+  }
+
+  list.innerHTML = threads.map(t => {
+    const initial  = (t.displayName || t.userId || '?')[0].toUpperCase();
+    const isActive = t.userId === activeUserId;
+    const ts = t.lastTs
+      ? (t.lastTs.toDate ? t.lastTs.toDate() : new Date(t.lastTs))
+          .toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+      : '';
+    const langFlag = t.lang === 'ru' ? '🇷🇺' : '🇬🇧';
+    const statusChip = t.status === 'open'
+      ? '<span class="thread-status-chip open">Open</span>'
+      : '<span class="thread-status-chip replied">Replied</span>';
+
+    return `<div class="thread-item ${isActive ? 'active' : ''}" onclick="selectThread('${t.userId}')">
+      <div class="thread-avatar">${initial}</div>
+      <div class="thread-info">
+        <div class="thread-name">${esc(t.displayName)} ${langFlag}</div>
+        <div class="thread-preview">${esc(t.lastMsg || '')}</div>
+      </div>
+      <div class="thread-meta">
+        <div class="thread-time">${ts}</div>
+        ${statusChip}
+        ${t.unread ? '<div class="thread-unread-dot"></div>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Select thread ─────────────────────────────────────────────────────
+window.selectThread = function(uid) {
+  activeUserId = uid;
+  renderThreadList();
+
+  // Mobile: close sidebar overlay
+  document.getElementById('sidebar').classList.remove('mob-open');
+
+  const thread = allThreads.find(t => t.userId === uid);
+  if (!thread) return;
+
+  updateChatHeader(thread);
+
+  // Show chat pane
+  document.getElementById('chat-empty').style.display = 'none';
+  const ac = document.getElementById('active-chat');
+  ac.style.display = 'flex';
+  ac.style.flexDirection = 'column';
+  ac.style.flex = '1';
+  ac.style.overflow = 'hidden';
+  ac.style.minHeight = '0';
+
+  document.getElementById('reply-input').placeholder = `Reply to ${thread.displayName}…`;
+
+  // Live subscribe to messages
+  if (threadUnsub) threadUnsub();
+  threadUnsub = onSnapshot(
+    query(collection(db, 'supportMessages'),
+          where('userId', '==', uid),
+          orderBy('createdAt', 'asc'),
+          limit(100)),
+    snap => renderChatMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+  );
+};
+
+function updateChatHeader(thread) {
+  document.getElementById('ch-avatar').textContent = (thread.displayName || thread.userId)[0].toUpperCase();
+  document.getElementById('ch-name').textContent   = thread.displayName;
+  document.getElementById('ch-sub').textContent    =
+    (thread.userName ? '@' + thread.userName + ' · ' : '') + `ID: ${thread.userId}`;
+  const chip = document.getElementById('ch-chip');
+  chip.textContent = thread.status === 'open' ? 'Open' : 'Replied';
+  chip.className   = 'chip ' + (thread.status === 'open' ? 'open' : 'replied');
+}
+
+window.closeMobileChat = function() {
+  document.getElementById('sidebar').classList.add('mob-open');
+};
+
+// ── Render messages ───────────────────────────────────────────────────
+function renderChatMessages(msgs) {
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = '';
+
+  if (!msgs.length) {
+    container.innerHTML = '<div style="text-align:center;padding:24px;font-size:11px;color:var(--muted);">No messages yet</div>';
+    return;
+  }
+
+  let lastDay = '';
+  msgs.forEach(m => {
+    const isUser  = m.direction === 'inbound';
+    const isAdmin = m.direction === 'outbound';
+    if (!isUser && !isAdmin) return;
+
+    const dateObj = m.createdAt
+      ? (m.createdAt.toDate ? m.createdAt.toDate() : new Date(m.createdAt))
+      : new Date();
+
+    const day = dateObj.toLocaleDateString([], { weekday:'short', month:'short', day:'numeric' });
+    if (day !== lastDay) {
+      lastDay = day;
+      const sep = document.createElement('div');
+      sep.className   = 'day-sep';
+      sep.textContent = day;
+      container.appendChild(sep);
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'msg ' + (isUser ? 'in' : 'out');
+
+    const bubble = document.createElement('div');
+    bubble.className   = 'msg-bubble';
+    bubble.textContent = m.text || '';
+
+    const meta = document.createElement('div');
+    meta.className   = 'msg-meta';
+    meta.textContent = (isUser ? '' : 'You · ') +
+      dateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+
+    wrapper.appendChild(bubble);
+    wrapper.appendChild(meta);
+    container.appendChild(wrapper);
+  });
+
+  container.scrollTop = container.scrollHeight;
+}
+
+// ── Send reply ────────────────────────────────────────────────────────
+window.sendReply = async function() {
+  if (!activeUserId) return;
+  const input = document.getElementById('reply-input');
+  const btn   = document.getElementById('send-btn');
+  const text  = input.value.trim();
+  if (!text) return;
+
+  btn.disabled  = true;
+  input.value   = '';
+  input.style.height = '';
+
+  const thread = allThreads.find(t => t.userId === activeUserId);
+
+  try {
+    // Save outbound message to Firestore
+    await addDoc(collection(db, 'supportMessages'), {
+      userId:      activeUserId,
+      userName:    thread?.userName || '',
+      displayName: thread?.displayName || '',
+      direction:   'outbound',
+      text,
+      repliedBy:   'admin',
+      createdAt:   serverTimestamp()
+    });
+
+    // Update chip immediately
+    const chip = document.getElementById('ch-chip');
+    chip.textContent = 'Replied';
+    chip.className   = 'chip replied';
+
+    // Send Telegram message to user (if real TG ID)
+    const numericId = parseInt(activeUserId);
+    if (!isNaN(numericId) && numericId > 0 && String(numericId).length > 5) {
+      fetch(`https://api.telegram.org/bot${SUPPORT_BOT_TOKEN}/sendMessage`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          chat_id:    numericId,
+          text:       `📩 <b>Message from TonPlay Support:</b>\n\n${text}`,
+          parse_mode: 'HTML'
+        })
+      }).catch(() => {});
+    }
+
+    showToast('✅ Reply sent!');
+    loadThreads(); // refresh sidebar status
+  } catch(e) {
+    showToast('❌ ' + e.message);
+    input.value = text;
+  }
+
+  btn.disabled = false;
+  input.focus();
+};
+
+window.autoResizeReply = function(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+};
+
+window.replyKeyDown = function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendReply();
+  }
+};
+
+// ── Helpers ───────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+window.showToast = function(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+};
+</script>
+</body>
+</html>
