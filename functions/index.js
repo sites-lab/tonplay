@@ -706,3 +706,172 @@ async function sendBotMessageWithButton(chatId, text, btnLabel, btnUrl) {
     });
   } catch(e) { console.error('Bot button msg failed:', e.message); }
 }
+
+
+// ═══════════════════════════════════════════════════════════════
+// 7.  SUPPORT BOT WEBHOOK
+//     Separate bot (8512101964) used as the user-facing support chat.
+//     - User sends message → forwarded here → we notify the admin.
+//     - Admin clicks “Reply via bot” callback → enters reply mode.
+//     - Admin types reply → bot sends it to the user’s chat.
+//
+//     Set webhook:
+//     POST https://api.telegram.org/bot8512101964:.../setWebhook
+//     { "url": "https://<region>-miniapp-ton.cloudfunctions.net/supportBotWebhook" }
+// ═══════════════════════════════════════════════════════════════
+const SUPPORT_BOT_TOKEN = '8512101964:AAEGRe9tsb-6NOuXYpE1DJe0l6zHVvY1bqs';
+const SUPPORT_ADMIN_1   = '8671373607';
+const SUPPORT_ADMIN_2   = '5222030484';
+// In-memory store of admin reply states (cleared on function cold start, good enough)
+// Format: { [adminChatId]: { userId, userName, expiresAt } }
+const supportReplyStates = {};
+
+exports.supportBotWebhook = functions.https.onRequest(async (req, res) => {
+  res.status(200).send('OK'); // always ack immediately
+
+  const update = req.body;
+  if (!update) return;
+
+  // ── Helper: send via support bot ──
+  async function suppSend(chatId, text, markup) {
+    const body = { chat_id: chatId, text, parse_mode: 'HTML' };
+    if (markup) body.reply_markup = markup;
+    try {
+      await fetch(`https://api.telegram.org/bot${SUPPORT_BOT_TOKEN}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    } catch(e) { console.error('suppSend error:', e.message); }
+  }
+
+  async function suppAnswer(queryId, text) {
+    try {
+      await fetch(`https://api.telegram.org/bot${SUPPORT_BOT_TOKEN}/answerCallbackQuery`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ callback_query_id: queryId, text, show_alert: true })
+      });
+    } catch(e) {}
+  }
+
+  const ADMINS = [SUPPORT_ADMIN_1, SUPPORT_ADMIN_2];
+
+  // ── Callback query: admin pressed “Reply via bot” ──
+  const cq = update.callback_query;
+  if (cq) {
+    const cbData  = cq.data || '';
+    const adminId = String(cq.from?.id || '');
+    if (cbData.startsWith('reply_') && ADMINS.includes(adminId)) {
+      const targetUserId = cbData.replace('reply_', '');
+      // Store reply state for 5 minutes
+      supportReplyStates[adminId] = {
+        userId:    targetUserId,
+        expiresAt: Date.now() + 5 * 60 * 1000
+      };
+      await suppAnswer(cq.id, `✏️ Reply mode ON — type your reply now and send it. It will go to user ${targetUserId}.`);
+    }
+    return;
+  }
+
+  // ── Message ──
+  const msg    = update.message;
+  if (!msg) return;
+  const fromId = String(msg.from?.id || '');
+  const text   = msg.text || msg.caption || '';
+  if (!text) return;
+
+  const isAdmin = ADMINS.includes(fromId);
+
+  // ── Admin sends a message → check reply state ──
+  if (isAdmin) {
+    const state = supportReplyStates[fromId];
+    if (state && state.expiresAt > Date.now()) {
+      const targetId = state.userId;
+      delete supportReplyStates[fromId];
+      // Send reply to user
+      const replyText = `📩 <b>Support reply:</b>\n\n${text}`;
+      await suppSend(targetId, replyText);
+      // Confirm to admin
+      await suppSend(fromId, `✅ Reply sent to user <code>${targetId}</code>`);
+    } else {
+      // Admin texted bot without active reply state
+      await suppSend(fromId, `ℹ️ No active reply target. Use the “Reply via bot” button on a support message first.`);
+    }
+    return;
+  }
+
+  // ── /start command → welcome message ──
+  if (text.startsWith('/start')) {
+    const firstName = msg.from?.first_name || 'there';
+    await suppSend(fromId,
+      `👋 <b>Hi, ${firstName}!</b>\n\n` +
+      `Welcome to <b>TonPlay Support</b>. Just send your message and our team will reply as soon as possible.\n\n` +
+      `🇧🇧 Или пишите на русском — мы ответим вам.`
+    );
+    return;
+  }
+
+  // ── Regular user message → look up user record (best-effort, no index needed) and forward to admins ──
+  let userRecord = null;
+  try {
+    // Simple doc lookup by Telegram ID – no composite index required
+    const snap = await db.collection('users').doc(fromId).get();
+    if (snap.exists) userRecord = snap.data();
+  } catch(e) { console.warn('User lookup failed (non-critical):', e.message); }
+
+  const displayName = userRecord?.displayName || `${msg.from?.first_name || ''} ${msg.from?.last_name || ''}`.trim() || 'Unknown';
+  const userName    = userRecord?.userName
+    ? '@' + userRecord.userName
+    : (msg.from?.username ? '@' + msg.from.username : fromId);
+  const balance  = userRecord?.balance != null ? `${parseFloat(userRecord.balance).toFixed(2)} TON` : '—';
+  const totalDep = userRecord?.totalDeposited != null ? `${parseFloat(userRecord.totalDeposited).toFixed(2)} TON` : '—';
+  const lang     = userRecord?.lang || (msg.from?.language_code?.startsWith('ru') ? 'ru' : 'en');
+
+  const header =
+    `💬 <b>Support Message</b>\n` +
+    `👤 ${displayName} (${userName})\n` +
+    `🆔 <code>${fromId}</code>\n` +
+    `💰 Balance: <b>${balance}</b> · Deposited: <b>${totalDep}</b>\n` +
+    `🌐 ${lang === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'}\n` +
+    `─────────────────\n` +
+    text;
+
+  const replyBtn = {
+    inline_keyboard: [[
+      { text: '↩️ Reply via bot', callback_data: `reply_${fromId}` }
+    ]]
+  };
+
+  // Forward to both admins
+  for (const adminId of ADMINS) {
+    await suppSend(adminId, header, replyBtn);
+  }
+
+  // Acknowledge receipt to user
+  const isRu = lang === 'ru';
+  await suppSend(
+    fromId,
+    isRu
+      ? '✅ Сообщение получено! Поддержка ответит вам в ближайшее время.'
+      : '✅ Message received! Our support team will reply shortly.'
+  );
+
+  console.log(`💬 Support msg from ${fromId} (${userName}): ${text.slice(0, 80)}`);
+});
+
+// Register support bot webhook (call once after deploy)
+exports.setSupportWebhook = functions.https.onRequest(async (req, res) => {
+  const baseUrl = `https://${req.hostname}`;
+  // Derive the function URL from current request host (works on Firebase Gen 1)
+  const target = `${baseUrl}/supportBotWebhook`;
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${SUPPORT_BOT_TOKEN}/setWebhook`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: target, allowed_updates: ['message', 'callback_query'] })
+    });
+    const json = await r.json();
+    res.json({ ok: json.ok, description: json.description, webhookUrl: target });
+  } catch(e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});

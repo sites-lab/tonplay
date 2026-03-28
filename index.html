@@ -1274,6 +1274,14 @@ window.LANG = LANG;
     <div class="notice" style="background:var(--green-light);border-color:rgba(16,185,129,0.3);" data-i18n-html="ref_notice">
       <strong>🎁 Referral System:</strong> Every player gets a unique referral code.
     </div>
+
+    <!-- ── Support Button ── -->
+    <div style="margin-top:4px;margin-bottom:10px;width:100%;">
+      <button id="support-btn" onclick="openSupport()" style="width:100%;padding:14px 16px;background:linear-gradient(135deg,#2196F3,#1565C0);border:none;border-radius:16px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(33,150,243,0.3);-webkit-tap-highlight-color:transparent;">
+        <span style="font-size:20px;">💬</span>
+        <span id="support-btn-lbl">Contact Support</span>
+      </button>
+    </div>
   </div>
 
 </div><!-- .app -->
@@ -2535,6 +2543,28 @@ window.setAmount = function(val, btn) {
   btn.classList.add('selected');
   updateEarnPreview();
 };
+
+// ── Open Support Chat as Mini App inside the bot ──
+window.openSupport = function() {
+  const tg = window.Telegram?.WebApp;
+  // Opens @ToPla_Support_bot directly inside Telegram
+  const botUrl = 'https://t.me/ToPla_Support_bot';
+  if (tg?.openTelegramLink) {
+    tg.openTelegramLink(botUrl);
+  } else if (tg?.openLink) {
+    tg.openLink(botUrl);
+  } else {
+    window.open(botUrl, '_blank');
+  }
+};
+
+// Translate support button if Russian
+(function() {
+  if (LANG === 'ru') {
+    const lbl = document.getElementById('support-btn-lbl');
+    if (lbl) lbl.textContent = 'Написать в поддержку';
+  }
+})();
 
 window.switchTab = function(name, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
