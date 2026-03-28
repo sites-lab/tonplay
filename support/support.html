@@ -36,10 +36,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
 .hero-card::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.05);}
 .hero-icon{font-size:36px;margin-bottom:10px;display:block;position:relative;z-index:1;}
 .hero-title{font-size:20px;font-weight:900;color:#fff;margin-bottom:6px;position:relative;z-index:1;}
-.hero-sub{font-size:13px;color:rgba(255,255,255,0.82);line-height:1.6;margin-bottom:20px;position:relative;z-index:1;}
-.hero-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:14px;background:#fff;border:none;border-radius:14px;color:var(--ton2);font-family:'Inter',sans-serif;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.15);transition:all .15s;position:relative;z-index:1;-webkit-tap-highlight-color:transparent;}
-.hero-btn:active{transform:scale(0.97);}
-.hero-btn-icon{font-size:20px;}
+.hero-sub{font-size:13px;color:rgba(255,255,255,0.82);line-height:1.6;position:relative;z-index:1;}
 
 /* ── INLINE CHAT ─────────────────────────────────────────── */
 .chat-section{width:100%;max-width:480px;margin:16px auto 0;padding:0 16px;box-sizing:border-box;}
@@ -113,16 +110,12 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
     </div>
   </div>
 
-  <!-- Hero -->
+  <!-- Hero — no button, just text -->
   <div class="hero">
     <div class="hero-card">
       <span class="hero-icon">🛡️</span>
       <div class="hero-title" id="hero-title">Need help?</div>
-      <div class="hero-sub" id="hero-sub">Chat with our support team directly here or via Telegram. We reply fast — usually within minutes.</div>
-      <button class="hero-btn" onclick="openSupportBot()">
-        <span class="hero-btn-icon">✈️</span>
-        <span id="hero-btn-text">Open Support Chat in Telegram</span>
-      </button>
+      <div class="hero-sub" id="hero-sub">Chat with our support team directly here. We reply fast — usually within minutes.</div>
     </div>
   </div>
 
@@ -188,7 +181,7 @@ html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-fam
     </div>
   </div>
 
-  <!-- Bottom CTA — original button kept exactly -->
+  <!-- Bottom CTA -->
   <div class="open-btn-wrap" style="margin-top:16px;">
     <button class="open-btn" onclick="openSupportBot()">
       <span style="font-size:20px;">✈️</span>
@@ -214,7 +207,6 @@ import { getFirestore, collection, addDoc, query, where, onSnapshot, serverTimes
 // ─── CONFIG ──────────────────────────────────────────────────────────
 const SUPPORT_BOT_USERNAME = 'ToPla_Support_bot';
 const SUPPORT_BOT_TOKEN    = '8512101964:AAEGRe9tsb-6NOuXYpE1DJe0l6zHVvY1bqs';
-// Only YOUR chat gets notifications now
 const ADMIN_CHAT_ID        = '5222030484';
 
 const firebaseConfig = {
@@ -228,7 +220,6 @@ const firebaseConfig = {
 
 const firebaseApp = initializeApp(firebaseConfig);
 const db          = getFirestore(firebaseApp);
-// ─────────────────────────────────────────────────────────────────────
 
 let tgUser = null;
 let tg     = null;
@@ -247,7 +238,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('header-sub').textContent =
       lang === 'ru' ? `Привет, ${tgUser.first_name}!` : `Hi, ${tgUser.first_name}!`;
   } else {
-    // Fallback for browser testing
     userId = localStorage.getItem('tonplay_guest_id') || ('guest_' + Math.random().toString(36).slice(2,10));
     localStorage.setItem('tonplay_guest_id', userId);
   }
@@ -259,8 +249,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function applyRussian() {
   document.getElementById('hero-title').textContent      = 'Нужна помощь?';
-  document.getElementById('hero-sub').textContent        = 'Напишите нашей команде прямо здесь или через Telegram. Отвечаем быстро.';
-  document.getElementById('hero-btn-text').textContent   = 'Открыть чат поддержки в Telegram';
+  document.getElementById('hero-sub').textContent        = 'Напишите нашей команде прямо здесь. Отвечаем быстро — обычно в течение нескольких минут.';
   document.getElementById('how-title').textContent       = 'Как работает поддержка';
   document.getElementById('step1').innerHTML             = '<strong>Введите сообщение</strong> в чат выше и нажмите Отправить.';
   document.getElementById('step2').innerHTML             = '<strong>Наша команда видит его</strong> сразу и отвечает.';
@@ -277,10 +266,9 @@ function applyRussian() {
   if (ph) ph.textContent = '👋 Привет! Напишите нам — мы ответим здесь.';
 }
 
-// ── Real-time chat ──────────────────────────────────────────────────
+// ── Real-time chat — no orderBy (avoids composite index requirement) ──
 function subscribeToChat() {
   if (!userId) return;
-  // No orderBy to avoid needing a composite Firestore index — we sort client-side
   const q = query(
     collection(db, 'supportMessages'),
     where('userId', '==', userId)
@@ -312,8 +300,8 @@ function renderMessages(msgs) {
   }
 
   msgs.forEach(m => {
-    const isOut = m.direction === 'inbound';   // user → us
-    const isIn  = m.direction === 'outbound';  // us → user
+    const isOut = m.direction === 'inbound';
+    const isIn  = m.direction === 'outbound';
     if (!isOut && !isIn) return;
 
     const wrapper = document.createElement('div');
@@ -340,7 +328,7 @@ function renderMessages(msgs) {
   container.scrollTop = container.scrollHeight;
 }
 
-// ── Send message ────────────────────────────────────────────────────
+// ── Send message ─────────────────────────────────────────────────────
 window.sendChatMessage = async function() {
   const input   = document.getElementById('chat-input');
   const sendBtn = document.getElementById('send-btn');
@@ -348,10 +336,10 @@ window.sendChatMessage = async function() {
   if (!text) return;
   if (!userId) { alert('Please open this in Telegram first.'); return; }
 
-  input.value      = '';
+  input.value        = '';
   input.style.height = '';
-  input.disabled   = true;
-  sendBtn.disabled = true;
+  input.disabled     = true;
+  sendBtn.disabled   = true;
 
   const displayName = tgUser
     ? `${tgUser.first_name || ''}${tgUser.last_name ? ' ' + tgUser.last_name : ''}`.trim()
@@ -359,7 +347,6 @@ window.sendChatMessage = async function() {
   const userName = tgUser?.username ? '@' + tgUser.username : displayName;
 
   try {
-    // 1. Save to Firestore
     await addDoc(collection(db, 'supportMessages'), {
       userId,
       userName:    tgUser?.username || '',
@@ -370,7 +357,7 @@ window.sendChatMessage = async function() {
       createdAt:   serverTimestamp()
     });
 
-    // 2. Notify admin via ToPla_support_bot (only chat 5222030484)
+    // Notify admin via ToPla_support_bot
     const notifyText =
       `💬 <b>New Support Message</b>\n` +
       `👤 ${displayName} (${userName})\n` +
@@ -382,11 +369,7 @@ window.sendChatMessage = async function() {
     fetch(`https://api.telegram.org/bot${SUPPORT_BOT_TOKEN}/sendMessage`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        chat_id:      ADMIN_CHAT_ID,
-        text:         notifyText,
-        parse_mode:   'HTML'
-      })
+      body:    JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: notifyText, parse_mode: 'HTML' })
     }).catch(() => {});
 
   } catch(e) {
@@ -410,26 +393,13 @@ window.chatKeyDown = function(e) {
   }
 };
 
-// ── Open Support Bot — works inside Mini App ────────────────────────
+// ── Open Support Bot ─────────────────────────────────────────────────
 window.openSupportBot = function() {
   const botUrl = `https://t.me/${SUPPORT_BOT_USERNAME}`;
-
-  // ── Open bot link — correct order for Mini App ──────────────────
-  // tg.openLink works for external URLs including t.me inside Mini Apps
-  // tg.openTelegramLink is only for links that open inside Telegram itself
   if (tg) {
-    try {
-      // This opens t.me/... inside Telegram natively
-      tg.openTelegramLink(botUrl);
-      return;
-    } catch(e1) {
-      try {
-        tg.openLink(botUrl);
-        return;
-      } catch(e2) { /* fall through */ }
-    }
+    try { tg.openTelegramLink(botUrl); return; } catch(e1) {}
+    try { tg.openLink(botUrl); return; } catch(e2) {}
   }
-  // Absolute fallback (browser / old WebApp versions)
   window.open(botUrl, '_blank');
 };
 </script>

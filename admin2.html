@@ -241,7 +241,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter'
 import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit,
+import { getFirestore, collection, addDoc, getDocs, query, where,
          onSnapshot, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -255,9 +255,8 @@ const firebaseConfig = {
   appId: "1:991105630791:web:551166c522317fad980d32"
 };
 
-// Only this chat ID gets Telegram notifications
+// Send user reply notification via ToPla_support_bot
 const SUPPORT_BOT_TOKEN = '8512101964:AAEGRe9tsb-6NOuXYpE1DJe0l6zHVvY1bqs';
-const ADMIN_CHAT_ID     = '5222030484';
 
 const firebaseApp = initializeApp(firebaseConfig);
 const auth = getAuth(firebaseApp);
@@ -305,24 +304,22 @@ function init() {
 }
 
 // ── Load threads ──────────────────────────────────────────────────────
+// Note: no orderBy on inbound query to avoid needing a composite Firestore index.
+// We sort client-side instead.
 window.loadThreads = async function() {
   try {
-    const inboundSnap = await getDocs(query(
-      collection(db, 'supportMessages'),
-      where('direction', '==', 'inbound'),
-      orderBy('createdAt', 'desc'),
-      limit(300)
-    ));
-    const outboundSnap = await getDocs(query(
-      collection(db, 'supportMessages'),
-      where('direction', '==', 'outbound')
-    ));
+    const [inboundSnap, outboundSnap] = await Promise.all([
+      getDocs(query(collection(db, 'supportMessages'), where('direction', '==', 'inbound'))),
+      getDocs(query(collection(db, 'supportMessages'), where('direction', '==', 'outbound')))
+    ]);
+
     const repliedUsers = new Set(outboundSnap.docs.map(d => d.data().userId));
 
     const byUser = {};
     inboundSnap.docs.forEach(d => {
       const dd = d.data();
-      if (!byUser[dd.userId]) {
+      const ts = dd.createdAt?.toMillis ? dd.createdAt.toMillis() : 0;
+      if (!byUser[dd.userId] || ts > (byUser[dd.userId]._ts || 0)) {
         byUser[dd.userId] = {
           userId:      dd.userId,
           displayName: dd.displayName || dd.userName || dd.userId,
@@ -330,17 +327,14 @@ window.loadThreads = async function() {
           lang:        dd.lang || 'en',
           lastMsg:     dd.text || '',
           lastTs:      dd.createdAt,
+          _ts:         ts,
           status:      repliedUsers.has(dd.userId) ? 'replied' : 'open',
           unread:      !repliedUsers.has(dd.userId)
         };
       }
     });
 
-    allThreads = Object.values(byUser).sort((a, b) => {
-      const ta = a.lastTs?.toDate ? a.lastTs.toDate() : new Date(a.lastTs || 0);
-      const tb = b.lastTs?.toDate ? b.lastTs.toDate() : new Date(b.lastTs || 0);
-      return tb - ta;
-    });
+    allThreads = Object.values(byUser).sort((a, b) => (b._ts || 0) - (a._ts || 0));
 
     const openCount = allThreads.filter(t => t.status === 'open').length;
     const badge = document.getElementById('new-badge');
@@ -362,7 +356,6 @@ window.loadThreads = async function() {
     updateStats();
     renderThreadList();
 
-    // Re-open active thread if one was selected
     if (activeUserId) {
       const t = allThreads.find(t => t.userId === activeUserId);
       if (t) updateChatHeader(t);
@@ -387,7 +380,6 @@ window.setFilter = function(f, btn) {
   btn.classList.add('active');
   renderThreadList();
 };
-
 window.filterThreads = function() { renderThreadList(); };
 
 function renderThreadList() {
@@ -439,8 +431,6 @@ function renderThreadList() {
 window.selectThread = function(uid) {
   activeUserId = uid;
   renderThreadList();
-
-  // Mobile: close sidebar overlay
   document.getElementById('sidebar').classList.remove('mob-open');
 
   const thread = allThreads.find(t => t.userId === uid);
@@ -448,25 +438,31 @@ window.selectThread = function(uid) {
 
   updateChatHeader(thread);
 
-  // Show chat pane
   document.getElementById('chat-empty').style.display = 'none';
   const ac = document.getElementById('active-chat');
-  ac.style.display = 'flex';
+  ac.style.display      = 'flex';
   ac.style.flexDirection = 'column';
-  ac.style.flex = '1';
-  ac.style.overflow = 'hidden';
-  ac.style.minHeight = '0';
+  ac.style.flex         = '1';
+  ac.style.overflow     = 'hidden';
+  ac.style.minHeight    = '0';
 
   document.getElementById('reply-input').placeholder = `Reply to ${thread.displayName}…`;
 
-  // Live subscribe to messages
+  // Subscribe to messages — no orderBy to avoid composite index requirement
   if (threadUnsub) threadUnsub();
   threadUnsub = onSnapshot(
-    query(collection(db, 'supportMessages'),
-          where('userId', '==', uid),
-          orderBy('createdAt', 'asc'),
-          limit(100)),
-    snap => renderChatMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })))
+    query(collection(db, 'supportMessages'), where('userId', '==', uid)),
+    snap => {
+      const msgs = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .sort((a, b) => {
+          const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt || 0);
+          const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt || 0);
+          return ta - tb;
+        });
+      renderChatMessages(msgs);
+    },
+    err => console.error('Chat snapshot error:', err)
   );
 };
 
@@ -496,8 +492,8 @@ function renderChatMessages(msgs) {
 
   let lastDay = '';
   msgs.forEach(m => {
-    const isUser  = m.direction === 'inbound';
-    const isAdmin = m.direction === 'outbound';
+    const isUser  = m.direction === 'inbound';   // user sent it
+    const isAdmin = m.direction === 'outbound';  // admin sent it
     if (!isUser && !isAdmin) return;
 
     const dateObj = m.createdAt
@@ -514,6 +510,8 @@ function renderChatMessages(msgs) {
     }
 
     const wrapper = document.createElement('div');
+    // inbound = user message → show on LEFT (class 'in')
+    // outbound = admin reply → show on RIGHT (class 'out')
     wrapper.className = 'msg ' + (isUser ? 'in' : 'out');
 
     const bubble = document.createElement('div');
@@ -522,7 +520,7 @@ function renderChatMessages(msgs) {
 
     const meta = document.createElement('div');
     meta.className   = 'msg-meta';
-    meta.textContent = (isUser ? '' : 'You · ') +
+    meta.textContent = (isAdmin ? 'You · ' : '') +
       dateObj.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
 
     wrapper.appendChild(bubble);
@@ -541,14 +539,14 @@ window.sendReply = async function() {
   const text  = input.value.trim();
   if (!text) return;
 
-  btn.disabled  = true;
-  input.value   = '';
-  input.style.height = '';
+  btn.disabled        = true;
+  input.value         = '';
+  input.style.height  = '';
 
   const thread = allThreads.find(t => t.userId === activeUserId);
 
   try {
-    // Save outbound message to Firestore
+    // 1. Save outbound message to Firestore so it appears in the user's chat
     await addDoc(collection(db, 'supportMessages'), {
       userId:      activeUserId,
       userName:    thread?.userName || '',
@@ -559,27 +557,28 @@ window.sendReply = async function() {
       createdAt:   serverTimestamp()
     });
 
-    // Update chip immediately
+    // 2. Update chip immediately
     const chip = document.getElementById('ch-chip');
     chip.textContent = 'Replied';
     chip.className   = 'chip replied';
 
-    // Send Telegram message to user (if real TG ID)
+    // 3. Send Telegram message to user via ToPla_support_bot
     const numericId = parseInt(activeUserId);
     if (!isNaN(numericId) && numericId > 0 && String(numericId).length > 5) {
+      const isRu = thread?.lang === 'ru';
+      const tgMsg = isRu
+        ? `📩 <b>Ответ от поддержки TonPlay:</b>\n\n${text}`
+        : `📩 <b>Message from TonPlay Support:</b>\n\n${text}`;
+
       fetch(`https://api.telegram.org/bot${SUPPORT_BOT_TOKEN}/sendMessage`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          chat_id:    numericId,
-          text:       `📩 <b>Message from TonPlay Support:</b>\n\n${text}`,
-          parse_mode: 'HTML'
-        })
+        body:    JSON.stringify({ chat_id: numericId, text: tgMsg, parse_mode: 'HTML' })
       }).catch(() => {});
     }
 
     showToast('✅ Reply sent!');
-    loadThreads(); // refresh sidebar status
+    loadThreads();
   } catch(e) {
     showToast('❌ ' + e.message);
     input.value = text;
@@ -605,7 +604,6 @@ window.replyKeyDown = function(e) {
 function esc(s) {
   return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
-
 window.showToast = function(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
