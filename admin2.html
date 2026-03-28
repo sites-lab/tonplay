@@ -674,7 +674,8 @@ window.replyKeyDown = function(e) {
 
 // ── Helpers ───────────────────────────────────────────────────────────
 function stripFlags(s) {
-  return String(s || '').replace(/\p{Emoji_Flag_Sequence}/gu, '').trim();
+  // Remove regional indicator pairs (flag emojis like 🇷🇺 🇬🇧)
+  return String(s || '').replace(/[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]/g, '').trim();
 }
 function esc(s) {
   return stripFlags(String(s || '')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
