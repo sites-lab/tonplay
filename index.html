@@ -76,6 +76,49 @@ html,body{
 .tab-content::-webkit-scrollbar{width:3px;}
 .tab-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
 
+/* ─── FLOATING SUPPORT BUTTON ─── */
+#float-support-btn{
+  position:fixed;
+  bottom:24px;
+  right:16px;
+  z-index:500;
+  display:none; /* hidden by default, shown only on info tab */
+  align-items:center;
+  gap:8px;
+  padding:13px 18px 13px 14px;
+  background:linear-gradient(135deg,#2196F3,#1565C0);
+  color:#fff;
+  border:none;
+  border-radius:50px;
+  font-family:'Inter',sans-serif;
+  font-size:14px;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:0 6px 24px rgba(33,150,243,0.45),0 2px 8px rgba(0,0,0,0.12);
+  -webkit-tap-highlight-color:transparent;
+  transform:translateY(80px) scale(0.9);
+  opacity:0;
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1), opacity .25s ease, box-shadow .2s;
+  white-space:nowrap;
+}
+#float-support-btn.visible{
+  display:flex;
+  transform:translateY(0) scale(1);
+  opacity:1;
+}
+#float-support-btn:active{
+  transform:scale(0.94);
+  box-shadow:0 3px 12px rgba(33,150,243,0.35);
+}
+#float-support-btn .fsb-icon{
+  width:28px;height:28px;
+  background:rgba(255,255,255,0.22);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;
+  flex-shrink:0;
+}
+
 /* ─── TON CONNECT WALLET BANNER ─── */
 .wallet-banner{
   background:linear-gradient(135deg,rgba(33,150,243,0.08),rgba(21,101,192,0.04));
@@ -219,7 +262,6 @@ html,body{
 .deal-stat-lbl{font-size:9px;color:rgba(255,255,255,0.7);margin-top:3px;font-weight:600;letter-spacing:.3px;}
 
 /* ─── DEPOSIT SLOT CARDS ─── */
-/* Number-switcher pills inside hero card */
 .dep-switcher{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;position:relative;z-index:2;}
 .dep-sw-pill{
   width:30px;height:30px;border-radius:50%;
@@ -234,7 +276,6 @@ html,body{
   background:#fff;border-color:#fff;
   box-shadow:0 2px 10px rgba(0,0,0,0.25);transform:scale(1.1);
 }
-/* pill active text colour matches the slot accent */
 .dep-sw-pill.active.sc1{color:#1565C0;}
 .dep-sw-pill.active.sc2{color:#B45309;}
 .dep-sw-pill.active.sc3{color:#065F46;}
@@ -246,7 +287,6 @@ html,body{
 .dep-sw-pill.active.sc9{color:#7C2D12;}
 .dep-sw-pill.active.sc10{color:#1E1B4B;}
 
-/* Inline deposit panel inside the hero card — now the MAIN content when a deposit is selected */
 .dep-inline-panel{
   margin-top:8px;
   position:relative;z-index:1;
@@ -302,7 +342,6 @@ html,body{
 .di-right{text-align:right;flex-shrink:0;}
 .di-yield{font-size:11px;font-weight:700;color:var(--green);}
 .di-weeks{font-size:10px;color:var(--sub);}
-/* ─── Deposit countdown ─── */
 .di-countdown{font-size:10px;font-weight:700;color:var(--ton);margin-top:3px;display:flex;align-items:center;gap:4px;}
 .di-countdown.urgent{color:var(--gold2);}
 .di-countdown.ready{color:var(--green);}
@@ -340,7 +379,7 @@ html,body{
 .ref-stat-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:700;color:var(--green);margin-bottom:2px;}
 .ref-stat-lbl{font-size:10px;color:var(--sub);font-weight:600;}
 
-/* ─── MILESTONES (single card, list rows) ─── */
+/* ─── MILESTONES ─── */
 .milestones-wrap{
   background:var(--surf);
   border:1px solid var(--border);
@@ -349,137 +388,50 @@ html,body{
   overflow:hidden;
   margin-bottom:12px;
 }
-
-.ms-row{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  padding:12px 14px;
-  border-bottom:1px solid var(--border);
-  position:relative;
-  transition:background .15s;
-}
+.ms-row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border);position:relative;transition:background .15s;}
 .ms-row:last-child{border-bottom:none;}
-.ms-row.done-ms{}
-.ms-row.next-ms{
-  background:linear-gradient(90deg,rgba(99,102,241,0.04),transparent);
-}
-.ms-row.locked-ms{
-  opacity:.5;
-  filter:saturate(0.4);
-}
-
-/* Left accent bar */
-.ms-row::before{
-  content:'';
-  position:absolute;
-  left:0;top:8px;bottom:8px;
-  width:3px;
-  border-radius:0 3px 3px 0;
-  opacity:0;
-}
+.ms-row.next-ms{background:linear-gradient(90deg,rgba(99,102,241,0.04),transparent);}
+.ms-row.locked-ms{opacity:.5;filter:saturate(0.4);}
+.ms-row::before{content:'';position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;opacity:0;}
 .ms-row.done-ms::before{background:var(--green);opacity:1;}
 .ms-row.next-ms::before{background:#6366F1;opacity:1;animation:ms-bar-pulse 2s ease-in-out infinite;}
 .ms-row.locked-ms::before{background:var(--muted);opacity:.4;}
 .ms-row:not(.done-ms):not(.next-ms):not(.locked-ms)::before{background:var(--gold);opacity:1;}
 @keyframes ms-bar-pulse{0%,100%{opacity:.6}50%{opacity:1}}
-
-/* Icon badge */
-.ms-icon-badge{
-  width:42px;height:42px;
-  border-radius:14px;
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
-  position:relative;
-  overflow:hidden;
-}
-.ms-row.done-ms   .ms-icon-badge{background:linear-gradient(145deg,#059669,#34D399);box-shadow:0 3px 10px rgba(16,185,129,0.3);}
-.ms-row.next-ms   .ms-icon-badge{background:linear-gradient(145deg,#4F46E5,#9333EA);box-shadow:0 3px 10px rgba(99,102,241,0.35);}
+.ms-icon-badge{width:42px;height:42px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;}
+.ms-row.done-ms .ms-icon-badge{background:linear-gradient(145deg,#059669,#34D399);box-shadow:0 3px 10px rgba(16,185,129,0.3);}
+.ms-row.next-ms .ms-icon-badge{background:linear-gradient(145deg,#4F46E5,#9333EA);box-shadow:0 3px 10px rgba(99,102,241,0.35);}
 .ms-row.locked-ms .ms-icon-badge{background:linear-gradient(145deg,#94A3B8,#64748B);}
 .ms-row:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-icon-badge{background:linear-gradient(145deg,#D97706,#FBBF24);box-shadow:0 3px 10px rgba(245,158,11,0.3);}
-
 .ms-star-svg{width:24px;height:24px;filter:drop-shadow(0 1px 3px rgba(0,0,0,0.3));position:relative;z-index:2;}
-
-/* Telegram icon behind star in milestone badge */
-.ms-tg-bg{
-  position:absolute;inset:0;
-  display:flex;align-items:center;justify-content:center;
-  z-index:1;
-  pointer-events:none;
-}
-.ms-tg-bg svg{
-  width:36px;height:36px;
-  opacity:0.18;
-  animation:ms-tg-float 3.5s ease-in-out infinite;
-}
-.ms-row.done-ms .ms-tg-bg svg{opacity:0.22;animation:ms-tg-float 3.5s ease-in-out infinite;}
+.ms-tg-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:1;pointer-events:none;}
+.ms-tg-bg svg{width:36px;height:36px;opacity:0.18;animation:ms-tg-float 3.5s ease-in-out infinite;}
 .ms-row.next-ms .ms-tg-bg svg{opacity:0.28;animation:ms-tg-pulse 2.2s ease-in-out infinite;}
-@keyframes ms-tg-float{
-  0%,100%{transform:scale(1) rotate(-6deg);opacity:0.18;}
-  50%{transform:scale(1.15) rotate(4deg);opacity:0.28;}
-}
-@keyframes ms-tg-pulse{
-  0%,100%{transform:scale(1) rotate(0deg);opacity:0.22;}
-  40%{transform:scale(1.2) rotate(-5deg);opacity:0.38;}
-  70%{transform:scale(0.95) rotate(3deg);opacity:0.25;}
-}
-
-/* Telegram Stars label below reward value */
-.ms-tg-stars-lbl{
-  font-size:8px;
-  font-weight:800;
-  letter-spacing:.3px;
-  text-transform:uppercase;
-  display:flex;
-  align-items:center;
-  gap:3px;
-  margin-top:1px;
-}
-.ms-row.done-ms   .ms-tg-stars-lbl{color:rgba(16,185,129,0.7);}
-.ms-row.next-ms   .ms-tg-stars-lbl{color:rgba(99,102,241,0.8);}
+@keyframes ms-tg-float{0%,100%{transform:scale(1) rotate(-6deg);opacity:0.18;}50%{transform:scale(1.15) rotate(4deg);opacity:0.28;}}
+@keyframes ms-tg-pulse{0%,100%{transform:scale(1) rotate(0deg);opacity:0.22;}40%{transform:scale(1.2) rotate(-5deg);opacity:0.38;}70%{transform:scale(0.95) rotate(3deg);opacity:0.25;}}
+.ms-tg-stars-lbl{font-size:8px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;display:flex;align-items:center;gap:3px;margin-top:1px;}
+.ms-row.done-ms .ms-tg-stars-lbl{color:rgba(16,185,129,0.7);}
+.ms-row.next-ms .ms-tg-stars-lbl{color:rgba(99,102,241,0.8);}
 .ms-row.locked-ms .ms-tg-stars-lbl{color:var(--muted);}
 .ms-row:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-tg-stars-lbl{color:rgba(217,119,6,0.75);}
-
-/* Middle: info */
 .ms-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;}
-
 .ms-info-top{display:flex;align-items:center;justify-content:space-between;gap:6px;}
-.ms-friends-label{
-  font-size:13px;font-weight:800;
-  color:var(--text);
-  letter-spacing:-.2px;
-}
-.ms-status-chip{
-  font-size:8px;font-weight:800;
-  padding:2px 8px;
-  border-radius:20px;
-  letter-spacing:.4px;
-  text-transform:uppercase;
-  flex-shrink:0;
-}
-.ms-status-chip.done  {background:var(--green-light);color:var(--green);border:1px solid rgba(16,185,129,0.3);}
-.ms-status-chip.next  {background:rgba(99,102,241,0.1);color:#6366F1;border:1px solid rgba(99,102,241,0.3);}
+.ms-friends-label{font-size:13px;font-weight:800;color:var(--text);letter-spacing:-.2px;}
+.ms-status-chip{font-size:8px;font-weight:800;padding:2px 8px;border-radius:20px;letter-spacing:.4px;text-transform:uppercase;flex-shrink:0;}
+.ms-status-chip.done{background:var(--green-light);color:var(--green);border:1px solid rgba(16,185,129,0.3);}
+.ms-status-chip.next{background:rgba(99,102,241,0.1);color:#6366F1;border:1px solid rgba(99,102,241,0.3);}
 .ms-status-chip.locked{background:var(--card2);color:var(--muted);border:1px solid var(--border);}
-.ms-status-chip.gold  {background:var(--gold-light);color:var(--gold2);border:1px solid rgba(245,158,11,0.3);}
-
-/* Stars reward */
-.ms-reward-line{
-  display:flex;align-items:center;gap:5px;
-}
-.ms-reward-val{
-  font-family:'DM Mono',monospace;
-  font-size:11px;font-weight:700;
-}
-.ms-row.done-ms   .ms-reward-val{color:var(--green);}
-.ms-row.next-ms   .ms-reward-val{color:#6366F1;}
+.ms-status-chip.gold{background:var(--gold-light);color:var(--gold2);border:1px solid rgba(245,158,11,0.3);}
+.ms-reward-line{display:flex;align-items:center;gap:5px;}
+.ms-reward-val{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;}
+.ms-row.done-ms .ms-reward-val{color:var(--green);}
+.ms-row.next-ms .ms-reward-val{color:#6366F1;}
 .ms-row.locked-ms .ms-reward-val{color:var(--muted);}
 .ms-row:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-reward-val{color:var(--gold2);}
-
-/* Progress bar */
 .ms-bar{height:4px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:2px;}
 .ms-bar-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.4,0,.2,1);}
-.ms-row.done-ms   .ms-bar-fill{background:linear-gradient(90deg,#059669,#6EE7B7);}
-.ms-row.next-ms   .ms-bar-fill{background:linear-gradient(90deg,#4F46E5,#9333EA);}
+.ms-row.done-ms .ms-bar-fill{background:linear-gradient(90deg,#059669,#6EE7B7);}
+.ms-row.next-ms .ms-bar-fill{background:linear-gradient(90deg,#4F46E5,#9333EA);}
 .ms-row.locked-ms .ms-bar-fill{background:var(--muted);}
 .ms-row:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-bar-fill{background:linear-gradient(90deg,#D97706,#FBBF24);}
 
@@ -568,7 +520,6 @@ html,body{
 
 <!-- ─── i18n translations ─── -->
 <script>
-// Language detection: RU for Russian, Ukrainian, Belarusian, Kazakh locales — English for everything else
 const RU_LOCALES = ['ru','uk','be','kk'];
 function detectLang() {
   const langs = navigator.languages || [navigator.language || navigator.userLanguage || 'en'];
@@ -783,6 +734,7 @@ const T = {
     bot_reference: '🔑 <b>Reference:</b>',
     bot_yield_msg: 'Your deposit is now earning <b>+10% every 15 days</b>! 🚀\nOpen the app to track your earnings 👇',
     bot_open_app: '🎮 Open TonPlay App',
+    float_support: '💬 Support',
   },
   ru: {
     stars_chip: '⭐',
@@ -986,6 +938,7 @@ const T = {
     bot_reference: '🔑 <b>Метка:</b>',
     bot_yield_msg: 'Ваш депозит теперь приносит <b>+10% каждые 15 дней</b>! 🚀\nОткройте приложение, чтобы отслеживать прибыль 👇',
     bot_open_app: '🎮 Открыть TonPlay',
+    float_support: '💬 Поддержка',
   }
 };
 
@@ -1061,26 +1014,21 @@ window.LANG = LANG;
 
     <div class="hero-card">
       <div style="position:relative;z-index:1;">
-
-        <!-- Info button -->
         <button onclick="showHowItWorksModal()" style="position:absolute;top:0;right:0;width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.35);display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:3;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </button>
-        <!-- Default view: total balance + no deposits selected -->
         <div id="hero-default-view">
           <div class="hero-label" data-i18n="total_balance">Total Balance</div>
           <div class="hero-balance"><span id="hero-balance">0.00</span> <span class="hero-balance-unit">TON</span></div>
           <div class="hero-sub" id="hero-sub">Start depositing to earn rewards every 15 days</div>
         </div>
-        <!-- Deposit-selected view: replaces balance area -->
         <div id="dep-inline-panel" class="dep-inline-panel hidden"></div>
-        <!-- Pill switcher (always shown when deposits exist) -->
         <div id="dep-switcher-wrap" style="display:none;"></div>
       </div>
     </div>
 
     <div style="text-align:center;margin-bottom:10px;">
-      <div class="yield-badge"><div class="yield-dot"></div><span data-i18n="yield_badge">+5% Weekly Yield on every deposit</span></div>
+      <div class="yield-badge"><div class="yield-dot"></div><span data-i18n="yield_badge">+10% Every 15 Days on every deposit</span></div>
     </div>
 
     <!-- ══ SPECIAL DEAL ══ -->
@@ -1206,7 +1154,6 @@ window.LANG = LANG;
       <div class="wd-hero-sub" data-i18n="wd_avail">Available Balance</div>
       <div class="wd-hero-bal"><span id="wd-balance">0.00</span> TON</div>
     </div>
-    <!-- Select deposit card to withdraw from -->
     <div id="wd-deposit-select" style="display:none;margin-bottom:10px;">
       <div class="sec-title" style="margin-bottom:6px;" id="wd-select-label">Select Deposit to Withdraw From</div>
       <div id="wd-deposit-pills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;"></div>
@@ -1274,10 +1221,9 @@ window.LANG = LANG;
     <div class="notice" style="background:var(--green-light);border-color:rgba(16,185,129,0.3);" data-i18n-html="ref_notice">
       <strong>🎁 Referral System:</strong> Every player gets a unique referral code.
     </div>
-
-    <!-- ── Support Button ── -->
-    <div style="margin-top:4px;margin-bottom:10px;width:100%;">
-      <button id="support-btn" onclick="openSupport()" style="width:100%;padding:14px 16px;background:linear-gradient(135deg,#2196F3,#1565C0);border:none;border-radius:16px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(33,150,243,0.3);-webkit-tap-highlight-color:transparent;">
+    <!-- Static support button inside info tab (for scroll context) -->
+    <div style="margin-top:4px;margin-bottom:80px;width:100%;">
+      <button onclick="openSupport()" style="width:100%;padding:14px 16px;background:linear-gradient(135deg,#2196F3,#1565C0);border:none;border-radius:16px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 4px 16px rgba(33,150,243,0.3);-webkit-tap-highlight-color:transparent;">
         <span style="font-size:20px;">💬</span>
         <span id="support-btn-lbl">Contact Support</span>
       </button>
@@ -1285,6 +1231,12 @@ window.LANG = LANG;
   </div>
 
 </div><!-- .app -->
+
+<!-- ── FLOATING SUPPORT BUTTON (Info tab only) ── -->
+<button id="float-support-btn" onclick="openSupport()">
+  <div class="fsb-icon">💬</div>
+  <span id="float-support-lbl">Support</span>
+</button>
 
 <div class="toast" id="toast"></div>
 <div class="modal-bg" id="modal-bg">
@@ -1316,6 +1268,11 @@ window.LANG = LANG;
     const key = el.getAttribute('data-i18n-placeholder');
     if (t[key] !== undefined) el.placeholder = t[key];
   });
+  // Set float support button label
+  const fsbLbl = document.getElementById('float-support-lbl');
+  if (fsbLbl) fsbLbl.textContent = window.LANG === 'ru' ? 'Поддержка' : 'Support';
+  const sbLbl = document.getElementById('support-btn-lbl');
+  if (sbLbl) sbLbl.textContent = window.LANG === 'ru' ? 'Написать в поддержку' : 'Contact Support';
 })();
 
 import { beginCell } from 'https://esm.sh/@ton/core@0.56.3';
@@ -1394,10 +1351,8 @@ tonConnectUI.onStatusChange(wallet => {
     document.getElementById('wallet-addr-display').textContent = connectedWalletFriendly;
     document.getElementById('info-wallet').textContent = short;
     document.getElementById('btn-pay').disabled = false;
-    // Always overwrite the withdraw wallet input with the connected wallet address
     const wdInput = document.getElementById('wd-wallet-input');
     if (wdInput) wdInput.value = connectedWalletFriendly;
-    // Also refresh the withdraw deposit pills now that we know the wallet
     renderWithdrawDepositSelect();
   } else {
     connectedWalletAddr     = null;
@@ -1563,14 +1518,14 @@ async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
       userName: currentUser.username || '',
       displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
       amount,
-      originalAmount: amount,  // locked for yield rate determination
+      originalAmount: amount,
       comment,
       walletAddress: connectedWalletFriendly || connectedWalletAddr || '',
       status: 'active',
       weeksActive: 0,
       earned: 0,
       autoDetected: true,
-      lastYieldAt: null,        // null = use createdAt as clock start
+      lastYieldAt: null,
       createdAt: serverTimestamp()
     });
 
@@ -1747,7 +1702,7 @@ function renderAll() {
 
   document.getElementById('header-balance').textContent = bal.toFixed(2);
   document.getElementById('hero-balance').textContent   = bal.toFixed(2);
-  // "You will get" in hero = sum of per-deposit yields at correct rates
+
   let _totalYield = 0;
   if (depositsData.length) {
     depositsData.filter(d => d.status === 'active').forEach(d => {
@@ -1758,7 +1713,7 @@ function renderAll() {
   } else {
     _totalYield = dep * (dep >= 100 ? 0.15 : 0.10);
   }
-  // hero-sub: show live countdown
+
   const heroSubEl = document.getElementById('hero-sub');
   if (heroSubEl) {
     if (dep > 0 && depositsData.length > 0) {
@@ -1789,15 +1744,11 @@ function renderAll() {
   document.getElementById('header-stars').textContent   = stars;
   document.getElementById('info-stars').textContent     = stars + ' ⭐';
 
-  // Auto-fill withdraw wallet: always prefer the connected TON wallet (user's own), fallback to saved address
   (function fillWdWallet() {
-  const wdInput = document.getElementById('wd-wallet-input');
-  if (!wdInput) return;
-  if (connectedWalletFriendly) {
-    wdInput.value = connectedWalletFriendly;
-  } else if (userData && userData.walletAddress) {
-    wdInput.value = userData.walletAddress;
-  }
+    const wdInput = document.getElementById('wd-wallet-input');
+    if (!wdInput) return;
+    if (connectedWalletFriendly) wdInput.value = connectedWalletFriendly;
+    else if (userData && userData.walletAddress) wdInput.value = userData.walletAddress;
   })();
 
   const refCode = userData.referralCode || '';
@@ -1809,8 +1760,7 @@ function renderAll() {
   document.getElementById('info-tgid').textContent    = userData.userId || '—';
   document.getElementById('info-username').textContent = userData.userName ? '@' + userData.userName : '—';
   document.getElementById('info-ref-code').textContent = refCode || '—';
-  document.getElementById('info-wd-status').textContent = userData.withdrawUnlocked ? t.withdrawals_open : (t.withdrawals_locked || (LANG==='ru'?'Заблокировано':'Locked'));
-  // Update info tab live stats
+  document.getElementById('info-wd-status').textContent = userData.withdrawUnlocked ? t.withdrawals_open : (t.withdrawals_locked || 'Locked');
   document.getElementById('info-balance').textContent  = (userData.balance||0).toFixed(2) + ' TON';
   document.getElementById('info-deposited').textContent= (userData.totalDeposited||0).toFixed(2) + ' TON';
   document.getElementById('info-earned').textContent   = (userData.totalEarned||0).toFixed(2) + ' TON';
@@ -1837,18 +1787,9 @@ function renderMilestones() {
     `<svg class="ms-star-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M179.6 61.2L33.4 117.9c-9.9 3.9-9.8 9.5-.2 11.9l37.4 11.7 14.5 44.3c1.8 5.2 2.7 7.1 5.8 7.1 3.1 0 4.5-1.4 6.3-3.1l18.8-18.2 39.1 28.8c7.2 4 12.4 1.9 14.2-6.7l25.7-121.1c2.5-10-3.7-14.5-14.4-11.4z" fill="white"/></svg>`,
     `<svg class="ms-star-svg" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M179.6 61.2L33.4 117.9c-9.9 3.9-9.8 9.5-.2 11.9l37.4 11.7 14.5 44.3c1.8 5.2 2.7 7.1 5.8 7.1 3.1 0 4.5-1.4 6.3-3.1l18.8-18.2 39.1 28.8c7.2 4 12.4 1.9 14.2-6.7l25.7-121.1c2.5-10-3.7-14.5-14.4-11.4z" fill="white"/></svg>`
   ];
-  const tierLabels = ['Bronze','Silver','Gold','Diamond'];
-  // Apply withdraw label translations
+
   const wdSelLabelEl = document.getElementById('wd-select-label');
   if (wdSelLabelEl) wdSelLabelEl.textContent = t.wd_select_label;
-  const wdDepLabelEl = document.getElementById('wd-deposit-label-el');
-  if (wdDepLabelEl) {
-    const numSpan = wdDepLabelEl.querySelector('#wd-sel-num');
-    wdDepLabelEl.textContent = t.wd_deposit_label;
-    if (numSpan) wdDepLabelEl.appendChild(numSpan);
-  }
-  const wdYieldLabelEl = document.getElementById('wd-yield-label-el');
-  if (wdYieldLabelEl) wdYieldLabelEl.textContent = t.wd_yield_label;
 
   list.innerHTML = '<div class="milestones-wrap">' + ms.map((m, i) => {
     const done   = count >= m.friends;
@@ -1919,7 +1860,6 @@ async function loadDeposits() {
   } catch(e) {}
 }
 
-// Refresh just the hero-sub countdown text without full re-render
 function refreshHeroSubCountdown() {
   const dep = userData?.totalDeposited || 0;
   const heroSubEl = document.getElementById('hero-sub');
@@ -1950,18 +1890,17 @@ function refreshHeroSubCountdown() {
   }
 }
 
-// 10 slot gradients matching pill colours
 const HERO_CARD_GRADIENTS = [
-  'linear-gradient(135deg,#1565C0 0%,#2196F3 50%,#42A5F5 100%)', // 1 blue (default)
-  'linear-gradient(135deg,#92400E 0%,#D97706 50%,#FBBF24 100%)', // 2 gold
-  'linear-gradient(135deg,#065F46 0%,#059669 50%,#34D399 100%)', // 3 green
-  'linear-gradient(135deg,#374151 0%,#6B7280 50%,#9CA3AF 100%)', // 4 grey
-  'linear-gradient(135deg,#5B21B6 0%,#7C3AED 50%,#A78BFA 100%)', // 5 purple
-  'linear-gradient(135deg,#991B1B 0%,#DC2626 50%,#F87171 100%)', // 6 red
-  'linear-gradient(135deg,#831843 0%,#DB2777 50%,#F472B6 100%)', // 7 pink
-  'linear-gradient(135deg,#134E4A 0%,#0D9488 50%,#2DD4BF 100%)', // 8 teal
-  'linear-gradient(135deg,#7C2D12 0%,#EA580C 50%,#FB923C 100%)', // 9 orange
-  'linear-gradient(135deg,#1E1B4B 0%,#4338CA 50%,#818CF8 100%)', // 10 indigo
+  'linear-gradient(135deg,#1565C0 0%,#2196F3 50%,#42A5F5 100%)',
+  'linear-gradient(135deg,#92400E 0%,#D97706 50%,#FBBF24 100%)',
+  'linear-gradient(135deg,#065F46 0%,#059669 50%,#34D399 100%)',
+  'linear-gradient(135deg,#374151 0%,#6B7280 50%,#9CA3AF 100%)',
+  'linear-gradient(135deg,#5B21B6 0%,#7C3AED 50%,#A78BFA 100%)',
+  'linear-gradient(135deg,#991B1B 0%,#DC2626 50%,#F87171 100%)',
+  'linear-gradient(135deg,#831843 0%,#DB2777 50%,#F472B6 100%)',
+  'linear-gradient(135deg,#134E4A 0%,#0D9488 50%,#2DD4BF 100%)',
+  'linear-gradient(135deg,#7C2D12 0%,#EA580C 50%,#FB923C 100%)',
+  'linear-gradient(135deg,#1E1B4B 0%,#4338CA 50%,#818CF8 100%)',
 ];
 const HERO_CARD_SHADOWS = [
   '0 6px 24px rgba(33,150,243,0.3)',
@@ -1977,7 +1916,7 @@ const HERO_CARD_SHADOWS = [
 ];
 const SLOT_PILL_CLS = ['sc1','sc2','sc3','sc4','sc5','sc6','sc7','sc8','sc9','sc10'];
 
-let activeDepIdx = -1; // -1 = no deposit selected (show total balance)
+let activeDepIdx = -1;
 
 function buildDepCdHtml(d, inlineClass='dep-inline-cd') {
   const isPremium = (d.originalAmount || d.amount || 0) >= 100;
@@ -2012,7 +1951,6 @@ function renderDepInlinePanel(d, idx) {
   const infoBtn = document.querySelector('.hero-card > div > button[onclick="showHowItWorksModal()"]');
   if (!panel) return;
   if (!d) {
-    // Show total balance view
     panel.className = 'dep-inline-panel hidden';
     if (defaultView) defaultView.style.display = 'block';
     if (infoBtn) infoBtn.style.display = 'flex';
@@ -2026,7 +1964,6 @@ function renderDepInlinePanel(d, idx) {
   const rateBadge = isPremium ? t.dep_rate_premium : t.dep_rate_standard;
   const dt = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—';
   const cdHtml = buildDepCdHtml(d, 'dep-inline-cd');
-  // Hide default view, show deposit panel
   if (defaultView) defaultView.style.display = 'none';
   panel.className = 'dep-inline-panel';
   panel.innerHTML = `
@@ -2047,14 +1984,13 @@ function renderDepInlinePanel(d, idx) {
   startCountdownTickers();
 }
 
-// Pill colours (shared)
 const WD_PILL_COLORS = [
   {bg:'#2196F3',text:'#fff'},{bg:'#D97706',text:'#fff'},{bg:'#059669',text:'#fff'},
   {bg:'#6B7280',text:'#fff'},{bg:'#7C3AED',text:'#fff'},{bg:'#DC2626',text:'#fff'},
   {bg:'#DB2777',text:'#fff'},{bg:'#0D9488',text:'#fff'},{bg:'#EA580C',text:'#fff'},{bg:'#4338CA',text:'#fff'}
 ];
 
-let selectedWdDepIdxSet = new Set(); // multiple selection
+let selectedWdDepIdxSet = new Set();
 
 function renderWithdrawDepositSelect() {
   const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 10);
@@ -2065,7 +2001,6 @@ function renderWithdrawDepositSelect() {
   if (!activeDeposits.length) { wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
 
-  // "All" pill + numbered pills
   const allSelected = selectedWdDepIdxSet.size === activeDeposits.length;
   const allPill = `<div onclick="toggleAllWdDeposits()" style="
     height:30px;padding:0 10px;border-radius:15px;cursor:pointer;
@@ -2090,7 +2025,6 @@ function renderWithdrawDepositSelect() {
     ">${i+1}</div>`;
   }).join('');
 
-  // Show summary of selected
   if (selectedWdDepIdxSet.size > 0) {
     const selectedDeps = [...selectedWdDepIdxSet].map(i => activeDeposits[i]);
     const totalAmt = selectedDeps.reduce((s, d) => s + (d.amount||0), 0);
@@ -2103,7 +2037,6 @@ function renderWithdrawDepositSelect() {
     document.getElementById('wd-sel-amount').textContent = totalAmt.toFixed(2) + ' TON';
     document.getElementById('wd-sel-yield').textContent = '+' + totalYield.toFixed(2) + ' TON';
     document.getElementById('wd-sel-rate').textContent = selectedWdDepIdxSet.size > 1 ? t.wd_multiple_rates : ((activeDeposits[[...selectedWdDepIdxSet][0]]?.originalAmount||0)>=100?'15% / 2 wk':'10% / 15d');
-    document.getElementById('wd-sel-date').textContent = t.wd_deposits_selected(selectedWdDepIdxSet.size);
     document.getElementById('wd-amount').value = totalAmt.toFixed(2);
     infoEl.style.display = 'block';
   } else {
@@ -2135,9 +2068,7 @@ function renderDeposits() {
   const inlinePanel  = document.getElementById('dep-inline-panel');
 
   const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 10);
-  const otherDeposits  = depositsData.filter(d => d.status !== 'active');
 
-  // ── Hero switcher + inline panel ──
   if (activeDeposits.length && switcherWrap) {
     switcherWrap.style.display = 'flex';
     switcherWrap.className = 'dep-switcher';
@@ -2146,7 +2077,6 @@ function renderDeposits() {
       const activeCls = i === activeDepIdx ? 'active '+pillCls : '';
       return `<div class="dep-sw-pill ${pillCls} ${activeCls}" onclick="selectDepSlot(${i})">${i+1}</div>`;
     }).join('');
-    // If no deposit selected yet, show default view; else show selected
     if (activeDepIdx >= 0 && activeDepIdx < activeDeposits.length) {
       renderDepInlinePanel(activeDeposits[activeDepIdx], activeDepIdx);
     } else {
@@ -2157,25 +2087,21 @@ function renderDeposits() {
     renderDepInlinePanel(null, -1);
   }
 
-  // ── Deposits list — simple text rows ──
   if (!depositsData.length) { list.style.display = 'none'; title.style.display = 'none'; return; }
   title.style.display = 'block'; list.style.display = 'block';
 
-  // ── Snapshot deposit history amounts to localStorage so they never shrink after withdrawal ──
   const historyKey = `tonplay_dep_history_${String(currentUser.id)}`;
   let savedHistory = {};
   try { savedHistory = JSON.parse(localStorage.getItem(historyKey) || '{}'); } catch(e) {}
 
   depositsData.forEach(d => {
     if (!savedHistory[d.id]) {
-      // First time we see this deposit — snapshot the deposited & earned amounts
       savedHistory[d.id] = {
         deposited: d.originalAmount || d.amount || 0,
         earned: d.earned || 0,
         date: d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '—'
       };
     } else {
-      // Always keep the highest earned seen (it only grows, never shrinks in history)
       if ((d.earned || 0) > (savedHistory[d.id].earned || 0)) {
         savedHistory[d.id].earned = d.earned || 0;
       }
@@ -2204,10 +2130,7 @@ function renderDeposits() {
   }).join('');
 
   list.innerHTML = `<div class="dep-history-list">${allRows}</div>`;
-  document.getElementById('info-deposits').textContent = depositsData.length;
-  document.getElementById('info-weeks').textContent = Math.max(...depositsData.map(d => d.weeksActive || 0), 0);
 
-  // Also refresh withdraw deposit select
   renderWithdrawDepositSelect();
   startCountdownTickers();
 }
@@ -2215,7 +2138,6 @@ function renderDeposits() {
 window.selectDepSlot = function(idx) {
   const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 10);
   if (idx >= activeDeposits.length) return;
-  // Toggle: clicking the active pill again deselects (shows total balance)
   if (activeDepIdx === idx) {
     activeDepIdx = -1;
     document.querySelectorAll('.dep-sw-pill').forEach((el, i) => {
@@ -2233,14 +2155,10 @@ window.selectDepSlot = function(idx) {
   renderDepInlinePanel(activeDeposits[idx], idx);
 };
 
-// ─── Countdown helpers ────────────────────────────────────────────
-
 function buildCountdownHtml(remainingMs, depId, isPremium) {
   const rate = isPremium ? '10%' : '5%';
   if (remainingMs <= 0) {
-    return `<div class="di-countdown ready" data-dep-id="${depId}" data-deadline="0">
-      ${t.yield_ready}
-    </div>`;
+    return `<div class="di-countdown ready" data-dep-id="${depId}" data-deadline="0">${t.yield_ready}</div>`;
   }
   const totalSecs = Math.floor(remainingMs / 1000);
   const days  = Math.floor(totalSecs / 86400);
@@ -2260,7 +2178,6 @@ let _countdownTimer = null;
 function startCountdownTickers() {
   if (_countdownTimer) clearInterval(_countdownTimer);
   _countdownTimer = setInterval(() => {
-    // Tick slot-card countdowns
     document.querySelectorAll('.dep-slot-countdown[data-deadline]').forEach(el => {
       const deadline = parseInt(el.dataset.deadline || '0');
       if (!deadline) return;
@@ -2282,7 +2199,6 @@ function startCountdownTickers() {
       const lbl = (t.dep_countdown_label||'Next +%RATE% in').replace('%RATE%', isPremium?'15%':'10%');
       el.innerHTML = `⏱ ${lbl} <strong>${timeStr}</strong>`;
     });
-    // Also tick legacy di-countdown elements if any
     document.querySelectorAll('.di-countdown[data-deadline]').forEach(el => {
       const deadline = parseInt(el.dataset.deadline || '0');
       if (!deadline) return;
@@ -2329,7 +2245,6 @@ window.submitWithdraw = async function() {
   if (!wallet.startsWith('EQ') && !wallet.startsWith('UQ')) { showToast(t.wallet_format_warn); return; }
   if (amount > bal) { showToast(t.insufficient); return; }
 
-  // Collect selected deposit info
   const activeDeposits = depositsData.filter(d => d.status === 'active').slice(0, 10);
   const selectedDepositsList = [...selectedWdDepIdxSet].sort((a,b)=>a-b).map(i => ({
     idx: i + 1,
@@ -2348,7 +2263,6 @@ window.submitWithdraw = async function() {
         const displayName = ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim();
         const userName = currentUser.username || '';
 
-        // Save withdrawal request with deposit info
         const wdRef = await addDoc(collection(db, 'withdrawals'), {
           userId: uid, userName, displayName,
           amount, walletAddress: wallet, status: 'pending',
@@ -2358,7 +2272,6 @@ window.submitWithdraw = async function() {
           createdAt: serverTimestamp()
         });
 
-        // Build deposit breakdown for bot message
         let depBreakdown = '';
         if (selectedDepositsList.length > 0) {
           depBreakdown = `\n💳 <b>From Deposits:</b> ${depositNums}\n`;
@@ -2368,7 +2281,6 @@ window.submitWithdraw = async function() {
           });
         }
 
-        // Send bot message WITH Confirm/Cancel inline buttons
         const callbackConfirm = `wd_confirm_${wdRef.id}_${uid}`;
         const callbackCancel  = `wd_cancel_${wdRef.id}_${uid}`;
 
@@ -2544,10 +2456,9 @@ window.setAmount = function(val, btn) {
   updateEarnPreview();
 };
 
-// ── Open Support Chat as Mini App inside the bot ──
+// ── Open Support ──
 window.openSupport = function() {
   const tg = window.Telegram?.WebApp;
-  // Opens @ToPla_Support_bot directly inside Telegram
   const botUrl = 'https://t.me/ToPla_Support_bot';
   if (tg?.openTelegramLink) {
     tg.openTelegramLink(botUrl);
@@ -2558,13 +2469,27 @@ window.openSupport = function() {
   }
 };
 
-// Translate support button if Russian
-(function() {
-  if (LANG === 'ru') {
-    const lbl = document.getElementById('support-btn-lbl');
-    if (lbl) lbl.textContent = 'Написать в поддержку';
+// ── Float Support Button — show only on info tab ──
+const floatBtn = document.getElementById('float-support-btn');
+let _floatBtnTimeout = null;
+
+function updateFloatBtn(tabName) {
+  if (_floatBtnTimeout) clearTimeout(_floatBtnTimeout);
+  if (tabName === 'info') {
+    // Small delay so the tab transition doesn't look jarring
+    _floatBtnTimeout = setTimeout(() => {
+      floatBtn.classList.add('visible');
+    }, 120);
+  } else {
+    floatBtn.classList.remove('visible');
+    // After CSS transition, hide the element so it can't be clicked
+    _floatBtnTimeout = setTimeout(() => {
+      if (!floatBtn.classList.contains('visible')) {
+        floatBtn.style.display = 'none';
+      }
+    }, 400);
   }
-})();
+}
 
 window.switchTab = function(name, btn) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -2572,15 +2497,16 @@ window.switchTab = function(name, btn) {
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
   document.getElementById('tab-' + name).scrollTop = 0;
-  // Auto-fill wallet address whenever user opens the Withdraw tab
+
+  // Update floating button visibility
+  updateFloatBtn(name);
+
   if (name === 'withdraw') {
     const wdInput = document.getElementById('wd-wallet-input');
     if (wdInput) {
-      // Always prefer connected wallet over anything else
       if (connectedWalletFriendly) wdInput.value = connectedWalletFriendly;
       else if (userData?.walletAddress) wdInput.value = userData.walletAddress;
     }
-    // Refresh deposit selection pills
     renderWithdrawDepositSelect();
   }
 };
@@ -2644,9 +2570,8 @@ init();
 (function initNotifPopup() {
   const NOTIF_KEY = 'tonplay_notif_count';
   const countSeen = parseInt(localStorage.getItem(NOTIF_KEY) || '0');
-  if (countSeen >= 2) return; // only show first 2 opens
+  if (countSeen >= 2) return;
 
-  // Inject notification styles
   const style = document.createElement('style');
   style.textContent = `
   .onboard-notif-overlay{position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}
@@ -2660,7 +2585,6 @@ init();
   `;
   document.head.appendChild(style);
 
-  // Build overlay
   const overlay = document.createElement('div');
   overlay.className = 'onboard-notif-overlay';
   const notif = document.createElement('div');
@@ -2675,7 +2599,6 @@ init();
   overlay.appendChild(notif);
   document.body.appendChild(overlay);
 
-  // Show after 30 seconds
   setTimeout(() => {
     notif.classList.add('show');
     localStorage.setItem(NOTIF_KEY, String(countSeen + 1));
