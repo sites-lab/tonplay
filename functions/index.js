@@ -77,6 +77,31 @@ exports.triggerWeeklyYield = functions.https.onRequest(async (req, res) => {
   }
 });
 
+// Helper: register the webhook automatically
+// Call once after deploy: GET https://<region>-<project>.cloudfunctions.net/setWebhook
+exports.setWebhook = functions.https.onRequest(async (req, res) => {
+  const webhookUrl = `https://${req.hostname}/telegramWebhook`;
+  // For Firebase Gen 1 the URL pattern is: https://<region>-<project>.cloudfunctions.net/telegramWebhook
+  // We derive it from the current request URL by replacing the function name
+  const baseUrl = req.originalUrl
+    ? `https://${req.hostname}${req.originalUrl}`.replace(/\/setWebhook.*$/, '')
+    : null;
+  const target = baseUrl
+    ? `${baseUrl}/telegramWebhook`
+    : `https://${req.hostname}/telegramWebhook`;
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/setWebhook`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ url: target, allowed_updates: ['message', 'callback_query'] })
+    });
+    const json = await r.json();
+    res.json({ ok: json.ok, description: json.description, webhookUrl: target });
+  } catch(e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
+
 async function runWeeklyYield() {
   const now = Date.now();
   const usersSnap = await db.collection('users').get();
@@ -335,6 +360,221 @@ function extractComment(tx) {
 // ═══════════════════════════════════════════════════════════════════
 // 5.  WITHDRAWAL REQUEST HANDLER  (HTTP trigger from app)
 // ═══════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// 6.  TELEGRAM WEBHOOK  – forwards user messages to admin
+//     Set webhook: https://api.telegram.org/bot<TOKEN>/setWebhook?url=<FUNCTION_URL>
+// ═══════════════════════════════════════════════════════════════════
+exports.telegramWebhook = functions.https.onRequest(async (req, res) => {
+  res.status(200).send('OK'); // always ack immediately
+
+  const update = req.body;
+  if (!update) return;
+
+  // ── Handle callback queries (withdraw confirm/cancel + admin reply) ──
+  const cq = update.callback_query;
+  if (cq) {
+    const cbData  = cq.data || '';
+    const msgId   = cq.message?.message_id;
+    const chatId  = cq.message?.chat?.id;
+
+    if (cbData.startsWith('wd_confirm_') || cbData.startsWith('wd_cancel_')) {
+      // Already handled by the admin.html poller — skip here to avoid double-processing
+    } else if (cbData.startsWith('reply_to_user_')) {
+      // Admin pressed "Reply" on a forwarded user message
+      const userId = cbData.replace('reply_to_user_', '');
+      // Store pending reply state in Firestore so admin knows who to reply to
+      await db.collection('adminReplyStates').doc(String(cq.from.id)).set({
+        replyToUserId: userId,
+        expiresAt: admin.firestore.Timestamp.fromMillis(Date.now() + 5 * 60 * 1000)
+      });
+      // Answer with instructions
+      try {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            callback_query_id: cq.id,
+            text: `✏️ Now send your reply — it will be forwarded to user ${userId}`,
+            show_alert: true
+          })
+        });
+      } catch(e) {}
+    }
+    return;
+  }
+
+  // ── Handle text/photo messages ──
+  const msg = update.message;
+  if (!msg) return;
+
+  const fromId   = String(msg.from?.id || '');
+  const fromName = msg.from?.first_name || 'Unknown';
+  const fromUser = msg.from?.username ? '@' + msg.from.username : fromName;
+  const text     = msg.text || '';
+  const caption  = msg.caption || '';
+
+  const isAdmin = (fromId === SUPER_ADMIN_CHAT || fromId === ADMIN_CHAT);
+
+  // ── If admin sends a message → check if they have a pending reply state ──
+  if (isAdmin && (text || caption)) {
+    const stateSnap = await db.collection('adminReplyStates').doc(fromId).get();
+    if (stateSnap.exists) {
+      const state = stateSnap.data();
+      const expired = state.expiresAt?.toMillis() < Date.now();
+      if (!expired && state.replyToUserId) {
+        const targetId = state.replyToUserId;
+        // Forward the reply to the user
+        const replyText = text || caption;
+        const replyMsg  = `📩 <b>Message from support:</b>\n\n${replyText}`;
+        let delivered = false;
+        try {
+          let sendRes;
+          if (msg.photo) {
+            const fileId = msg.photo[msg.photo.length - 1].file_id;
+            sendRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chat_id: targetId, photo: fileId, caption: replyMsg, parse_mode: 'HTML' })
+            });
+          } else {
+            sendRes = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chat_id: targetId, text: replyMsg, parse_mode: 'HTML' })
+            });
+          }
+          const j = await sendRes.json();
+          delivered = j.ok;
+        } catch(e) {}
+
+        // Clear the reply state
+        await db.collection('adminReplyStates').doc(fromId).delete();
+
+        // Confirm to admin
+        const confirmText = delivered
+          ? `✅ Reply sent to user <code>${targetId}</code>!`
+          : `❌ Failed to deliver reply to user <code>${targetId}</code> (may have blocked the bot).`;
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: fromId, text: confirmText, parse_mode: 'HTML' })
+        });
+        return; // don't forward admin's own message to themselves
+      } else if (expired) {
+        await db.collection('adminReplyStates').doc(fromId).delete();
+      }
+    }
+    return; // ignore other admin messages (commands etc.)
+  }
+
+  // ── Regular user message → forward to SUPER_ADMIN ──
+  if (!text && !caption && !msg.photo && !msg.sticker && !msg.voice) return;
+
+  // Look up user info from Firestore
+  let userRecord = null;
+  try {
+    const userSnap = await db.collection('users').doc(fromId).get();
+    if (userSnap.exists) userRecord = userSnap.data();
+  } catch(e) {}
+
+  const displayName  = userRecord?.displayName || fromName;
+  const userName     = userRecord?.userName ? '@' + userRecord.userName : fromUser;
+  const balance      = userRecord?.balance != null ? `${parseFloat(userRecord.balance).toFixed(2)} TON` : '?';
+  const totalDep     = userRecord?.totalDeposited != null ? `${parseFloat(userRecord.totalDeposited).toFixed(2)} TON` : '?';
+
+  const header =
+    `💬 <b>User Message</b>\n` +
+    `👤 ${displayName} (${userName})\n` +
+    `🆔 <code>${fromId}</code>\n` +
+    `💰 Balance: <b>${balance}</b> · Deposited: <b>${totalDep}</b>\n` +
+    `─────────────────\n`;
+
+  const replyBtn = {
+    inline_keyboard: [[
+      { text: '↩️ Reply to user', callback_data: `reply_to_user_${fromId}` }
+    ]]
+  };
+
+  try {
+    if (msg.photo) {
+      // Forward photo with caption
+      const fileId = msg.photo[msg.photo.length - 1].file_id;
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: SUPER_ADMIN_CHAT,
+          photo: fileId,
+          caption: header + (caption || ''),
+          parse_mode: 'HTML',
+          reply_markup: replyBtn
+        })
+      });
+    } else if (msg.sticker) {
+      // Forward sticker, then send header as follow-up
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendSticker`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT, sticker: msg.sticker.file_id })
+      });
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: SUPER_ADMIN_CHAT,
+          text: header + '🎭 <i>(sticker above)</i>',
+          parse_mode: 'HTML',
+          reply_markup: replyBtn
+        })
+      });
+    } else if (msg.voice) {
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendVoice`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT, voice: msg.voice.file_id })
+      });
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: SUPER_ADMIN_CHAT,
+          text: header + '🎤 <i>(voice message above)</i>',
+          parse_mode: 'HTML',
+          reply_markup: replyBtn
+        })
+      });
+    } else {
+      // Plain text
+      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: SUPER_ADMIN_CHAT,
+          text: header + text,
+          parse_mode: 'HTML',
+          reply_markup: replyBtn
+        })
+      });
+    }
+
+    // Auto-acknowledge to user
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: fromId,
+        text: userRecord?.lang === 'ru'
+          ? '✅ Ваше сообщение получено! Поддержка ответит вам в ближайшее время.'
+          : '✅ Your message has been received! Support will reply to you shortly.',
+        parse_mode: 'HTML'
+      })
+    });
+
+    // Save the message in Firestore for history
+    await db.collection('supportMessages').add({
+      userId:      fromId,
+      userName:    userRecord?.userName || '',
+      displayName: displayName,
+      text:        text || caption || '[media]',
+      direction:   'inbound',
+      createdAt:   admin.firestore.FieldValue.serverTimestamp()
+    });
+
+  } catch(e) {
+    console.error('telegramWebhook forward error:', e);
+  }
+});
+
+
 exports.requestWithdrawal = functions.https.onRequest(async (req, res) => {
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');

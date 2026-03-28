@@ -349,18 +349,33 @@ tr:hover td{background:rgba(33,150,243,0.02);}
       <div class="panel" style="max-width:620px;">
         <div class="panel-head"><div class="panel-title">📢 Broadcast to All Users</div></div>
         <div style="padding:20px;">
-          <div style="font-size:11px;color:var(--sub);margin-bottom:16px;line-height:1.6;">Send a message (with optional photo) to all users who have a Telegram ID saved in Firestore.</div>
+          <div style="font-size:11px;color:var(--sub);margin-bottom:16px;line-height:1.6;">Send a message (with optional photo) to all users. Photos are uploaded once to Telegram and reused — fast and reliable.</div>
 
+          <!-- EN photo -->
           <div style="margin-bottom:14px;">
-            <label class="set-label">📷 Photo (optional)</label>
-            <input type="file" id="bc-photo" accept="image/*" style="display:none;" onchange="handleBcPhoto(this)">
-            <div id="bc-photo-preview" onclick="document.getElementById('bc-photo').click()" style="width:100%;height:120px;background:var(--card2);border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--sub);overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--ton)'" onmouseout="this.style.borderColor='var(--border)'">
-              <span id="bc-photo-label">🖼️ Click to select a photo</span>
-              <img id="bc-photo-img" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;">
+            <label class="set-label">📷 🇬🇧 English Photo (optional)</label>
+            <input type="file" id="bc-photo-en" accept="image/*" style="display:none;" onchange="handleBcPhoto(this,'en')">
+            <div id="bc-photo-preview-en" onclick="document.getElementById('bc-photo-en').click()" style="width:100%;height:110px;background:var(--card2);border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--sub);overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--ton)'" onmouseout="this.style.borderColor='var(--border)'">
+              <span id="bc-photo-label-en">🖼️ Click to select English photo</span>
+              <img id="bc-photo-img-en" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;">
             </div>
-            <div style="display:flex;gap:8px;margin-top:6px;">
-              <button class="btn-act red" id="bc-remove-photo" style="display:none;" onclick="removeBcPhoto()">✕ Remove photo</button>
+            <div style="display:flex;gap:8px;margin-top:5px;">
+              <button class="btn-act red" id="bc-remove-photo-en" style="display:none;" onclick="removeBcPhoto('en')">✕ Remove</button>
             </div>
+          </div>
+
+          <!-- RU photo -->
+          <div style="margin-bottom:14px;">
+            <label class="set-label">📷 🇷🇺 Russian Photo (optional)</label>
+            <input type="file" id="bc-photo-ru" accept="image/*" style="display:none;" onchange="handleBcPhoto(this,'ru')">
+            <div id="bc-photo-preview-ru" onclick="document.getElementById('bc-photo-ru').click()" style="width:100%;height:110px;background:var(--card2);border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--sub);overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--ton)'" onmouseout="this.style.borderColor='var(--border)'">
+              <span id="bc-photo-label-ru">🖼️ Click to select Russian photo</span>
+              <img id="bc-photo-img-ru" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:5px;">
+              <button class="btn-act red" id="bc-remove-photo-ru" style="display:none;" onclick="removeBcPhoto('ru')">✕ Remove</button>
+            </div>
+            <div style="font-size:10px;color:var(--sub);margin-top:4px;">If not set, the English photo will be used for Russian users too.</div>
           </div>
 
           <div style="margin-bottom:14px;">
@@ -1091,44 +1106,106 @@ window.openDM = function(uid, userName) {
 };
 
 // ── Broadcast ──
-let bcPhotoBase64 = null;
-let bcPhotoMime = null;
+// Per-language photo storage: { base64, mime, fileId }
+let bcPhotos = { en: { base64: null, mime: null, fileId: null }, ru: { base64: null, mime: null, fileId: null } };
 let allUserIds = [];
+const BC_BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
 
 async function loadBroadcastCount() {
   try {
     const snap = await getDocs(collection(db, 'users'));
     allUserIds = snap.docs.map(d => ({
       id: d.data().userId || d.id,
-      lang: d.data().lang || 'en'
+      lang: d.data().lang || 'ru'
     })).filter(u => u.id);
     document.getElementById('bc-user-count').textContent = allUserIds.length + ' users';
   } catch(e) { document.getElementById('bc-user-count').textContent = '? (error)'; }
 }
 
-window.handleBcPhoto = function(input) {
+window.handleBcPhoto = function(input, lang) {
   const file = input.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = e => {
     const dataUrl = e.target.result;
-    bcPhotoMime = file.type;
-    bcPhotoBase64 = dataUrl.split(',')[1];
-    document.getElementById('bc-photo-label').style.display = 'none';
-    const img = document.getElementById('bc-photo-img');
+    bcPhotos[lang].mime = file.type;
+    bcPhotos[lang].base64 = dataUrl.split(',')[1];
+    bcPhotos[lang].fileId = null; // reset cached file_id
+    document.getElementById(`bc-photo-label-${lang}`).style.display = 'none';
+    const img = document.getElementById(`bc-photo-img-${lang}`);
     img.src = dataUrl; img.style.display = 'block';
-    document.getElementById('bc-remove-photo').style.display = '';
+    document.getElementById(`bc-remove-photo-${lang}`).style.display = '';
   };
   reader.readAsDataURL(file);
 };
 
-window.removeBcPhoto = function() {
-  bcPhotoBase64 = null; bcPhotoMime = null;
-  document.getElementById('bc-photo').value = '';
-  document.getElementById('bc-photo-img').style.display = 'none';
-  document.getElementById('bc-photo-label').style.display = '';
-  document.getElementById('bc-remove-photo').style.display = 'none';
+window.removeBcPhoto = function(lang) {
+  bcPhotos[lang] = { base64: null, mime: null, fileId: null };
+  document.getElementById(`bc-photo-${lang}`).value = '';
+  document.getElementById(`bc-photo-img-${lang}`).style.display = 'none';
+  document.getElementById(`bc-photo-label-${lang}`).style.display = '';
+  document.getElementById(`bc-remove-photo-${lang}`).style.display = 'none';
 };
+
+// Upload photo file once → get Telegram file_id to reuse for all sends
+async function uploadPhotoOnce(lang) {
+  const p = bcPhotos[lang];
+  if (!p.base64) return null;
+  if (p.fileId) return p.fileId; // already uploaded
+  const byteChars = atob(p.base64);
+  const byteArr = new Uint8Array(byteChars.length);
+  for (let b = 0; b < byteChars.length; b++) byteArr[b] = byteChars.charCodeAt(b);
+  const blob = new Blob([byteArr], { type: p.mime || 'image/jpeg' });
+  const fd = new FormData();
+  // Use a dummy chat that definitely exists — we send to SUPER_ADMIN to get file_id
+  fd.append('chat_id', '8671373607'); // SUPER_ADMIN_CHAT
+  fd.append('photo', blob, 'photo.jpg');
+  fd.append('caption', '(upload probe — ignore)');
+  const res = await fetch(`https://api.telegram.org/bot${BC_BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd });
+  const json = await res.json();
+  if (!json.ok) throw new Error('Photo upload failed: ' + json.description);
+  const photos = json.result.photo;
+  const fileId = photos[photos.length - 1].file_id; // largest size
+  bcPhotos[lang].fileId = fileId;
+  return fileId;
+}
+
+// Send one message with retry on 429 rate-limit
+async function sendOneMsg(chatId, text, fileId) {
+  const maxRetries = 3;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      let res;
+      if (fileId) {
+        res = await fetch(`https://api.telegram.org/bot${BC_BOT_TOKEN}/sendPhoto`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chatId, photo: fileId, caption: text, parse_mode: 'HTML' })
+        });
+      } else {
+        res = await fetch(`https://api.telegram.org/bot${BC_BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
+        });
+      }
+      const json = await res.json();
+      if (json.ok) return true;
+      // 429 = rate limited — wait and retry
+      if (json.error_code === 429) {
+        const wait = ((json.parameters && json.parameters.retry_after) || 2) * 1000;
+        await new Promise(r => setTimeout(r, wait));
+        continue;
+      }
+      // Other error (blocked bot, user not found, etc.) — don't retry
+      return false;
+    } catch(e) {
+      if (attempt === maxRetries - 1) return false;
+      await new Promise(r => setTimeout(r, 1000));
+    }
+  }
+  return false;
+}
 
 window.sendBroadcast = async function() {
   const textEn = document.getElementById('bc-text-en').value.trim();
@@ -1136,16 +1213,18 @@ window.sendBroadcast = async function() {
   if (!textEn) { showToast('❌ English message is required'); return; }
   if (!allUserIds.length) { showToast('❌ No users loaded — click Refresh count first'); return; }
 
+  const hasRu = !!textRu;
+  const hasPhotoEn = !!bcPhotos.en.base64;
+  const hasPhotoRu = !!bcPhotos.ru.base64;
   const ruCount = allUserIds.filter(u => (u.lang || 'ru') === 'ru').length;
   const enCount = allUserIds.length - ruCount;
-  const hasRu = !!textRu;
   const confirmMsg = hasRu
-    ? `Send to ${allUserIds.length} users?\n🇬🇧 English → ${enCount} users\n🇷🇺 Russian → ${ruCount} users`
-    : `Send Russian message to all ${allUserIds.length} users? (No English-only fallback)`;
+    ? `Send to ${allUserIds.length} users?\n🇬🇧 English → ${enCount} users${hasPhotoEn?' (with photo)':''}\n🇷🇺 Russian → ${ruCount} users${(hasPhotoRu||hasPhotoEn)?' (with photo)':''}`
+    : `Send to all ${allUserIds.length} users? (English message for everyone)`;
   if (!confirm(confirmMsg)) return;
 
   const btn = document.getElementById('bc-send-btn');
-  btn.disabled = true; btn.textContent = '⏳ Sending…';
+  btn.disabled = true; btn.textContent = '⏳ Uploading photos…';
   const progress = document.getElementById('bc-progress');
   const progressBar = document.getElementById('bc-progress-bar');
   const progressLabel = document.getElementById('bc-progress-label');
@@ -1153,54 +1232,55 @@ window.sendBroadcast = async function() {
   const result = document.getElementById('bc-result');
   progress.style.display = 'block'; result.textContent = '';
 
-  const BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
-  let sent = 0, failed = 0;
+  // Step 1: Upload photos once → get reusable file_id
+  let fileIdEn = null, fileIdRu = null;
+  try {
+    if (hasPhotoEn) {
+      progressLabel.textContent = '📤 Uploading EN photo…';
+      fileIdEn = await uploadPhotoOnce('en');
+    }
+    if (hasPhotoRu) {
+      progressLabel.textContent = '📤 Uploading RU photo…';
+      fileIdRu = await uploadPhotoOnce('ru');
+    }
+  } catch(e) {
+    showToast('❌ Photo upload failed: ' + e.message);
+    btn.disabled = false; btn.textContent = '📢 Send Broadcast';
+    return;
+  }
 
-  for (let i = 0; i < allUserIds.length; i++) {
-    const user = allUserIds[i];
-    const chatId = user.id;
-    // Pick message based on user language; fallback to English if no RU text
-    // Default to Russian if no lang set (most users are Ukrainian/Russian speakers)
-    const userLang = user.lang || 'ru';
-    const text = (hasRu && userLang === 'ru') ? textRu : textEn;
-    const pct = Math.round(((i + 1) / allUserIds.length) * 100);
+  // Step 2: Send to all users in parallel batches of 25
+  let sent = 0, failed = 0;
+  const BATCH = 25; // Telegram allows ~30 msg/sec; 25 concurrent is safe
+
+  for (let i = 0; i < allUserIds.length; i += BATCH) {
+    const batch = allUserIds.slice(i, i + BATCH);
+    const pct = Math.round((i / allUserIds.length) * 100);
     progressBar.style.width = pct + '%';
-    progressLabel.textContent = `Sending… ${i + 1} / ${allUserIds.length} (${userLang === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'})`;
+    progressLabel.textContent = `Sending… ${Math.min(i + BATCH, allUserIds.length)} / ${allUserIds.length}`;
     progressDetail.textContent = `✅ ${sent} sent · ❌ ${failed} failed`;
 
-    try {
-      let res;
-      if (bcPhotoBase64 && bcPhotoMime) {
-        // Convert base64 → Blob for FormData
-        const byteChars = atob(bcPhotoBase64);
-        const byteArr = new Uint8Array(byteChars.length);
-        for (let b = 0; b < byteChars.length; b++) byteArr[b] = byteChars.charCodeAt(b);
-        const blob = new Blob([byteArr], { type: bcPhotoMime });
-        const fd = new FormData();
-        fd.append('chat_id', chatId);
-        fd.append('photo', blob, 'photo.jpg');
-        fd.append('caption', text);
-        fd.append('parse_mode', 'HTML');
-        res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd });
-      } else {
-        res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
-        });
-      }
-      const json = await res.json();
-      if (json.ok) sent++; else failed++;
-    } catch(e) { failed++; }
+    const results = await Promise.all(batch.map(user => {
+      const userLang = user.lang || 'ru';
+      const text = (hasRu && userLang === 'ru') ? textRu : textEn;
+      // Use RU photo for RU users if available, else fall back to EN photo
+      const fileId = (userLang === 'ru' && fileIdRu) ? fileIdRu : fileIdEn;
+      return sendOneMsg(user.id, text, fileId);
+    }));
 
-    // Small delay to avoid Telegram rate limit (30 msg/sec)
-    if ((i + 1) % 25 === 0) await new Promise(r => setTimeout(r, 1100));
+    results.forEach(ok => ok ? sent++ : failed++);
+
+    // Respect rate limit: wait 1 second between batches
+    if (i + BATCH < allUserIds.length) {
+      await new Promise(r => setTimeout(r, 1000));
+    }
   }
 
   progressLabel.textContent = '✅ Done!';
   progressBar.style.width = '100%';
-  const ruSent = allUserIds.filter(u => (u.lang || 'ru') === 'ru').length;
-  const langNote = hasRu ? ` <span style="font-size:10px;color:var(--sub);">(${allUserIds.length - ruSent} 🇬🇧 + ${ruSent} 🇷🇺)</span>` : '';
+  const langNote = hasRu
+    ? ` <span style="font-size:10px;color:var(--sub);">( ${allUserIds.filter(u=>(u.lang||'ru')==='en').length} 🇬🇧 EN + ${allUserIds.filter(u=>(u.lang||'ru')==='ru').length} 🇷🇺 RU)</span>`
+    : '';
   result.innerHTML = `<span style="color:var(--green);font-weight:700;">✅ Sent: ${sent}</span>${langNote} &nbsp; <span style="color:var(--red);font-weight:700;">❌ Failed: ${failed}</span>`;
   btn.disabled = false; btn.textContent = '📢 Send Broadcast';
   showToast(`✅ Broadcast done! ${sent} sent, ${failed} failed`);
@@ -1224,27 +1304,148 @@ window.showToast = function(msg) {
 // ── Telegram Callback Query Poller (Withdrawal Confirm/Cancel)
 // ════════════════════════════════════════════════════════════
 const CB_BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
+const SUPER_ADMIN_CHAT_ID = '8671373607';
 let cbLastUpdateId = 0;
 let cbPolling = false;
+
+// Track pending admin reply: { userId, userName } or null
+let adminPendingReply = null;
 
 async function pollCallbackQueries() {
   if (!document.getElementById('admin-app')?.classList.contains('visible')) return;
   try {
-    const url = `https://api.telegram.org/bot${CB_BOT_TOKEN}/getUpdates?offset=${cbLastUpdateId + 1}&timeout=5&allowed_updates=["callback_query"]`;
+    // Listen for both callback_query AND message updates
+    const url = `https://api.telegram.org/bot${CB_BOT_TOKEN}/getUpdates?offset=${cbLastUpdateId + 1}&timeout=5&allowed_updates=["callback_query","message"]`;
     const res = await fetch(url);
     const data = await res.json();
     if (!data.ok || !data.result?.length) return;
     for (const update of data.result) {
       cbLastUpdateId = update.update_id;
-      const cq = update.callback_query;
-      if (!cq) continue;
-      const cbData = cq.data || '';
-      const msgId  = cq.message?.message_id;
-      const chatId = cq.message?.chat?.id;
 
-      if (cbData.startsWith('wd_confirm_') || cbData.startsWith('wd_cancel_')) {
-        await handleWithdrawalCallback(cbData, cq.id, msgId, chatId);
+      // ── Callback query (withdrawal buttons + reply button) ──
+      const cq = update.callback_query;
+      if (cq) {
+        const cbData = cq.data || '';
+        const msgId  = cq.message?.message_id;
+        const chatId = cq.message?.chat?.id;
+        if (cbData.startsWith('wd_confirm_') || cbData.startsWith('wd_cancel_')) {
+          await handleWithdrawalCallback(cbData, cq.id, msgId, chatId);
+        } else if (cbData.startsWith('reply_to_user_')) {
+          const parts   = cbData.replace('reply_to_user_', '').split('|');
+          const rUserId = parts[0];
+          const rName   = parts[1] || rUserId;
+          adminPendingReply = { userId: rUserId, userName: rName };
+          await answerCbQuery(cq.id, `✏️ Type your reply — it will be sent to ${rName}`);
+          showToast(`✏️ Reply mode: next message goes to ${rName}`);
+        }
+        continue;
       }
+
+      // ── Incoming message ──
+      const msg = update.message;
+      if (!msg) continue;
+      const fromId   = String(msg.from?.id || '');
+      const fromName = msg.from?.first_name || '';
+      const fromUser = msg.from?.username ? '@' + msg.from.username : fromName;
+      const text     = msg.text || msg.caption || '';
+      const ADMIN_IDS = [SUPER_ADMIN_CHAT_ID, '5222030484'];
+
+      // ── Admin sent a message → forward as reply if pending ──
+      if (ADMIN_IDS.includes(fromId)) {
+        if (adminPendingReply && text) {
+          const { userId: targetId, userName: targetName } = adminPendingReply;
+          adminPendingReply = null;
+          let ok = false;
+          try {
+            const r = await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: targetId,
+                text: `📩 <b>Message from support:</b>\n\n${text}`,
+                parse_mode: 'HTML'
+              })
+            });
+            ok = (await r.json()).ok;
+          } catch(e) {}
+          // Confirm to admin in Telegram
+          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: fromId,
+              text: ok ? `✅ Reply delivered to ${targetName}!` : `❌ Could not deliver to ${targetName} (may have blocked the bot).`,
+              parse_mode: 'HTML'
+            })
+          });
+          showToast(ok ? `✅ Reply sent to ${targetName}` : `❌ Delivery failed`);
+        }
+        continue; // don't forward admin messages to themselves
+      }
+
+      // ── Regular user message → forward to admin in Telegram ──
+      // Look up user profile in already-loaded allPlayers list first
+      const knownPlayer = allPlayers.find(p => String(p.userId || p.id) === fromId);
+      const balance  = knownPlayer ? `${(knownPlayer.balance||0).toFixed(2)} TON` : '?';
+      const totalDep = knownPlayer ? `${(knownPlayer.totalDeposited||0).toFixed(2)} TON` : '?';
+      const displayName = knownPlayer?.displayName || fromName;
+      const userName    = knownPlayer?.userName ? '@' + knownPlayer.userName : fromUser;
+
+      const header =
+        `💬 <b>User Message</b>\n` +
+        `👤 ${displayName} (${userName})\n` +
+        `🆔 <code>${fromId}</code>\n` +
+        `💰 Balance: <b>${balance}</b> · Deposited: <b>${totalDep}</b>\n` +
+        `─────────────────\n`;
+
+      const replyMarkup = {
+        inline_keyboard: [[
+          { text: '↩️ Reply', callback_data: `reply_to_user_${fromId}|${userName}` }
+        ]]
+      };
+
+      try {
+        if (msg.photo) {
+          const fileId = msg.photo[msg.photo.length - 1].file_id;
+          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendPhoto`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, photo: fileId, caption: header + (text||''), parse_mode: 'HTML', reply_markup: replyMarkup })
+          });
+        } else if (msg.voice) {
+          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendVoice`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, voice: msg.voice.file_id })
+          });
+          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, text: header + '🎤 <i>(voice above)</i>', parse_mode: 'HTML', reply_markup: replyMarkup })
+          });
+        } else if (msg.sticker) {
+          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendSticker`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, sticker: msg.sticker.file_id })
+          });
+          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, text: header + '🎭 <i>(sticker above)</i>', parse_mode: 'HTML', reply_markup: replyMarkup })
+          });
+        } else if (text) {
+          await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: SUPER_ADMIN_CHAT_ID, text: header + text, parse_mode: 'HTML', reply_markup: replyMarkup })
+          });
+        }
+        // Auto-ack to user
+        const isRu = knownPlayer?.lang === 'ru';
+        await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: fromId,
+            text: isRu
+              ? '✅ Ваше сообщение получено! Поддержка ответит вам в ближайшее время.'
+              : '✅ Your message has been received! Support will reply to you shortly.',
+            parse_mode: 'HTML'
+          })
+        });
+      } catch(e) { console.warn('Forward msg error:', e); }
     }
   } catch(e) { console.warn('CB poll error:', e); }
 }
