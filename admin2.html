@@ -393,10 +393,12 @@ window.loadThreads = async function() {
       badge.style.display = '';
       document.title = `(${openCount}) 💬 New — TonPlay Support`;
       setTimeout(() => { document.title = 'TonPlay — Support Admin'; }, 8000);
-      if (Notification?.permission === 'granted') {
-        new Notification('TonPlay Support', { body: `${openCount} open conversation(s)` });
-      } else if (Notification?.permission !== 'denied') {
-        Notification.requestPermission();
+      if (typeof Notification !== 'undefined') {
+        if (Notification.permission === 'granted') {
+          new Notification('TonPlay Support', { body: `${openCount} open conversation(s)` });
+        } else if (Notification.permission !== 'denied') {
+          Notification.requestPermission();
+        }
       }
     } else {
       badge.style.display = openCount > 0 ? '' : 'none';
