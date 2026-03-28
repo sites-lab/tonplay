@@ -460,7 +460,6 @@ function renderThreadList() {
       ? (t.lastTs.toDate ? t.lastTs.toDate() : new Date(t.lastTs))
           .toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
       : '';
-    const langFlag = t.lang === 'ru' ? '🇷🇺' : '🇬🇧';
     const statusChip = t.status === 'open'
       ? '<span class="thread-status-chip open">Open</span>'
       : '<span class="thread-status-chip replied">Replied</span>';
@@ -468,7 +467,7 @@ function renderThreadList() {
     return `<div class="thread-item ${isActive ? 'active' : ''}" onclick="selectThread('${esc(t.userId)}')">
       <div class="thread-avatar">${initial}</div>
       <div class="thread-info">
-        <div class="thread-name">${esc(t.displayName)} ${langFlag}</div>
+        <div class="thread-name">${esc(t.displayName)}</div>
         <div class="thread-preview">${esc(t.lastMsg)}</div>
       </div>
       <div class="thread-meta">
