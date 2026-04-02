@@ -1138,7 +1138,7 @@ window.LANG = LANG;
     </div>
     <div id="milestones-list"><div class="empty-state"><div class="spinner"></div></div></div>
     <div id="ref-used-display"></div>
-    <div class="ref-enter-card">
+    <div class="ref-enter-card" id="ref-enter-card" style="display:none;">
       <div class="sec-title" data-i18n="enter_ref_code">Enter a Referral Code</div>
       <input class="ref-input" id="ref-code-input" type="text" maxlength="10" data-i18n-placeholder="ref_input_placeholder" placeholder="Enter code (e.g. ABC123)">
       <button class="btn-green" id="ref-submit-btn" onclick="submitRefCode()" data-i18n="apply_code_btn">✓ Apply Code</button>
@@ -1646,10 +1646,7 @@ async function init() {
   resumePendingDetection();
   const startCode = getStartParam();
   if (startCode && !userData.referredBy && startCode !== userData.referralCode) {
-    document.getElementById('ref-code-input').value = startCode;
-    switchTab('referral', document.querySelector('.tab-btn.ref-tab'));
-    await new Promise(r => setTimeout(r, 500));
-    await applyRefCode(startCode, false);
+    await applyRefCode(startCode, true);
   }
 }
 
@@ -1768,19 +1765,12 @@ function renderAll() {
   document.getElementById('info-earned').textContent   = (userData.totalEarned||0).toFixed(2) + ' TON';
 
   const refUsed = document.getElementById('ref-used-display');
-  const refEnterCard = document.querySelector('.ref-enter-card');
   if (userData.referredBy) {
-    // Show a nice "already used" badge, hide the input form completely
     refUsed.innerHTML = `<div class="ref-used-badge">${t.ref_used_prefix}${userData.referredBy}</div>`;
-    document.getElementById('ref-code-input').disabled = true;
-    document.getElementById('ref-submit-btn').disabled = true;
-    if (refEnterCard) refEnterCard.style.display = 'none';
   } else {
     refUsed.innerHTML = '';
-    document.getElementById('ref-code-input').disabled = false;
-    document.getElementById('ref-submit-btn').disabled = false;
-    if (refEnterCard) refEnterCard.style.display = 'block';
   }
+  // Manual entry card stays hidden — referral codes only apply via invite link
 
   renderMilestones();
 }
