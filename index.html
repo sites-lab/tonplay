@@ -1507,19 +1507,18 @@ async function checkTransactionOnChain(comment, expectedAmount) {
 
 async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
   try {
-    // Guard 1: check the pending document status
+    // Guard 1: check pending doc status
     const pendingSnap = await getDoc(doc(db, 'pendingPayments', pendingDocId));
     if (!pendingSnap.exists()) return;
     if (pendingSnap.data()?.status === 'confirmed') return;
 
-    // Guard 2: check no deposit with this comment already exists
+    // Guard 2: check no deposit with this comment already exists (prevent double-credit)
     const existingDeps = await getDocs(query(
       collection(db, 'users/' + uid + '/deposits'),
       where('comment', '==', comment),
       limit(1)
     ));
     if (!existingDeps.empty) {
-      // Deposit already credited — just mark pending as confirmed silently
       await updateDoc(doc(db, 'pendingPayments', pendingDocId), { status: 'confirmed', confirmedAt: serverTimestamp() });
       hideDetectionBanner();
       return;
@@ -2422,57 +2421,72 @@ function showReferralWelcomeBadge(refName, silent) {
 async function applyRefCode(code, silent = false) {
   if (!code) { if (!silent) showToast(t.enter_ref_warn); return; }
 
+  const normalizedCode = code.trim().toUpperCase();
   const uid = String(currentUser.id);
 
-  // Always re-read from Firestore — never trust in-memory userData for this check
-  let freshReferredBy = null;
+  // Always re-read user from Firestore — never trust in-memory userData
   try {
-    const freshUserSnap = await getDoc(doc(db, 'users', uid));
-    if (freshUserSnap.exists()) {
-      const val = freshUserSnap.data()?.referredBy;
-      // Only treat as "used" if it's a non-empty string that isn't the user's own code
-      freshReferredBy = (val && typeof val === 'string' && val.trim() !== '' && val.trim() !== userData.referralCode)
-        ? val.trim() : null;
-      userData.referredBy = freshReferredBy;
+    const freshSnap = await getDoc(doc(db, 'users', uid));
+    if (freshSnap.exists()) {
+      const d = freshSnap.data();
+      const rv = d.referredBy;
+      userData.referredBy = (rv && typeof rv === 'string' && rv.trim() !== '') ? rv.trim() : null;
+      if (d.referralCode) userData.referralCode = d.referralCode;
     }
   } catch(e) {
-    console.error('applyRefCode: failed to read user doc:', e);
-    // Don't block — proceed without the fresh check
+    console.warn('applyRefCode: could not refresh user:', e.message);
   }
 
-  if (freshReferredBy) { if (!silent) showToast(t.already_used_warn); return; }
-
-  const normalizedCode = code.trim().toUpperCase();
-  if (normalizedCode === (userData.referralCode || '').toUpperCase()) {
-    if (!silent) showToast(t.own_code_warn); return;
+  // Guard: already used a code?
+  if (userData.referredBy && userData.referredBy.trim() !== '') {
+    if (!silent) showToast(t.already_used_warn);
+    return;
   }
+
+  // Guard: own code?
+  if (normalizedCode === (userData.referralCode || '').trim().toUpperCase()) {
+    if (!silent) showToast(t.own_code_warn);
+    return;
+  }
+
+  // Look up the referral code
+  let snap;
+  try {
+    snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', normalizedCode), limit(1)));
+  } catch(queryErr) {
+    console.error('applyRefCode: query error:', queryErr);
+    if (!silent) showToast('❌ ' + (queryErr.message || 'Query failed'));
+    return;
+  }
+
+  if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
+
+  const refDoc = snap.docs[0];
+  if (refDoc.id === uid) { if (!silent) showToast(t.own_code_warn); return; }
 
   try {
-    const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', normalizedCode), limit(1)));
-    if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
-    const refDoc  = snap.docs[0];
-    if (refDoc.id === uid) { if (!silent) showToast(t.own_code_warn); return; }
     const refData = refDoc.data();
 
     await updateDoc(doc(db, 'users', uid), { referredBy: normalizedCode });
     userData.referredBy = normalizedCode;
 
-    // Hide the enter card now that code is applied
     const enterCard = document.getElementById('ref-enter-card');
     if (enterCard) enterCard.style.display = 'none';
 
     const newCount = (refData.referralCount || 0) + 1;
     await updateDoc(doc(db, 'users', refDoc.id), { referralCount: newCount });
+
     const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
     showReferralWelcomeBadge(refName, silent);
     if (!silent) showToast(t.code_applied);
     renderAll();
+
     const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
     await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${newCount}\n🔑 <b>Code used:</b> <code>${normalizedCode}</code>`);
     await sendReferralProgressMessage(refDoc.id, newCount, refData);
   } catch(e) {
     console.error('applyRefCode error:', e);
-    if (!silent) showToast('❌ ' + e.message);
+    if (!silent) showToast('❌ ' + (e.message || 'Unknown error'));
   }
 }
 
@@ -2657,22 +2671,19 @@ async function resumePendingDetection() {
       limit(5)
     ));
     if (snap.empty) return;
-
     let anyResumed = false;
     for (const docSnap of snap.docs) {
       const pd = docSnap.data();
       const age = Date.now() - (pd.createdAt?.toMillis?.() || 0);
-      // Expire old pending payments (>2 hours)
       if (age > 2 * 60 * 60 * 1000) {
         await updateDoc(doc(db, 'pendingPayments', docSnap.id), { status: 'expired' });
         continue;
       }
-      // Resume polling — do NOT call confirmPaymentInFirebase directly
-      // The Cloud Function will credit the user once it detects the on-chain tx
+      // Only resume polling — never auto-credit without on-chain verification
       showDetectionBanner(t.detecting);
       startPaymentDetection(pd.comment, pd.amount, uid, docSnap.id);
       anyResumed = true;
-      break; // only resume the most recent pending
+      break;
     }
     if (!anyResumed) hideDetectionBanner();
   } catch(e) {
