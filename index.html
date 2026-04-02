@@ -1617,19 +1617,26 @@ let userData    = null;
 let globalSettings = { referralBonus: 0.05, referralMilestones: [] };
 
 function getStartParam() {
+  // 1. Native Telegram Mini App start param (most reliable)
   const tgParam = tg?.initDataUnsafe?.start_param;
   if (tgParam) return tgParam.toUpperCase();
-  // Try URL query params
-  const url = new URL(location.href);
-  const qRef = url.searchParams.get('ref') || url.searchParams.get('startapp') || url.searchParams.get('start');
-  if (qRef) return qRef.toUpperCase();
-  // Telegram also encodes startapp in the URL hash as tgWebAppStartParam=CODE
+
+  // 2. Telegram encodes startapp in the URL hash as tgWebAppStartParam
+  //    e.g. https://t.me/Bot/app?startapp=AXALEW -> hash contains tgWebAppStartParam=AXALEW
   try {
-    const hash = location.hash.replace(/^#/, '');
-    const hashParams = new URLSearchParams(hash);
+    const rawHash = location.hash.replace(/^#/, '');
+    const hashParams = new URLSearchParams(rawHash);
     const hRef = hashParams.get('tgWebAppStartParam') || hashParams.get('startapp') || hashParams.get('start');
     if (hRef) return hRef.toUpperCase();
   } catch(e) {}
+
+  // 3. Plain URL query string fallback (for testing outside Telegram)
+  try {
+    const url = new URL(location.href);
+    const qRef = url.searchParams.get('startapp') || url.searchParams.get('ref') || url.searchParams.get('start');
+    if (qRef) return qRef.toUpperCase();
+  } catch(e) {}
+
   return null;
 }
 
@@ -2341,18 +2348,17 @@ window.shareRefLink = function() {
   const code = userData?.referralCode || '';
   if (!code) { showToast(t.no_ref_code); return; }
   const link = buildRefLink(code);
-  // Bilingual share message (RU first, then EN) so any recipient understands
   const shareText =
     '💎 Присоединяйся к TonPlay — зарабатывай +10% каждые 15 дней!\n' +
-    '💎 Join TonPlay — earn +10% every 15 days on your TON!\n\n' +
-    '👇 ' + link;
+    '💎 Join TonPlay — earn +10% every 15 days on your TON!';
   if (tg?.openTelegramLink) {
-    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(
-      '💎 Присоединяйся к TonPlay — зарабатывай +10% каждые 15 дней!\n' +
-      '💎 Join TonPlay — earn +10% every 15 days on your TON!'
-    )}`);
+    tg.openTelegramLink(
+      'https://t.me/share/url?url=' + encodeURIComponent(link) +
+      '&text=' + encodeURIComponent(shareText)
+    );
   } else {
-    navigator.clipboard?.writeText(link).catch(() => {});
+    const full = shareText + '\n\n👇 ' + link;
+    navigator.clipboard?.writeText(full).catch(() => {});
     showToast(t.link_copied);
   }
 };
