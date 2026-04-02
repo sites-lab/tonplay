@@ -1671,26 +1671,21 @@ async function init() {
   resumePendingDetection();
 
   // ── Auto-apply referral code from link ──
-  // Must run AFTER loadOrCreateUser() so userData is ready
   const startCode = getStartParam();
-  console.log('[TonPlay] startCode from link:', startCode);
-  console.log('[TonPlay] userData.referredBy:', userData?.referredBy);
-  console.log('[TonPlay] userData.referralCode:', userData?.referralCode);
-  if (startCode) {
-    // Always fill the input so the user can see it
-    const refInput = document.getElementById('ref-code-input');
-    if (refInput) refInput.value = startCode;
-    if (!userData.referredBy && startCode !== userData.referralCode) {
-      // Auto-apply from link — show result via toast
-      await applyRefCode(startCode, false);
-    } else if (userData.referredBy) {
-      // Already applied — show banner with stored code
-      showRefAppliedBanner(userData.referredBy);
-      console.log('[TonPlay] Already referred by:', userData.referredBy);
-    }
-  } else if (userData.referredBy) {
-    // No start code in URL but user was previously referred — show banner
+  console.log('[TonPlay] startCode:', startCode, '| referredBy:', userData?.referredBy, '| myCode:', userData?.referralCode);
+
+  if (userData.referredBy) {
+    // User was already referred — just show the banner
     showRefAppliedBanner(userData.referredBy);
+  } else if (startCode && startCode !== (userData.referralCode || '').toUpperCase()) {
+    // Fresh link open — fill input and auto-apply silently
+    const refInput = document.getElementById('ref-code-input');
+    if (refInput) { refInput.disabled = false; refInput.value = startCode; }
+    await applyRefCode(startCode, true); // silent=true, success shown via banner
+  } else if (startCode) {
+    // startCode equals own code — fill but don't apply
+    const refInput = document.getElementById('ref-code-input');
+    if (refInput) { refInput.disabled = false; refInput.value = startCode; }
   }
 }
 
@@ -1808,25 +1803,25 @@ function renderAll() {
   document.getElementById('info-deposited').textContent= (userData.totalDeposited||0).toFixed(2) + ' TON';
   document.getElementById('info-earned').textContent   = (userData.totalEarned||0).toFixed(2) + ' TON';
 
-  // Referral input state — only update if not already showing the applied banner
+  // Referral input state
   const refInput2 = document.getElementById('ref-code-input');
   const refBtn2   = document.getElementById('ref-submit-btn');
   const refUsed   = document.getElementById('ref-used-display');
   if (userData.referredBy) {
-    // Already used a code — show compact badge and lock inputs
+    // Already used a code — show banner and lock inputs
     if (refUsed && !refUsed.querySelector('.ref-applied-banner')) {
-      refUsed.innerHTML = `<div class="ref-used-badge">${t.ref_used_prefix}${userData.referredBy}</div>`;
+      showRefAppliedBanner(userData.referredBy);
     }
-    if (refInput2) refInput2.disabled = true;
-    if (refBtn2)   refBtn2.disabled   = true;
+    if (refInput2) { refInput2.disabled = true; refInput2.value = userData.referredBy; }
+    if (refBtn2)   refBtn2.disabled = true;
   } else {
-    // Not yet referred — keep inputs enabled, pre-fill from URL if empty
+    // Not yet referred — keep inputs ENABLED, pre-fill from URL if empty
+    if (refInput2) refInput2.disabled = false;
+    if (refBtn2)   refBtn2.disabled   = false;
     if (refInput2 && !refInput2.value) {
       const sc = getStartParam();
       if (sc && sc !== (userData.referralCode || '')) refInput2.value = sc;
     }
-    if (refInput2) refInput2.disabled = false;
-    if (refBtn2)   refBtn2.disabled   = false;
   }
 
   renderMilestones();
@@ -2404,24 +2399,26 @@ window.shareRefLink = function() {
 };
 
 async function applyRefCode(code, silent = false) {
-  if (!code) { if (!silent) showToast(t.enter_ref_warn); return; }
-  // Re-read from Firestore to be sure we have latest state
+  if (!code || code.trim() === '') { if (!silent) showToast(t.enter_ref_warn); return; }
+  code = code.trim().toUpperCase();
   const uid = String(currentUser.id);
+
+  // Always re-read Firestore to get the freshest state
   try {
     const freshSnap = await getDoc(doc(db, 'users', uid));
     if (freshSnap.exists()) {
       const freshData = freshSnap.data();
       if (freshData.referredBy) {
         userData.referredBy = freshData.referredBy;
-        if (!silent) showToast(t.already_used_warn);
-        renderAll();
         showRefAppliedBanner(freshData.referredBy);
+        if (!silent) showToast(t.already_used_warn);
         return;
       }
     }
-  } catch(e) {}
+  } catch(e) { console.error('applyRefCode freshSnap error:', e); }
+
   if (userData.referredBy) { if (!silent) showToast(t.already_used_warn); return; }
-  if (code === userData.referralCode) { if (!silent) showToast(t.own_code_warn); return; }
+  if (code === (userData.referralCode || '').toUpperCase()) { if (!silent) showToast(t.own_code_warn); return; }
   try {
     const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', code), limit(1)));
     if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
