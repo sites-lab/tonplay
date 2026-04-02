@@ -1680,13 +1680,17 @@ async function init() {
     // Always fill the input so the user can see it
     const refInput = document.getElementById('ref-code-input');
     if (refInput) refInput.value = startCode;
-    // Switch to referral tab so the user sees it
     if (!userData.referredBy && startCode !== userData.referralCode) {
-      // Apply it — NOT silent so errors show as toasts
+      // Auto-apply from link — show result via toast
       await applyRefCode(startCode, false);
     } else if (userData.referredBy) {
-      console.log('[TonPlay] Already has referredBy, skipping auto-apply');
+      // Already applied — show banner with stored code
+      showRefAppliedBanner(userData.referredBy);
+      console.log('[TonPlay] Already referred by:', userData.referredBy);
     }
+  } else if (userData.referredBy) {
+    // No start code in URL but user was previously referred — show banner
+    showRefAppliedBanner(userData.referredBy);
   }
 }
 
@@ -1804,11 +1808,25 @@ function renderAll() {
   document.getElementById('info-deposited').textContent= (userData.totalDeposited||0).toFixed(2) + ' TON';
   document.getElementById('info-earned').textContent   = (userData.totalEarned||0).toFixed(2) + ' TON';
 
-  const refUsed = document.getElementById('ref-used-display');
+  // Referral input state — only update if not already showing the applied banner
+  const refInput2 = document.getElementById('ref-code-input');
+  const refBtn2   = document.getElementById('ref-submit-btn');
+  const refUsed   = document.getElementById('ref-used-display');
   if (userData.referredBy) {
-    refUsed.innerHTML = `<div class="ref-used-badge">${t.ref_used_prefix}${userData.referredBy}</div>`;
-    document.getElementById('ref-code-input').disabled = true;
-    document.getElementById('ref-submit-btn').disabled = true;
+    // Already used a code — show compact badge and lock inputs
+    if (refUsed && !refUsed.querySelector('.ref-applied-banner')) {
+      refUsed.innerHTML = `<div class="ref-used-badge">${t.ref_used_prefix}${userData.referredBy}</div>`;
+    }
+    if (refInput2) refInput2.disabled = true;
+    if (refBtn2)   refBtn2.disabled   = true;
+  } else {
+    // Not yet referred — keep inputs enabled, pre-fill from URL if empty
+    if (refInput2 && !refInput2.value) {
+      const sc = getStartParam();
+      if (sc && sc !== (userData.referralCode || '')) refInput2.value = sc;
+    }
+    if (refInput2) refInput2.disabled = false;
+    if (refBtn2)   refBtn2.disabled   = false;
   }
 
   renderMilestones();
@@ -2387,31 +2405,70 @@ window.shareRefLink = function() {
 
 async function applyRefCode(code, silent = false) {
   if (!code) { if (!silent) showToast(t.enter_ref_warn); return; }
+  // Re-read from Firestore to be sure we have latest state
+  const uid = String(currentUser.id);
+  try {
+    const freshSnap = await getDoc(doc(db, 'users', uid));
+    if (freshSnap.exists()) {
+      const freshData = freshSnap.data();
+      if (freshData.referredBy) {
+        userData.referredBy = freshData.referredBy;
+        if (!silent) showToast(t.already_used_warn);
+        renderAll();
+        showRefAppliedBanner(freshData.referredBy);
+        return;
+      }
+    }
+  } catch(e) {}
   if (userData.referredBy) { if (!silent) showToast(t.already_used_warn); return; }
   if (code === userData.referralCode) { if (!silent) showToast(t.own_code_warn); return; }
   try {
     const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', code), limit(1)));
     if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
     const refDoc  = snap.docs[0];
-    if (refDoc.id === String(currentUser.id)) { if (!silent) showToast(t.own_code_warn); return; }
+    if (refDoc.id === uid) { if (!silent) showToast(t.own_code_warn); return; }
     const refData = refDoc.data();
     // Mutual-exclusion: if the inviter was already referred by the current user, block it
     if (refData.referredBy && refData.referredBy === userData.referralCode) {
       if (!silent) showToast(LANG === 'ru' ? '⚠️ Нельзя использовать код друга, который уже использовал ваш код' : '⚠️ Cannot use code of a user who already used your code');
       return;
     }
-    const uid     = String(currentUser.id);
     await updateDoc(doc(db, 'users', uid), { referredBy: code });
     userData.referredBy = code;
     const newCount = (refData.referralCount || 0) + 1;
     await updateDoc(doc(db, 'users', refDoc.id), { referralCount: newCount });
-    showToast(t.code_applied);
-    renderAll();
-    const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
+    // Show friendly banner FIRST, then renderAll (renderAll won't overwrite because of .ref-applied-banner guard)
     const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
+    showRefAppliedBanner(code, refName);
+    showToast(t.code_applied);
+    renderAll(); // renderAll sees .ref-applied-banner and skips overwriting ref-used-display
+    const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
     await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${newCount}\n🔑 <b>Code used:</b> <code>${code}</code>`);
     await sendReferralProgressMessage(refDoc.id, newCount, refData);
   } catch(e) { if (!silent) showToast('❌ ' + e.message); }
+}
+
+// ── Show a green success banner after referral is applied ──
+function showRefAppliedBanner(code, refName) {
+  const refUsed = document.getElementById('ref-used-display');
+  if (!refUsed) return;
+  const label = refName
+    ? (LANG === 'ru' ? `✅ Вас пригласил ${refName}` : `✅ Referred by ${refName}`)
+    : (LANG === 'ru' ? `✅ Код применён: ${code}` : `✅ Code applied: ${code}`);
+  // Mark with class so renderAll() won't overwrite it
+  refUsed.innerHTML = `
+    <div class="ref-applied-banner" style="display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(16,185,129,0.12),rgba(16,185,129,0.06));border:1.5px solid rgba(16,185,129,0.35);border-radius:14px;padding:12px 14px;margin-bottom:10px;">
+      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#059669,#10B981);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🎁</div>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:13px;font-weight:800;color:var(--green);">${label}</div>
+        <div style="font-size:10px;color:var(--sub);margin-top:2px;">${LANG === 'ru' ? 'Реферальный бонус активирован!' : 'Referral bonus activated!'}</div>
+      </div>
+      <div style="font-size:22px;">✅</div>
+    </div>`;
+  const inp = document.getElementById('ref-code-input');
+  const btn = document.getElementById('ref-submit-btn');
+  if (inp) inp.disabled = true;
+  if (btn) btn.disabled = true;
 }
 
 async function sendReferralProgressMessage(referrerId, newCount, refData) {
