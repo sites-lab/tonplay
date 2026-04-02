@@ -1770,7 +1770,15 @@ function renderAll() {
   } else {
     refUsed.innerHTML = '';
   }
-  // Manual entry card stays hidden — referral codes only apply via invite link
+  // Show manual entry card only if user hasn't used a referral code yet
+  const refEnterCard = document.getElementById('ref-enter-card');
+  if (refEnterCard) {
+    if (userData.referredBy) {
+      refEnterCard.style.display = 'none';
+    } else {
+      refEnterCard.style.display = 'block';
+    }
+  }
 
   renderMilestones();
 }
