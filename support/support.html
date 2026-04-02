@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>TonPlay Support</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#F0F4FF;--surf:#FFFFFF;--card2:#F7F9FF;
+  --ton:#2196F3;--ton2:#1565C0;--ton-light:#E3F0FF;
+  --green:#10B981;--green-light:#D1FAE5;
+  --red:#EF4444;--red-light:#FEE2E2;
+  --text:#0F172A;--sub:#64748B;--muted:#94A3B8;--border:#E2E8F0;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 12px rgba(0,0,0,0.04);
+  --r:16px;
+}
+html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;-webkit-tap-highlight-color:transparent;}
+
+.app{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:0 0 32px;}
+
+/* Header */
+.header{width:100%;padding:16px 20px;display:flex;align-items:center;gap:12px;background:var(--surf);border-bottom:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:0;}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,#2196F3,#1565C0);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(33,150,243,0.3);flex-shrink:0;}
+.logo-icon svg{width:22px;height:22px;}
+.header-title{font-size:17px;font-weight:900;letter-spacing:-0.3px;}
+.header-title span{color:var(--ton);}
+.header-sub{font-size:11px;color:var(--sub);margin-top:2px;}
+
+/* Hero card */
+.hero{width:100%;max-width:480px;margin:20px auto 0;padding:0 16px;box-sizing:border-box;}
+.hero-card{background:linear-gradient(135deg,#1565C0,#2196F3,#42A5F5);border-radius:22px;padding:24px 22px;position:relative;overflow:hidden;box-shadow:0 8px 28px rgba(33,150,243,0.3);}
+.hero-card::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.07);}
+.hero-card::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.05);}
+.hero-icon{font-size:36px;margin-bottom:10px;display:block;position:relative;z-index:1;}
+.hero-title{font-size:20px;font-weight:900;color:#fff;margin-bottom:6px;position:relative;z-index:1;}
+.hero-sub{font-size:13px;color:rgba(255,255,255,0.82);line-height:1.6;position:relative;z-index:1;}
+
+/* ── INLINE CHAT ─────────────────────────────────────────── */
+.chat-section{width:100%;max-width:480px;margin:16px auto 0;padding:0 16px;box-sizing:border-box;}
+.chat-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column;}
+.chat-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--card2);}
+.chat-head-icon{font-size:18px;}
+.chat-head-title{font-size:13px;font-weight:800;}
+.chat-head-sub{font-size:10px;color:var(--sub);margin-top:1px;}
+.online-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 2px rgba(16,185,129,0.2);margin-left:auto;flex-shrink:0;}
+
+.chat-messages{min-height:180px;max-height:320px;overflow-y:auto;padding:14px 14px 6px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;}
+
+.msg{display:flex;flex-direction:column;max-width:82%;}
+.msg.out{align-self:flex-end;align-items:flex-end;}
+.msg.in{align-self:flex-start;align-items:flex-start;}
+.msg-bubble{padding:8px 12px;border-radius:14px;font-size:12.5px;line-height:1.5;word-break:break-word;}
+.msg.out .msg-bubble{background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;border-bottom-right-radius:4px;}
+.msg.in .msg-bubble{background:var(--card2);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:4px;}
+.msg-meta{font-size:9px;color:var(--muted);margin-top:2px;padding:0 2px;}
+.msg.in .msg-meta::before{content:'Support · ';}
+
+.chat-notice{text-align:center;font-size:11px;color:var(--muted);padding:28px 12px;font-style:italic;}
+
+.chat-input-row{display:flex;gap:8px;padding:10px 12px;border-top:1px solid var(--border);align-items:flex-end;}
+.chat-textarea{flex:1;padding:9px 12px;background:var(--card2);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:none;transition:border-color .2s;min-height:38px;max-height:100px;line-height:1.4;}
+.chat-textarea:focus{border-color:var(--ton);}
+.chat-textarea::placeholder{color:var(--muted);}
+.chat-send-btn{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--ton),var(--ton2));border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;box-shadow:0 3px 10px rgba(33,150,243,0.25);}
+.chat-send-btn:active{transform:scale(0.93);}
+.chat-send-btn:disabled{opacity:.5;cursor:not-allowed;}
+.chat-send-btn svg{width:18px;height:18px;fill:white;}
+
+/* Info cards */
+.cards{width:100%;max-width:480px;margin:16px auto 0;padding:0 16px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box;}
+.card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden;}
+.card-head{padding:14px 16px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.card-head-icon{font-size:20px;}
+.card-head-title{font-size:13px;font-weight:800;}
+.card-rows{padding:4px 0;}
+.info-row{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);font-size:12px;}
+.info-row:last-child{border-bottom:none;}
+.info-row-l{color:var(--sub);font-weight:600;}
+.info-row-r{font-weight:700;color:var(--text);}
+.info-row-r.blue{color:var(--ton);}
+
+/* Steps */
+.steps{padding:12px 16px;display:flex;flex-direction:column;gap:10px;}
+.step{display:flex;align-items:flex-start;gap:12px;}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--ton-light);color:var(--ton);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+.step-text{font-size:12px;color:var(--sub);line-height:1.6;padding-top:3px;}
+.step-text strong{color:var(--text);}
+
+/* Bottom open btn */
+.open-btn-wrap{width:100%;max-width:480px;margin:8px auto 0;padding:0 16px;box-sizing:border-box;}
+.open-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:15px;background:linear-gradient(135deg,var(--ton),var(--ton2));border:none;border-radius:16px;color:#fff;font-family:'Inter',sans-serif;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(33,150,243,0.3);transition:all .15s;-webkit-tap-highlight-color:transparent;}
+.open-btn:active{transform:scale(0.97);}
+
+/* Notice */
+.notice{width:100%;max-width:480px;margin:12px auto 0;padding:0 16px;box-sizing:border-box;}
+.notice-box{background:var(--green-light);border:1.5px solid rgba(16,185,129,0.25);border-radius:14px;padding:12px 14px;font-size:11px;color:#065f46;line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="header">
+    <div class="logo-icon"><svg viewBox="0 0 24 24" fill="white"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6L12 2z"/></svg></div>
+    <div>
+      <div class="header-title">Ton<span>Play</span> Support</div>
+      <div class="header-sub" id="header-sub">We're here to help</div>
+    </div>
+  </div>
+
+  <!-- Hero — no button, just text -->
+  <div class="hero">
+    <div class="hero-card">
+      <span class="hero-icon">🛡️</span>
+      <div class="hero-title" id="hero-title">Need help?</div>
+      <div class="hero-sub" id="hero-sub">Chat with our support team directly here. We reply fast — usually within minutes.</div>
+    </div>
+  </div>
+
+  <!-- ── INLINE LIVE CHAT ────────────────────────────────────── -->
+  <div class="chat-section">
+    <div class="chat-card">
+      <div class="chat-head">
+        <span class="chat-head-icon">💬</span>
+        <div>
+          <div class="chat-head-title" id="chat-head-title">Live Support Chat</div>
+          <div class="chat-head-sub" id="chat-head-sub">Send a message — we'll reply here</div>
+        </div>
+        <div class="online-dot" title="Online"></div>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-notice" id="chat-placeholder">👋 Hi! Send us a message — we'll reply right here.</div>
+      </div>
+      <div class="chat-input-row">
+        <textarea class="chat-textarea" id="chat-input" placeholder="Type your message…" rows="1" oninput="autoResize(this)" onkeydown="chatKeyDown(event)"></textarea>
+        <button class="chat-send-btn" id="send-btn" onclick="sendChatMessage()">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="cards">
+    <div class="card">
+      <div class="card-head">
+        <span class="card-head-icon">💡</span>
+        <span class="card-head-title" id="how-title">How support works</span>
+      </div>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text" id="step1"><strong>Type your message</strong> in the chat above and hit Send.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text" id="step2"><strong>Our team sees it</strong> instantly and replies.</div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text" id="step3"><strong>Replies appear here</strong> in real time.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Common topics -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-head-icon">📋</span>
+        <span class="card-head-title" id="topics-title">Common topics</span>
+      </div>
+      <div class="card-rows">
+        <div class="info-row"><span class="info-row-l">💰 Deposit not credited</span><span class="info-row-r blue" id="reply-fast">Fast reply</span></div>
+        <div class="info-row"><span class="info-row-l">💸 Withdrawal issues</span><span class="info-row-r blue">Fast reply</span></div>
+        <div class="info-row"><span class="info-row-l">👥 Referral questions</span><span class="info-row-r blue">Fast reply</span></div>
+        <div class="info-row"><span class="info-row-l">📈 Yield / earnings</span><span class="info-row-r blue">Fast reply</span></div>
+        <div class="info-row"><span class="info-row-l">🔐 Account issues</span><span class="info-row-r blue">Fast reply</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom CTA -->
+  <div class="open-btn-wrap" style="margin-top:16px;">
+    <button class="open-btn" onclick="openSupportBot()">
+      <span style="font-size:20px;">✈️</span>
+      <span id="open-btn-text">Open @ToPla_Support_bot</span>
+    </button>
+  </div>
+
+  <!-- Notice -->
+  <div class="notice">
+    <div class="notice-box" id="notice-box">
+      🔔 <strong>Tip:</strong> Make sure notifications are enabled for the bot so you don't miss our reply!
+    </div>
+  </div>
+
+</div>
+
+<!-- Firebase SDK -->
+<script type="module">
+import { initializeApp }    from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// ─── CONFIG ──────────────────────────────────────────────────────────
+const SUPPORT_BOT_USERNAME = 'ToPla_Support_bot';
+const SUPPORT_BOT_TOKEN    = '8512101964:AAEGRe9tsb-6NOuXYpE1DJe0l6zHVvY1bqs';
+const ADMIN_CHAT_ID        = '5222030484';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAml8c0QPKlbEmXG7C4eXd-WYbbOvOHtP8",
+  authDomain: "miniapp-ton.firebaseapp.com",
+  projectId: "miniapp-ton",
+  storageBucket: "miniapp-ton.firebasestorage.app",
+  messagingSenderId: "991105630391",
+  appId: "1:991105630791:web:551166c522317fad980d32"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const db          = getFirestore(firebaseApp);
+
+let tgUser = null;
+let tg     = null;
+let lang   = 'en';
+let userId = null;
+
+window.addEventListener('DOMContentLoaded', () => {
+  tg = window.Telegram?.WebApp;
+  if (tg) { tg.expand(); tg.ready(); }
+
+  tgUser = tg?.initDataUnsafe?.user || null;
+  lang   = (tgUser?.language_code || '').startsWith('ru') ? 'ru' : 'en';
+
+  if (tgUser) {
+    userId = String(tgUser.id);
+    document.getElementById('header-sub').textContent =
+      lang === 'ru' ? `Привет, ${tgUser.first_name}!` : `Hi, ${tgUser.first_name}!`;
+  } else {
+    userId = localStorage.getItem('tonplay_guest_id') || ('guest_' + Math.random().toString(36).slice(2,10));
+    localStorage.setItem('tonplay_guest_id', userId);
+  }
+
+  if (lang === 'ru') applyRussian();
+
+  subscribeToChat();
+});
+
+function applyRussian() {
+  document.getElementById('hero-title').textContent      = 'Нужна помощь?';
+  document.getElementById('hero-sub').textContent        = 'Напишите нашей команде прямо здесь. Отвечаем быстро — обычно в течение нескольких минут.';
+  document.getElementById('how-title').textContent       = 'Как работает поддержка';
+  document.getElementById('step1').innerHTML             = '<strong>Введите сообщение</strong> в чат выше и нажмите Отправить.';
+  document.getElementById('step2').innerHTML             = '<strong>Наша команда видит его</strong> сразу и отвечает.';
+  document.getElementById('step3').innerHTML             = '<strong>Ответы появляются здесь</strong> в реальном времени.';
+  document.getElementById('topics-title').textContent    = 'Частые вопросы';
+  document.getElementById('reply-fast').textContent      = 'Быстрый ответ';
+  document.querySelectorAll('.info-row-r.blue').forEach(el => el.textContent = 'Быстрый ответ');
+  document.getElementById('open-btn-text').textContent   = 'Открыть @ToPla_Support_bot';
+  document.getElementById('notice-box').innerHTML        = '🔔 <strong>Совет:</strong> Убедитесь, что уведомления включены, чтобы не пропустить ответ!';
+  document.getElementById('chat-head-title').textContent = 'Живой чат поддержки';
+  document.getElementById('chat-head-sub').textContent   = 'Напишите — мы ответим здесь';
+  document.getElementById('chat-input').placeholder      = 'Ваше сообщение…';
+  const ph = document.getElementById('chat-placeholder');
+  if (ph) ph.textContent = '👋 Привет! Напишите нам — мы ответим здесь.';
+}
+
+// ── Real-time chat — no orderBy (avoids composite index requirement) ──
+function subscribeToChat() {
+  if (!userId) return;
+  const q = query(
+    collection(db, 'supportMessages'),
+    where('userId', '==', userId)
+  );
+  onSnapshot(q, snap => {
+    const msgs = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .sort((a, b) => {
+        const ta = a.createdAt?.toMillis ? a.createdAt.toMillis() : (a.createdAt || 0);
+        const tb = b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt || 0);
+        return ta - tb;
+      });
+    renderMessages(msgs);
+  }, err => console.warn('Chat error:', err));
+}
+
+function renderMessages(msgs) {
+  const container = document.getElementById('chat-messages');
+  container.innerHTML = '';
+
+  if (!msgs.length) {
+    const notice = document.createElement('div');
+    notice.className = 'chat-notice';
+    notice.textContent = lang === 'ru'
+      ? '👋 Привет! Напишите нам — мы ответим здесь.'
+      : '👋 Hi! Send us a message — we\'ll reply right here.';
+    container.appendChild(notice);
+    return;
+  }
+
+  msgs.forEach(m => {
+    const isOut = m.direction === 'inbound';
+    const isIn  = m.direction === 'outbound';
+    if (!isOut && !isIn) return;
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'msg ' + (isOut ? 'out' : 'in');
+
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.textContent = m.text || '';
+
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    const ts = m.createdAt
+      ? (m.createdAt.toDate
+          ? m.createdAt.toDate().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
+          : new Date(m.createdAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}))
+      : '';
+    meta.textContent = ts;
+
+    wrapper.appendChild(bubble);
+    wrapper.appendChild(meta);
+    container.appendChild(wrapper);
+  });
+
+  container.scrollTop = container.scrollHeight;
+}
+
+// ── Send message ─────────────────────────────────────────────────────
+window.sendChatMessage = async function() {
+  const input   = document.getElementById('chat-input');
+  const sendBtn = document.getElementById('send-btn');
+  const text    = input.value.trim();
+  if (!text) return;
+  if (!userId) { alert('Please open this in Telegram first.'); return; }
+
+  input.value        = '';
+  input.style.height = '';
+  input.disabled     = true;
+  sendBtn.disabled   = true;
+
+  const displayName = tgUser
+    ? `${tgUser.first_name || ''}${tgUser.last_name ? ' ' + tgUser.last_name : ''}`.trim()
+    : userId;
+  const userName = tgUser?.username ? '@' + tgUser.username : displayName;
+
+  try {
+    await addDoc(collection(db, 'supportMessages'), {
+      userId,
+      userName:    tgUser?.username || '',
+      displayName,
+      direction:   'inbound',
+      text,
+      lang,
+      createdAt:   serverTimestamp()
+    });
+
+    // Notify admin via ToPla_support_bot
+    const notifyText =
+      `💬 <b>New Support Message</b>\n` +
+      `👤 ${displayName} (${userName})\n` +
+      `🆔 <code>${userId}</code>\n` +
+      `🌐 ${lang === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'}\n` +
+      `─────────────\n` +
+      `${text}`;
+
+    fetch(`https://api.telegram.org/bot${SUPPORT_BOT_TOKEN}/sendMessage`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ chat_id: ADMIN_CHAT_ID, text: notifyText, parse_mode: 'HTML' })
+    }).catch(() => {});
+
+  } catch(e) {
+    console.error('Send error:', e);
+  }
+
+  input.disabled   = false;
+  sendBtn.disabled = false;
+  input.focus();
+};
+
+window.autoResize = function(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+};
+
+window.chatKeyDown = function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChatMessage();
+  }
+};
+
+// ── Open Support Bot ─────────────────────────────────────────────────
+window.openSupportBot = function() {
+  const botUrl = `https://t.me/${SUPPORT_BOT_USERNAME}`;
+  if (tg) {
+    try { tg.openTelegramLink(botUrl); return; } catch(e1) {}
+    try { tg.openLink(botUrl); return; } catch(e2) {}
+  }
+  window.open(botUrl, '_blank');
+};
+</script>
+</body>
+</html>

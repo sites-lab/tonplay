@@ -1,0 +1,28 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": {
+    "source": "functions",
+    "runtime": "nodejs18"
+  },
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**",
+      "functions/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/requestWithdrawal",
+        "function": "requestWithdrawal"
+      },
+      {
+        "source": "/api/telegramWebhook",
+        "function": "telegramWebhook"
+      }
+    ]
+  }
+}
