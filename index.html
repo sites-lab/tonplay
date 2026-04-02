@@ -1617,26 +1617,36 @@ let userData    = null;
 let globalSettings = { referralBonus: 0.05, referralMilestones: [] };
 
 function getStartParam() {
-  // 1. Native Telegram Mini App start param (most reliable)
+  // 1. Native Telegram Mini App — most reliable
   const tgParam = tg?.initDataUnsafe?.start_param;
-  if (tgParam) return tgParam.toUpperCase();
+  if (tgParam) { console.log('[TonPlay] start_param from initDataUnsafe:', tgParam); return tgParam.toUpperCase(); }
 
-  // 2. Telegram encodes startapp in the URL hash as tgWebAppStartParam
-  //    e.g. https://t.me/Bot/app?startapp=AXALEW -> hash contains tgWebAppStartParam=AXALEW
+  // 2. Parse raw initData string directly (sometimes initDataUnsafe is missing)
+  try {
+    const rawInitData = tg?.initData || '';
+    if (rawInitData) {
+      const parsed = new URLSearchParams(rawInitData);
+      const sp = parsed.get('start_param');
+      if (sp) { console.log('[TonPlay] start_param from initData string:', sp); return sp.toUpperCase(); }
+    }
+  } catch(e) {}
+
+  // 3. URL hash — Telegram encodes ?startapp=CODE as tgWebAppStartParam in the hash
   try {
     const rawHash = location.hash.replace(/^#/, '');
     const hashParams = new URLSearchParams(rawHash);
-    const hRef = hashParams.get('tgWebAppStartParam') || hashParams.get('startapp') || hashParams.get('start');
-    if (hRef) return hRef.toUpperCase();
+    const hRef = hashParams.get('tgWebAppStartParam') || hashParams.get('startapp') || hashParams.get('start_param') || hashParams.get('start');
+    if (hRef) { console.log('[TonPlay] start_param from URL hash:', hRef); return hRef.toUpperCase(); }
   } catch(e) {}
 
-  // 3. Plain URL query string fallback (for testing outside Telegram)
+  // 4. Plain URL query string — for browser testing
   try {
     const url = new URL(location.href);
-    const qRef = url.searchParams.get('startapp') || url.searchParams.get('ref') || url.searchParams.get('start');
-    if (qRef) return qRef.toUpperCase();
+    const qRef = url.searchParams.get('startapp') || url.searchParams.get('tgWebAppStartParam') || url.searchParams.get('ref') || url.searchParams.get('start');
+    if (qRef) { console.log('[TonPlay] start_param from URL query:', qRef); return qRef.toUpperCase(); }
   } catch(e) {}
 
+  console.log('[TonPlay] No start_param found. hash:', location.hash, 'search:', location.search);
   return null;
 }
 
@@ -1659,12 +1669,24 @@ async function init() {
   loadWithdrawals();
   loadInvitedFriends();
   resumePendingDetection();
+
+  // ── Auto-apply referral code from link ──
+  // Must run AFTER loadOrCreateUser() so userData is ready
   const startCode = getStartParam();
-  if (startCode && !userData.referredBy && startCode !== userData.referralCode) {
-    // Auto-fill the input so the user sees it was applied
-    document.getElementById('ref-code-input').value = startCode;
-    // Apply silently in the background; if it fails, the user can still try manually
-    await applyRefCode(startCode, true);
+  console.log('[TonPlay] startCode from link:', startCode);
+  console.log('[TonPlay] userData.referredBy:', userData?.referredBy);
+  console.log('[TonPlay] userData.referralCode:', userData?.referralCode);
+  if (startCode) {
+    // Always fill the input so the user can see it
+    const refInput = document.getElementById('ref-code-input');
+    if (refInput) refInput.value = startCode;
+    // Switch to referral tab so the user sees it
+    if (!userData.referredBy && startCode !== userData.referralCode) {
+      // Apply it — NOT silent so errors show as toasts
+      await applyRefCode(startCode, false);
+    } else if (userData.referredBy) {
+      console.log('[TonPlay] Already has referredBy, skipping auto-apply');
+    }
   }
 }
 
