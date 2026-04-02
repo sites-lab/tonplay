@@ -1138,10 +1138,10 @@ window.LANG = LANG;
     </div>
     <div id="milestones-list"><div class="empty-state"><div class="spinner"></div></div></div>
     <div id="ref-used-display"></div>
-    <div class="ref-enter-card" id="ref-enter-card" style="display:none;">
-      <div class="sec-title" data-i18n="enter_ref_code">Enter a Referral Code</div>
-      <input class="ref-input" id="ref-code-input" type="text" maxlength="10" data-i18n-placeholder="ref_input_placeholder" placeholder="Enter code (e.g. ABC123)">
-      <button class="btn-green" id="ref-submit-btn" onclick="submitRefCode()" data-i18n="apply_code_btn">✓ Apply Code</button>
+    <div class="ref-enter-card" id="ref-enter-card">
+      <div class="sec-title">ENTER A REFERRAL CODE</div>
+      <input id="ref-code-input" type="text" maxlength="10" placeholder="e.g. ABC123" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" style="width:100%;padding:14px 16px;background:#fff;border:2px solid #E2E8F0;border-radius:12px;color:#0F172A;font-size:16px;outline:none;margin-bottom:10px;font-family:'DM Mono',monospace;box-sizing:border-box;">
+      <button onclick="submitRefCode()" style="width:100%;padding:14px;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✓ Apply Code</button>
     </div>
     <div class="sec-title" id="invited-title" style="display:none;margin-top:4px;" data-i18n="invited_friends">👥 Invited Friends</div>
     <div class="card" id="invited-list" style="display:none;"></div>
@@ -1769,15 +1769,6 @@ function renderAll() {
     refUsed.innerHTML = `<div class="ref-used-badge">${t.ref_used_prefix}${userData.referredBy}</div>`;
   } else {
     refUsed.innerHTML = '';
-  }
-  // Show manual entry card only if user hasn't used a referral code yet
-  const refEnterCard = document.getElementById('ref-enter-card');
-  if (refEnterCard) {
-    if (userData.referredBy) {
-      refEnterCard.style.display = 'none';
-    } else {
-      refEnterCard.style.display = 'block';
-    }
   }
 
   renderMilestones();
