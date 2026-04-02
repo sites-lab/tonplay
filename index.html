@@ -1619,9 +1619,18 @@ let globalSettings = { referralBonus: 0.05, referralMilestones: [] };
 function getStartParam() {
   const tgParam = tg?.initDataUnsafe?.start_param;
   if (tgParam) return tgParam.toUpperCase();
+  // Try URL query params
   const url = new URL(location.href);
-  const ref = url.searchParams.get('ref') || url.searchParams.get('startapp') || url.searchParams.get('start');
-  return ref ? ref.toUpperCase() : null;
+  const qRef = url.searchParams.get('ref') || url.searchParams.get('startapp') || url.searchParams.get('start');
+  if (qRef) return qRef.toUpperCase();
+  // Telegram also encodes startapp in the URL hash as tgWebAppStartParam=CODE
+  try {
+    const hash = location.hash.replace(/^#/, '');
+    const hashParams = new URLSearchParams(hash);
+    const hRef = hashParams.get('tgWebAppStartParam') || hashParams.get('startapp') || hashParams.get('start');
+    if (hRef) return hRef.toUpperCase();
+  } catch(e) {}
+  return null;
 }
 
 function generateReferralCode(uid) {
@@ -1645,8 +1654,9 @@ async function init() {
   resumePendingDetection();
   const startCode = getStartParam();
   if (startCode && !userData.referredBy && startCode !== userData.referralCode) {
+    // Auto-fill the input so the user sees it was applied
     document.getElementById('ref-code-input').value = startCode;
-    switchTab('referral', document.querySelector('.tab-btn.ref-tab'));
+    // Apply silently in the background; if it fails, the user can still try manually
     await applyRefCode(startCode, true);
   }
 }
@@ -2331,9 +2341,16 @@ window.shareRefLink = function() {
   const code = userData?.referralCode || '';
   if (!code) { showToast(t.no_ref_code); return; }
   const link = buildRefLink(code);
-  const shareText = LANG === 'ru' ? '💎 Присоединяйся к TonPlay — зарабатывай +5% каждую неделю!\nМоя ссылка:' : '💎 Join TonPlay — earn +5% every week on your TON!\nUse my invite link:';
+  // Bilingual share message (RU first, then EN) so any recipient understands
+  const shareText =
+    '💎 Присоединяйся к TonPlay — зарабатывай +10% каждые 15 дней!\n' +
+    '💎 Join TonPlay — earn +10% every 15 days on your TON!\n\n' +
+    '👇 ' + link;
   if (tg?.openTelegramLink) {
-    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(shareText)}`);
+    tg.openTelegramLink(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(
+      '💎 Присоединяйся к TonPlay — зарабатывай +10% каждые 15 дней!\n' +
+      '💎 Join TonPlay — earn +10% every 15 days on your TON!'
+    )}`);
   } else {
     navigator.clipboard?.writeText(link).catch(() => {});
     showToast(t.link_copied);
@@ -2350,6 +2367,11 @@ async function applyRefCode(code, silent = false) {
     const refDoc  = snap.docs[0];
     if (refDoc.id === String(currentUser.id)) { if (!silent) showToast(t.own_code_warn); return; }
     const refData = refDoc.data();
+    // Mutual-exclusion: if the inviter was already referred by the current user, block it
+    if (refData.referredBy && refData.referredBy === userData.referralCode) {
+      if (!silent) showToast(LANG === 'ru' ? '⚠️ Нельзя использовать код друга, который уже использовал ваш код' : '⚠️ Cannot use code of a user who already used your code');
+      return;
+    }
     const uid     = String(currentUser.id);
     await updateDoc(doc(db, 'users', uid), { referredBy: code });
     userData.referredBy = code;
