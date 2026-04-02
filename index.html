@@ -1290,7 +1290,7 @@ const firebaseConfig = {
   projectId: "miniapp-ton",
   storageBucket: "miniapp-ton.firebasestorage.app",
   messagingSenderId: "991105630391",
-  appId: "1:991105630791:web:551166c522317fad980d32"
+  appId: "1:991105630391:web:551166c522317fad980d32"
 };
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
@@ -1779,10 +1779,13 @@ function renderAll() {
   document.getElementById('info-earned').textContent   = (userData.totalEarned||0).toFixed(2) + ' TON';
 
   const refUsed = document.getElementById('ref-used-display');
-  if (userData.referredBy) {
+  const enterCard = document.getElementById('ref-enter-card');
+  if (userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim() !== '') {
     refUsed.innerHTML = `<div class="ref-used-badge">${t.ref_used_prefix}${userData.referredBy}</div>`;
+    if (enterCard) enterCard.style.display = 'none';
   } else {
     refUsed.innerHTML = '';
+    if (enterCard) enterCard.style.display = 'block';
   }
 
   renderMilestones();
@@ -2427,22 +2430,37 @@ async function applyRefCode(code, silent = false) {
     const freshUserSnap = await getDoc(doc(db, 'users', uid));
     if (freshUserSnap.exists()) {
       const val = freshUserSnap.data()?.referredBy;
-      freshReferredBy = (val && typeof val === 'string' && val.trim() !== '') ? val : null;
-      userData.referredBy = freshReferredBy; // sync in-memory
+      // Only treat as "used" if it's a non-empty string that isn't the user's own code
+      freshReferredBy = (val && typeof val === 'string' && val.trim() !== '' && val.trim() !== userData.referralCode)
+        ? val.trim() : null;
+      userData.referredBy = freshReferredBy;
     }
-  } catch(e) {}
+  } catch(e) {
+    console.error('applyRefCode: failed to read user doc:', e);
+    // Don't block — proceed without the fresh check
+  }
 
   if (freshReferredBy) { if (!silent) showToast(t.already_used_warn); return; }
-  if (code === userData.referralCode) { if (!silent) showToast(t.own_code_warn); return; }
+
+  const normalizedCode = code.trim().toUpperCase();
+  if (normalizedCode === (userData.referralCode || '').toUpperCase()) {
+    if (!silent) showToast(t.own_code_warn); return;
+  }
 
   try {
-    const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', code), limit(1)));
+    const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', normalizedCode), limit(1)));
     if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
     const refDoc  = snap.docs[0];
-    if (refDoc.id === String(currentUser.id)) { if (!silent) showToast(t.own_code_warn); return; }
+    if (refDoc.id === uid) { if (!silent) showToast(t.own_code_warn); return; }
     const refData = refDoc.data();
-    await updateDoc(doc(db, 'users', uid), { referredBy: code });
-    userData.referredBy = code;
+
+    await updateDoc(doc(db, 'users', uid), { referredBy: normalizedCode });
+    userData.referredBy = normalizedCode;
+
+    // Hide the enter card now that code is applied
+    const enterCard = document.getElementById('ref-enter-card');
+    if (enterCard) enterCard.style.display = 'none';
+
     const newCount = (refData.referralCount || 0) + 1;
     await updateDoc(doc(db, 'users', refDoc.id), { referralCount: newCount });
     const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
@@ -2450,9 +2468,12 @@ async function applyRefCode(code, silent = false) {
     if (!silent) showToast(t.code_applied);
     renderAll();
     const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
-    await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${newCount}\n🔑 <b>Code used:</b> <code>${code}</code>`);
+    await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${newCount}\n🔑 <b>Code used:</b> <code>${normalizedCode}</code>`);
     await sendReferralProgressMessage(refDoc.id, newCount, refData);
-  } catch(e) { if (!silent) showToast('❌ ' + e.message); }
+  } catch(e) {
+    console.error('applyRefCode error:', e);
+    if (!silent) showToast('❌ ' + e.message);
+  }
 }
 
 async function sendReferralProgressMessage(referrerId, newCount, refData) {
