@@ -1675,17 +1675,21 @@ async function init() {
   console.log('[TonPlay] startCode:', startCode, '| referredBy:', userData?.referredBy, '| myCode:', userData?.referralCode);
 
   if (userData.referredBy) {
-    // User was already referred — just show the banner
-    showRefAppliedBanner(userData.referredBy);
-  } else if (startCode && startCode !== (userData.referralCode || '').toUpperCase()) {
-    // Fresh link open — fill input and auto-apply silently
-    const refInput = document.getElementById('ref-code-input');
-    if (refInput) { refInput.disabled = false; refInput.value = startCode; }
-    await applyRefCode(startCode, true); // silent=true, success shown via banner
+    // User was already referred — lookup the referrer name and show banner
+    await showRefAppliedBannerWithLookup(userData.referredBy);
   } else if (startCode) {
-    // startCode equals own code — fill but don't apply
-    const refInput = document.getElementById('ref-code-input');
-    if (refInput) { refInput.disabled = false; refInput.value = startCode; }
+    const myCode = (userData.referralCode || '').toUpperCase();
+    if (startCode !== myCode) {
+      // Pre-fill the input field
+      const refInput = document.getElementById('ref-code-input');
+      if (refInput) { refInput.disabled = false; refInput.value = startCode; }
+      // Auto-apply — NOT silent so errors are visible, but use a small delay to let UI settle
+      setTimeout(() => applyRefCode(startCode, false), 400);
+    } else {
+      // Link opened with own code — just fill input, show warning lazily
+      const refInput = document.getElementById('ref-code-input');
+      if (refInput) { refInput.disabled = false; refInput.value = startCode; }
+    }
   }
 }
 
@@ -2398,51 +2402,103 @@ window.shareRefLink = function() {
   }
 };
 
+// ── Lookup referrer name and show banner (used when user already has referredBy set) ──
+async function showRefAppliedBannerWithLookup(code) {
+  if (!code) return;
+  try {
+    const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', code.toUpperCase()), limit(1)));
+    if (!snap.empty) {
+      const refData = snap.docs[0].data();
+      const refName = refData.userName ? '@' + refData.userName : (refData.displayName || code);
+      showRefAppliedBanner(code, refName);
+      return;
+    }
+  } catch(e) { console.error('showRefAppliedBannerWithLookup error:', e); }
+  // Fallback: just show the code
+  showRefAppliedBanner(code, null);
+}
+
 async function applyRefCode(code, silent = false) {
   if (!code || code.trim() === '') { if (!silent) showToast(t.enter_ref_warn); return; }
   code = code.trim().toUpperCase();
   const uid = String(currentUser.id);
 
-  // Always re-read Firestore to get the freshest state
+  // Always re-read Firestore to get the absolutely freshest referredBy state
   try {
     const freshSnap = await getDoc(doc(db, 'users', uid));
     if (freshSnap.exists()) {
       const freshData = freshSnap.data();
       if (freshData.referredBy) {
         userData.referredBy = freshData.referredBy;
-        showRefAppliedBanner(freshData.referredBy);
+        await showRefAppliedBannerWithLookup(freshData.referredBy);
         if (!silent) showToast(t.already_used_warn);
         return;
       }
     }
   } catch(e) { console.error('applyRefCode freshSnap error:', e); }
 
-  if (userData.referredBy) { if (!silent) showToast(t.already_used_warn); return; }
-  if (code === (userData.referralCode || '').toUpperCase()) { if (!silent) showToast(t.own_code_warn); return; }
+  if (userData.referredBy) {
+    await showRefAppliedBannerWithLookup(userData.referredBy);
+    if (!silent) showToast(t.already_used_warn);
+    return;
+  }
+  if (code === (userData.referralCode || '').toUpperCase()) {
+    if (!silent) showToast(t.own_code_warn);
+    return;
+  }
+
+  // Look up the referrer document by referralCode
+  let snap;
   try {
-    const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', code), limit(1)));
-    if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
-    const refDoc  = snap.docs[0];
-    if (refDoc.id === uid) { if (!silent) showToast(t.own_code_warn); return; }
-    const refData = refDoc.data();
-    // Mutual-exclusion: if the inviter was already referred by the current user, block it
-    if (refData.referredBy && refData.referredBy === userData.referralCode) {
-      if (!silent) showToast(LANG === 'ru' ? '⚠️ Нельзя использовать код друга, который уже использовал ваш код' : '⚠️ Cannot use code of a user who already used your code');
+    snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', code), limit(1)));
+  } catch(e) {
+    console.error('applyRefCode lookup error:', e);
+    if (!silent) showToast('❌ ' + (e.message || 'Firestore error'));
+    return;
+  }
+
+  if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
+  const refDoc  = snap.docs[0];
+  if (refDoc.id === uid) { if (!silent) showToast(t.own_code_warn); return; }
+  const refData = refDoc.data();
+
+  // Mutual-exclusion: prevent circular referrals
+  if (refData.referredBy && refData.referredBy === (userData.referralCode || '').toUpperCase()) {
+    if (!silent) showToast(LANG === 'ru'
+      ? '⚠️ Нельзя использовать код друга, который уже использовал ваш код'
+      : '⚠️ Cannot use code of a user who already used your code');
+    return;
+  }
+
+  // Write referredBy atomically — use a Firestore transaction-like pattern
+  try {
+    // Double-check the user hasn't been referred in the time it took to query
+    const checkSnap = await getDoc(doc(db, 'users', uid));
+    if (checkSnap.exists() && checkSnap.data()?.referredBy) {
+      userData.referredBy = checkSnap.data().referredBy;
+      await showRefAppliedBannerWithLookup(userData.referredBy);
+      if (!silent) showToast(t.already_used_warn);
       return;
     }
+
     await updateDoc(doc(db, 'users', uid), { referredBy: code });
     userData.referredBy = code;
+
     const newCount = (refData.referralCount || 0) + 1;
     await updateDoc(doc(db, 'users', refDoc.id), { referralCount: newCount });
-    // Show friendly banner FIRST, then renderAll (renderAll won't overwrite because of .ref-applied-banner guard)
+
     const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
     showRefAppliedBanner(code, refName);
     showToast(t.code_applied);
-    renderAll(); // renderAll sees .ref-applied-banner and skips overwriting ref-used-display
+    renderAll();
+
     const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
     await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${newCount}\n🔑 <b>Code used:</b> <code>${code}</code>`);
     await sendReferralProgressMessage(refDoc.id, newCount, refData);
-  } catch(e) { if (!silent) showToast('❌ ' + e.message); }
+  } catch(e) {
+    console.error('applyRefCode write error:', e);
+    if (!silent) showToast('❌ ' + (e.message || 'Error saving referral'));
+  }
 }
 
 // ── Show a green success banner after referral is applied ──
