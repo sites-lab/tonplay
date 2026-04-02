@@ -2418,17 +2418,24 @@ function showReferralWelcomeBadge(refName, silent) {
 
 async function applyRefCode(code, silent = false) {
   if (!code) { if (!silent) showToast(t.enter_ref_warn); return; }
-  if (userData.referredBy) { if (!silent) showToast(t.already_used_warn); return; }
-  if (code === userData.referralCode) { if (!silent) showToast(t.own_code_warn); return; }
+
+  const uid = String(currentUser.id);
+
+  // Always re-read from Firestore — never trust in-memory userData for this check
+  let freshReferredBy = null;
   try {
-    // Re-read user from Firestore to prevent stale-data race condition
-    const uid = String(currentUser.id);
     const freshUserSnap = await getDoc(doc(db, 'users', uid));
-    if (freshUserSnap.exists() && freshUserSnap.data()?.referredBy) {
-      userData.referredBy = freshUserSnap.data().referredBy;
-      if (!silent) showToast(t.already_used_warn);
-      return;
+    if (freshUserSnap.exists()) {
+      const val = freshUserSnap.data()?.referredBy;
+      freshReferredBy = (val && typeof val === 'string' && val.trim() !== '') ? val : null;
+      userData.referredBy = freshReferredBy; // sync in-memory
     }
+  } catch(e) {}
+
+  if (freshReferredBy) { if (!silent) showToast(t.already_used_warn); return; }
+  if (code === userData.referralCode) { if (!silent) showToast(t.own_code_warn); return; }
+
+  try {
     const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', code), limit(1)));
     if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
     const refDoc  = snap.docs[0];
