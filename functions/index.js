@@ -151,7 +151,9 @@ async function runWeeklyYield() {
         const cs2 = fd.lastYieldAt
           ? fd.lastYieldAt.toMillis()
           : (fd.createdAt?.toMillis ? fd.createdAt.toMillis() : 0);
-        if ((Date.now() - cs2) < FIFTEEN_DAYS_MS) return;
+        const principal3 = fd.originalAmount || fd.amount || 0;
+        const cycleMsCheck = principal3 >= PREMIUM_THRESHOLD ? TWO_WEEKS_MS : FIFTEEN_DAYS_MS;
+        if ((Date.now() - cs2) < cycleMsCheck) return;
 
         t.update(depRef, {
           amount:      newAmount,

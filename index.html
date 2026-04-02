@@ -1426,7 +1426,7 @@ async function sendTonTransaction(amount, comment, uid) {
     showDetectionBanner(t.detecting);
     showToast(t.tx_sent);
 
-    const pendingRef = await addDoc(collection(db, 'depositNotifications'), {
+    const pendingRef = await addDoc(collection(db, 'pendingPayments'), {
       userId: uid,
       userName: currentUser.username || '',
       displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
@@ -1435,7 +1435,6 @@ async function sendTonTransaction(amount, comment, uid) {
       status: 'pending', createdAt: serverTimestamp()
     });
 
-    await confirmPaymentInFirebase(comment, amount, uid, pendingRef.id);
     startPaymentDetection(comment, amount, uid, pendingRef.id);
 
   } catch (err) {
@@ -1508,10 +1507,25 @@ async function checkTransactionOnChain(comment, expectedAmount) {
 
 async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
   try {
-    const pendingSnap = await getDoc(doc(db, 'depositNotifications', pendingDocId));
-    if (pendingSnap.exists() && pendingSnap.data()?.status === 'confirmed') return;
+    // Guard 1: check the pending document status
+    const pendingSnap = await getDoc(doc(db, 'pendingPayments', pendingDocId));
+    if (!pendingSnap.exists()) return;
+    if (pendingSnap.data()?.status === 'confirmed') return;
 
-    await updateDoc(doc(db, 'depositNotifications', pendingDocId), { status: 'confirmed', confirmedAt: serverTimestamp() });
+    // Guard 2: check no deposit with this comment already exists
+    const existingDeps = await getDocs(query(
+      collection(db, 'users/' + uid + '/deposits'),
+      where('comment', '==', comment),
+      limit(1)
+    ));
+    if (!existingDeps.empty) {
+      // Deposit already credited — just mark pending as confirmed silently
+      await updateDoc(doc(db, 'pendingPayments', pendingDocId), { status: 'confirmed', confirmedAt: serverTimestamp() });
+      hideDetectionBanner();
+      return;
+    }
+
+    await updateDoc(doc(db, 'pendingPayments', pendingDocId), { status: 'confirmed', confirmedAt: serverTimestamp() });
 
     await addDoc(collection(db, 'users/' + uid + '/deposits'), {
       userId: uid,
@@ -2339,25 +2353,96 @@ window.shareRefLink = function() {
   }
 };
 
+function showReferralWelcomeBadge(refName, silent) {
+  // Only show the popup when coming from a link (silent=true means auto-applied from link)
+  if (!silent) return;
+
+  const el = document.createElement('div');
+  el.id = 'ref-welcome-badge';
+  el.innerHTML = `
+    <div style="
+      position:fixed;top:0;left:0;right:0;bottom:0;z-index:9998;
+      background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;
+      justify-content:center;backdrop-filter:blur(4px);
+      animation:fadeInBg .3s ease;
+    " id="ref-badge-bg">
+      <div style="
+        background:#fff;border-radius:24px 24px 0 0;
+        padding:24px 24px 40px;width:100%;
+        animation:slideUpBadge .4s cubic-bezier(.34,1.56,.64,1);
+        box-shadow:0 -8px 40px rgba(0,0,0,0.18);
+      ">
+        <div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px;"></div>
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="
+            width:64px;height:64px;border-radius:50%;
+            background:linear-gradient(135deg,#059669,#10B981);
+            display:flex;align-items:center;justify-content:center;
+            font-size:28px;margin:0 auto 12px;
+            box-shadow:0 6px 20px rgba(16,185,129,0.35);
+          ">🎁</div>
+          <div style="font-size:11px;font-weight:800;color:#10B981;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">You were invited by</div>
+          <div style="font-size:24px;font-weight:900;color:#0F172A;letter-spacing:-0.5px;">${refName}</div>
+        </div>
+        <div style="
+          background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.03));
+          border:1.5px solid rgba(16,185,129,0.25);
+          border-radius:14px;padding:12px 16px;margin-bottom:18px;text-align:center;
+        ">
+          <div style="font-size:13px;color:#64748B;line-height:1.6;">
+            🎉 Welcome to <strong style="color:#0F172A;">TonPlay</strong>!<br>
+            Your referral has been registered.<br>
+            <span style="color:#10B981;font-weight:700;">Deposit TON to start earning +10% every 15 days!</span>
+          </div>
+        </div>
+        <button onclick="document.getElementById('ref-badge-bg').parentElement.remove()" style="
+          width:100%;padding:15px;
+          background:linear-gradient(135deg,#059669,#10B981);
+          color:#fff;border:none;border-radius:14px;
+          font-family:'Inter',sans-serif;font-size:15px;font-weight:800;
+          cursor:pointer;box-shadow:0 6px 20px rgba(16,185,129,0.35);
+        ">Let's Go! 🚀</button>
+      </div>
+    </div>
+  `;
+
+  // Add animations
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes fadeInBg{from{opacity:0}to{opacity:1}}
+    @keyframes slideUpBadge{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  `;
+  document.head.appendChild(style);
+  document.body.appendChild(el);
+}
+
 async function applyRefCode(code, silent = false) {
   if (!code) { if (!silent) showToast(t.enter_ref_warn); return; }
   if (userData.referredBy) { if (!silent) showToast(t.already_used_warn); return; }
   if (code === userData.referralCode) { if (!silent) showToast(t.own_code_warn); return; }
   try {
+    // Re-read user from Firestore to prevent stale-data race condition
+    const uid = String(currentUser.id);
+    const freshUserSnap = await getDoc(doc(db, 'users', uid));
+    if (freshUserSnap.exists() && freshUserSnap.data()?.referredBy) {
+      userData.referredBy = freshUserSnap.data().referredBy;
+      if (!silent) showToast(t.already_used_warn);
+      return;
+    }
     const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', code), limit(1)));
     if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
     const refDoc  = snap.docs[0];
     if (refDoc.id === String(currentUser.id)) { if (!silent) showToast(t.own_code_warn); return; }
     const refData = refDoc.data();
-    const uid     = String(currentUser.id);
     await updateDoc(doc(db, 'users', uid), { referredBy: code });
     userData.referredBy = code;
     const newCount = (refData.referralCount || 0) + 1;
     await updateDoc(doc(db, 'users', refDoc.id), { referralCount: newCount });
-    showToast(t.code_applied);
+    const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
+    showReferralWelcomeBadge(refName, silent);
+    if (!silent) showToast(t.code_applied);
     renderAll();
     const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
-    const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
     await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${newCount}\n🔑 <b>Code used:</b> <code>${code}</code>`);
     await sendReferralProgressMessage(refDoc.id, newCount, refData);
   } catch(e) { if (!silent) showToast('❌ ' + e.message); }
@@ -2537,26 +2622,31 @@ async function resumePendingDetection() {
   try {
     const uid = String(currentUser.id);
     const snap = await getDocs(query(
-      collection(db, 'depositNotifications'),
+      collection(db, 'pendingPayments'),
       where('userId', '==', uid),
       where('status', '==', 'pending'),
       orderBy('createdAt', 'desc'),
       limit(5)
     ));
     if (snap.empty) return;
-    showDetectionBanner(t.detecting);
+
+    let anyResumed = false;
     for (const docSnap of snap.docs) {
       const pd = docSnap.data();
       const age = Date.now() - (pd.createdAt?.toMillis?.() || 0);
+      // Expire old pending payments (>2 hours)
       if (age > 2 * 60 * 60 * 1000) {
-        await updateDoc(doc(db, 'depositNotifications', docSnap.id), { status: 'expired' });
+        await updateDoc(doc(db, 'pendingPayments', docSnap.id), { status: 'expired' });
         continue;
       }
-      await confirmPaymentInFirebase(pd.comment, pd.amount, uid, docSnap.id);
-      hideDetectionBanner();
-      return;
+      // Resume polling — do NOT call confirmPaymentInFirebase directly
+      // The Cloud Function will credit the user once it detects the on-chain tx
+      showDetectionBanner(t.detecting);
+      startPaymentDetection(pd.comment, pd.amount, uid, docSnap.id);
+      anyResumed = true;
+      break; // only resume the most recent pending
     }
-    hideDetectionBanner();
+    if (!anyResumed) hideDetectionBanner();
   } catch(e) {
     console.error('resumePendingDetection error:', e);
     hideDetectionBanner();
