@@ -1154,16 +1154,29 @@ window.LANG = LANG;
       </button>
     </div>
 
-    <!-- ── CODE I USED HISTORY ── -->
-    <div id="used-code-section" style="display:none;margin-bottom:10px;">
-      <div class="sec-title" style="margin-bottom:6px;">🔑 Code I Used</div>
-      <div class="card" id="used-code-list"></div>
-    </div>
-
-    <!-- ── INVITED FRIENDS HISTORY ── -->
-    <div id="invited-section" style="display:none;">
-      <div class="sec-title" style="margin-bottom:6px;" data-i18n="invited_friends">👥 Invited Friends</div>
-      <div class="card" id="invited-list"></div>
+    <!-- ── REFERRAL HISTORY TABS ── -->
+    <div id="ref-history-wrap" style="margin-bottom:10px;">
+      <!-- Row tab switcher -->
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <button id="rhtab-used" onclick="switchRefHistoryTab('used')" style="flex:1;padding:8px 10px;border-radius:10px;border:1.5px solid rgba(16,185,129,0.4);background:linear-gradient(145deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04));color:var(--green);font-family:'Inter',sans-serif;font-size:10px;font-weight:800;cursor:pointer;letter-spacing:.3px;">
+          🔑 <span id="rhtab-used-lbl">Code I Used</span>
+        </button>
+        <button id="rhtab-invited" onclick="switchRefHistoryTab('invited')" style="flex:1;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surf);color:var(--sub);font-family:'Inter',sans-serif;font-size:10px;font-weight:800;cursor:pointer;letter-spacing:.3px;">
+          👥 <span id="rhtab-invited-lbl">Friends I Invited</span>
+        </button>
+      </div>
+      <!-- CODE I USED panel -->
+      <div id="used-code-section" style="display:block;">
+        <div class="card" id="used-code-list">
+          <div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;" id="used-code-empty">—</div>
+        </div>
+      </div>
+      <!-- INVITED FRIENDS panel -->
+      <div id="invited-section" style="display:none;">
+        <div class="card" id="invited-list">
+          <div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">—</div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1678,7 +1691,9 @@ async function init() {
   loadInvitedFriends();
   resumePendingDetection();
   const startCode = getStartParam();
-  if (startCode && !userData.referredBy && startCode !== userData.referralCode) {
+  const alreadyUsed = userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim().length >= 4;
+  const ownCode = (userData.referralCode || '').toUpperCase();
+  if (startCode && !alreadyUsed && startCode !== ownCode) {
     await applyRefCode(startCode, true);
   }
 }
@@ -2477,7 +2492,13 @@ async function applyRefCode(code, silent = false) {
 
   // Guard: already used a valid code (must be a real code, length >= 4)
   if (userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim().length >= 4) {
-    if (!silent) showToast(t.already_used_warn);
+    const existingCode = userData.referredBy.trim().toUpperCase();
+    if (existingCode === normalizedCode) {
+      // Same code submitted again (e.g. re-opening via referral link) — silent skip or friendly toast
+      if (!silent) showToast(LANG === 'ru' ? '✅ Этот код уже применён' : '✅ Code already applied');
+    } else {
+      if (!silent) showToast(t.already_used_warn);
+    }
     return;
   }
 
@@ -2584,24 +2605,57 @@ window.mainRefSubmit = async function() {
   if (input) input.value = '';
 };
 
+window.switchRefHistoryTab = function(tab) {
+  const usedPanel    = document.getElementById('used-code-section');
+  const invitedPanel = document.getElementById('invited-section');
+  const btnUsed    = document.getElementById('rhtab-used');
+  const btnInvited = document.getElementById('rhtab-invited');
+  if (tab === 'used') {
+    usedPanel.style.display    = 'block';
+    invitedPanel.style.display = 'none';
+    btnUsed.style.borderColor  = 'rgba(16,185,129,0.4)';
+    btnUsed.style.background   = 'linear-gradient(145deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04))';
+    btnUsed.style.color        = 'var(--green)';
+    btnInvited.style.borderColor = 'var(--border)';
+    btnInvited.style.background  = 'var(--surf)';
+    btnInvited.style.color       = 'var(--sub)';
+  } else {
+    usedPanel.style.display    = 'none';
+    invitedPanel.style.display = 'block';
+    btnInvited.style.borderColor = 'rgba(16,185,129,0.4)';
+    btnInvited.style.background  = 'linear-gradient(145deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04))';
+    btnInvited.style.color       = 'var(--green)';
+    btnUsed.style.borderColor  = 'var(--border)';
+    btnUsed.style.background   = 'var(--surf)';
+    btnUsed.style.color        = 'var(--sub)';
+  }
+};
+
 function renderHistorySections() {
-  // Show "Code I Used" section if user has a referredBy code
-  const usedSection = document.getElementById('used-code-section');
-  const usedList    = document.getElementById('used-code-list');
+  // Translate tab labels
+  const lblUsed    = document.getElementById('rhtab-used-lbl');
+  const lblInvited = document.getElementById('rhtab-invited-lbl');
+  if (lblUsed)    lblUsed.textContent    = LANG === 'ru' ? 'Мой код' : 'Code I Used';
+  if (lblInvited) lblInvited.textContent = LANG === 'ru' ? 'Мои друзья' : 'Friends I Invited';
+
+  // Fill "Code I Used" panel
+  const usedList = document.getElementById('used-code-list');
   const hasUsed = userData && userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim().length >= 4;
-  if (usedSection && usedList) {
+  if (usedList) {
     if (hasUsed) {
-      usedSection.style.display = 'block';
+      const appliedLabel = LANG === 'ru' ? 'Реферальный код применён' : 'Referral code applied';
+      const usedLabel    = LANG === 'ru' ? '✓ Применён' : '✓ Used';
       usedList.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;">
         <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#059669,#10B981);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🔑</div>
         <div style="flex:1;">
-          <div style="font-size:13px;font-weight:700;color:var(--text);">${userData.referredBy}</div>
-          <div style="font-size:10px;color:var(--sub);">Referral code applied</div>
+          <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:var(--text);letter-spacing:2px;">${userData.referredBy}</div>
+          <div style="font-size:10px;color:var(--sub);margin-top:2px;">${appliedLabel}</div>
         </div>
-        <div style="background:var(--green-light);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green);">✓ Used</div>
+        <div style="background:var(--green-light);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green);">${usedLabel}</div>
       </div>`;
     } else {
-      usedSection.style.display = 'none';
+      const emptyLabel = LANG === 'ru' ? 'Код не применён' : 'No code applied yet';
+      usedList.innerHTML = `<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">${emptyLabel}</div>`;
     }
   }
 }
