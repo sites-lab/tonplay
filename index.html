@@ -1686,6 +1686,10 @@ async function loadOrCreateUser() {
   if (snap.exists()) {
     userData = { id: uid, ...snap.data() };
     if (!userData.referralCode && userData.referral_code) userData.referralCode = userData.referral_code;
+    // Normalize referredBy: clear out empty/short stale values from Firestore
+    if (userData.referredBy && (typeof userData.referredBy !== 'string' || userData.referredBy.trim().length < 4)) {
+      userData.referredBy = null;
+    }
     const updates = {};
     if (!userData.referralCode) { const code = generateReferralCode(uid); userData.referralCode = code; updates.referralCode = code; }
     if (!userData.lang) { userData.lang = LANG; updates.lang = LANG; }
@@ -2453,15 +2457,16 @@ async function applyRefCode(code, silent = false) {
     if (freshSnap.exists()) {
       const d = freshSnap.data();
       const rv = d.referredBy;
-      userData.referredBy = (rv && typeof rv === 'string' && rv.trim() !== '') ? rv.trim() : null;
+      // Normalize: only treat as a used code if it's a real string of length >= 4
+      userData.referredBy = (rv && typeof rv === 'string' && rv.trim().length >= 4) ? rv.trim() : null;
       if (d.referralCode) userData.referralCode = d.referralCode;
     }
   } catch(e) {
     console.warn('applyRefCode: could not refresh user:', e.message);
   }
 
-  // Guard: already used a valid code
-  if (userData.referredBy && userData.referredBy.trim() !== '') {
+  // Guard: already used a valid code (must be a real code, length >= 4)
+  if (userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim().length >= 4) {
     if (!silent) showToast(t.already_used_warn);
     return;
   }
