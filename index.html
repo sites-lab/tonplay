@@ -436,7 +436,7 @@ html,body{
 .ms-row:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-bar-fill{background:linear-gradient(90deg,#D97706,#FBBF24);}
 
 /* ─── REF ENTER CODE ─── */
-.ref-enter-card{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;width:100%;}
+.ref-enter-card{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;width:100%;display:block;}
 .ref-input{width:100%;padding:13px 16px;background:var(--surf);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Mono',monospace;font-size:16px;outline:none;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
 .ref-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,0.1);}
 .ref-input::placeholder{text-transform:none;letter-spacing:0;font-size:12px;font-family:'Inter',sans-serif;}
@@ -1138,7 +1138,7 @@ window.LANG = LANG;
     </div>
     <div id="milestones-list"><div class="empty-state"><div class="spinner"></div></div></div>
     <div id="ref-used-display"></div>
-    <div class="ref-enter-card" id="ref-enter-card">
+    <div class="ref-enter-card" id="ref-enter-card" style="display:block;">
       <div class="sec-title">ENTER A REFERRAL CODE</div>
       <input id="ref-code-input" type="text" maxlength="10" placeholder="e.g. ABC123" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" style="width:100%;padding:14px 16px;background:#fff;border:2px solid #E2E8F0;border-radius:12px;color:#0F172A;font-size:16px;outline:none;margin-bottom:10px;font-family:'DM Mono',monospace;box-sizing:border-box;">
       <button onclick="submitRefCode()" style="width:100%;padding:14px;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✓ Apply Code</button>
@@ -1779,7 +1779,8 @@ function renderAll() {
 
   const refUsed = document.getElementById('ref-used-display');
   const enterCard = document.getElementById('ref-enter-card');
-  if (userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim() !== '') {
+  const hasUsedCode = userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim().length >= 4;
+  if (hasUsedCode) {
     refUsed.innerHTML = `<div class="ref-used-badge">${t.ref_used_prefix}${userData.referredBy}</div>`;
     if (enterCard) enterCard.style.display = 'none';
   } else {
@@ -2424,7 +2425,29 @@ async function applyRefCode(code, silent = false) {
   const normalizedCode = code.trim().toUpperCase();
   const uid = String(currentUser.id);
 
-  // Always re-read user from Firestore — never trust in-memory userData
+  // Guard: own code? (fast check before any network call)
+  if (normalizedCode === (userData.referralCode || '').trim().toUpperCase()) {
+    if (!silent) showToast(t.own_code_warn);
+    return;
+  }
+
+  // FIRST: check if the code actually exists in Firestore
+  let snap;
+  try {
+    snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', normalizedCode), limit(1)));
+  } catch(queryErr) {
+    console.error('applyRefCode: query error:', queryErr);
+    if (!silent) showToast('❌ ' + (queryErr.message || 'Query failed'));
+    return;
+  }
+
+  // Code does not exist — show invalid, NOT already_used
+  if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
+
+  const refDoc = snap.docs[0];
+  if (refDoc.id === uid) { if (!silent) showToast(t.own_code_warn); return; }
+
+  // THEN: re-read this user from Firestore to check if they already used a code
   try {
     const freshSnap = await getDoc(doc(db, 'users', uid));
     if (freshSnap.exists()) {
@@ -2437,32 +2460,11 @@ async function applyRefCode(code, silent = false) {
     console.warn('applyRefCode: could not refresh user:', e.message);
   }
 
-  // Guard: already used a code?
+  // Guard: already used a valid code
   if (userData.referredBy && userData.referredBy.trim() !== '') {
     if (!silent) showToast(t.already_used_warn);
     return;
   }
-
-  // Guard: own code?
-  if (normalizedCode === (userData.referralCode || '').trim().toUpperCase()) {
-    if (!silent) showToast(t.own_code_warn);
-    return;
-  }
-
-  // Look up the referral code
-  let snap;
-  try {
-    snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', normalizedCode), limit(1)));
-  } catch(queryErr) {
-    console.error('applyRefCode: query error:', queryErr);
-    if (!silent) showToast('❌ ' + (queryErr.message || 'Query failed'));
-    return;
-  }
-
-  if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
-
-  const refDoc = snap.docs[0];
-  if (refDoc.id === uid) { if (!silent) showToast(t.own_code_warn); return; }
 
   try {
     const refData = refDoc.data();
