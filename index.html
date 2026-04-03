@@ -1137,11 +1137,30 @@ window.LANG = LANG;
       </button>
     </div>
     <div id="milestones-list"><div class="empty-state"><div class="spinner"></div></div></div>
-    <div id="ref-used-display"></div>
-    <div class="ref-enter-card" id="ref-enter-card" style="display:block;">
-      <div class="sec-title">ENTER A REFERRAL CODE</div>
-      <input id="ref-code-input" type="text" maxlength="10" placeholder="e.g. ABC123" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" style="width:100%;padding:14px 16px;background:#fff;border:2px solid #E2E8F0;border-radius:12px;color:#0F172A;font-size:16px;outline:none;margin-bottom:10px;font-family:'DM Mono',monospace;box-sizing:border-box;">
-      <button onclick="submitRefCode()" style="width:100%;padding:14px;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">✓ Apply Code</button>
+
+    <!-- ── REFERRAL CODE ENTRY ── -->
+    <div id="ref-code-section" style="margin-top:14px;">
+      <!-- Input state -->
+      <div id="ref-code-input-card" style="background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;">
+        <div style="font-size:10px;font-weight:800;letter-spacing:.8px;color:var(--sub);text-transform:uppercase;margin-bottom:10px;" data-i18n="enter_ref_code">Enter a Referral Code</div>
+        <input id="ref-main-input" type="text" maxlength="10"
+          style="width:100%;padding:13px 16px;background:var(--surf);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Mono',monospace;font-size:16px;outline:none;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;box-sizing:border-box;"
+          placeholder="e.g. ABC123XY"
+          autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"
+          oninput="this.value=this.value.toUpperCase()"
+        >
+        <button id="ref-main-btn" onclick="mainRefSubmit()"
+          style="width:100%;padding:13px;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(16,185,129,0.25);display:flex;align-items:center;justify-content:center;gap:6px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          <span data-i18n="apply_code_btn">✓ Apply Code</span>
+        </button>
+      </div>
+      <!-- Applied state -->
+      <div id="ref-code-applied-badge" style="display:none;background:var(--green-light);border:1.5px solid rgba(16,185,129,0.35);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:none;align-items:center;gap:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span style="font-size:12px;font-weight:700;color:var(--green);" data-i18n="ref_used_prefix">Code applied: </span>
+        <span id="ref-code-applied-val" style="font-family:'DM Mono',monospace;font-size:12px;font-weight:700;color:var(--green);"></span>
+      </div>
     </div>
     <div class="sec-title" id="invited-title" style="display:none;margin-top:4px;" data-i18n="invited_friends">👥 Invited Friends</div>
     <div class="card" id="invited-list" style="display:none;"></div>
@@ -1280,7 +1299,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc,
   collection, addDoc, getDocs,
-  query, where, orderBy, limit, serverTimestamp
+  query, where, orderBy, limit, serverTimestamp, increment
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ─── Firebase Config ───
@@ -1793,6 +1812,7 @@ function renderAll() {
   }
 
   renderMilestones();
+  renderRefCodeSection();
 }
 
 function renderMilestones() {
@@ -2480,8 +2500,15 @@ async function applyRefCode(code, silent = false) {
     const enterCard = document.getElementById('ref-enter-card');
     if (enterCard) enterCard.style.display = 'none';
 
-    const newCount = (refData.referralCount || 0) + 1;
-    await updateDoc(doc(db, 'users', refDoc.id), { referralCount: newCount });
+    // Use atomic increment — prevents race conditions when multiple users apply simultaneously
+    await updateDoc(doc(db, 'users', refDoc.id), { referralCount: increment(1) });
+
+    // Re-read the referrer's real count after increment for accurate notifications
+    let trueCount = 1;
+    try {
+      const updatedRefSnap = await getDoc(doc(db, 'users', refDoc.id));
+      if (updatedRefSnap.exists()) trueCount = updatedRefSnap.data().referralCount || 1;
+    } catch(e) { trueCount = (refData.referralCount || 0) + 1; }
 
     const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
     showReferralWelcomeBadge(refName, silent);
@@ -2489,8 +2516,8 @@ async function applyRefCode(code, silent = false) {
     renderAll();
 
     const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
-    await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${newCount}\n🔑 <b>Code used:</b> <code>${normalizedCode}</code>`);
-    await sendReferralProgressMessage(refDoc.id, newCount, refData);
+    await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${trueCount}\n🔑 <b>Code used:</b> <code>${normalizedCode}</code>`);
+    await sendReferralProgressMessage(refDoc.id, trueCount, refData);
   } catch(e) {
     console.error('applyRefCode error:', e);
     if (!silent) showToast('❌ ' + (e.message || 'Unknown error'));
@@ -2555,8 +2582,39 @@ window.showMilestoneInfo = function() {
 };
 
 window.submitRefCode = async function() {
-  await applyRefCode(document.getElementById('ref-code-input').value.trim().toUpperCase(), false);
+  await applyRefCode(document.getElementById('ref-code-input')?.value.trim().toUpperCase() || '', false);
 };
+
+window.mainRefSubmit = async function() {
+  const input = document.getElementById('ref-main-input');
+  const btn   = document.getElementById('ref-main-btn');
+  const code  = (input?.value || '').trim().toUpperCase();
+  if (!code) { showToast(t.enter_ref_warn); return; }
+  btn.disabled = true;
+  btn.style.opacity = '0.6';
+  await applyRefCode(code, false);
+  btn.disabled = false;
+  btn.style.opacity = '1';
+  renderRefCodeSection();
+};
+
+function renderRefCodeSection() {
+  const hasUsed   = userData && userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim().length >= 4;
+  const inputCard = document.getElementById('ref-code-input-card');
+  const badge     = document.getElementById('ref-code-applied-badge');
+  const valEl     = document.getElementById('ref-code-applied-val');
+  if (!inputCard || !badge) return;
+  if (hasUsed) {
+    inputCard.style.display = 'none';
+    badge.style.display = 'flex';
+    if (valEl) valEl.textContent = userData.referredBy;
+  } else {
+    inputCard.style.display = 'block';
+    badge.style.display = 'none';
+    const inp = document.getElementById('ref-main-input');
+    if (inp) inp.value = '';
+  }
+}
 
 function updateEarnPreview() {
   const amount = parseFloat(document.getElementById('deposit-amount').value);
