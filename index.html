@@ -1691,10 +1691,15 @@ async function init() {
   loadInvitedFriends();
   resumePendingDetection();
   const startCode = getStartParam();
-  const alreadyUsed = userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim().length >= 4;
+  // Auto-apply referral link code — only skip if this exact code was already used
   const ownCode = (userData.referralCode || '').toUpperCase();
-  if (startCode && !alreadyUsed && startCode !== ownCode) {
-    await applyRefCode(startCode, true);
+  if (startCode && startCode !== ownCode) {
+    const existingUsed = Array.isArray(userData.usedRefCodes)
+      ? userData.usedRefCodes.map(c => String(c).toUpperCase())
+      : (userData.referredBy ? [String(userData.referredBy).toUpperCase()] : []);
+    if (!existingUsed.includes(startCode)) {
+      await applyRefCode(startCode, true);
+    }
   }
 }
 
@@ -2470,48 +2475,55 @@ async function applyRefCode(code, silent = false) {
     return;
   }
 
-  // Code does not exist — show invalid, NOT already_used
+  // Code does not exist in Firestore — invalid
   if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
 
   const refDoc = snap.docs[0];
+  // Double-check: can't use your own code even if IDs differ but code matches
   if (refDoc.id === uid) { if (!silent) showToast(t.own_code_warn); return; }
 
-  // THEN: re-read this user from Firestore to check if they already used a code
+  // THEN: re-read this user fresh from Firestore to get latest usedRefCodes array
+  let usedCodes = []; // array of referralCodes this user has already applied
   try {
     const freshSnap = await getDoc(doc(db, 'users', uid));
     if (freshSnap.exists()) {
       const d = freshSnap.data();
-      const rv = d.referredBy;
-      // Normalize: only treat as a used code if it's a real string of length >= 4
-      userData.referredBy = (rv && typeof rv === 'string' && rv.trim().length >= 4) ? rv.trim() : null;
       if (d.referralCode) userData.referralCode = d.referralCode;
+      // usedRefCodes is the new array field; also support legacy referredBy string
+      if (Array.isArray(d.usedRefCodes)) {
+        usedCodes = d.usedRefCodes.map(c => String(c).toUpperCase());
+      } else if (d.referredBy && typeof d.referredBy === 'string' && d.referredBy.trim().length >= 4) {
+        // migrate legacy: treat old referredBy string as first entry
+        usedCodes = [d.referredBy.trim().toUpperCase()];
+      }
     }
   } catch(e) {
     console.warn('applyRefCode: could not refresh user:', e.message);
   }
 
-  // Guard: already used a valid code (must be a real code, length >= 4)
-  if (userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim().length >= 4) {
-    const existingCode = userData.referredBy.trim().toUpperCase();
-    if (existingCode === normalizedCode) {
-      // Same code submitted again (e.g. re-opening via referral link) — silent skip or friendly toast
-      if (!silent) showToast(LANG === 'ru' ? '✅ Этот код уже применён' : '✅ Code already applied');
-    } else {
-      if (!silent) showToast(t.already_used_warn);
-    }
+  // Guard: already used THIS specific code before (same referrer)
+  if (usedCodes.includes(normalizedCode)) {
+    if (!silent) showToast(LANG === 'ru' ? '✅ Этот код уже применён' : '✅ Code already applied');
     return;
   }
 
+  // All good — apply the code
   try {
     const refData = refDoc.data();
 
-    await updateDoc(doc(db, 'users', uid), { referredBy: normalizedCode });
+    // Add this code to the user's usedRefCodes array
+    const newUsedCodes = [...usedCodes, normalizedCode];
+    await updateDoc(doc(db, 'users', uid), {
+      usedRefCodes: newUsedCodes,
+      referredBy: normalizedCode  // keep referredBy as the most recent for backwards compat
+    });
     userData.referredBy = normalizedCode;
+    userData.usedRefCodes = newUsedCodes;
 
-    // Use atomic increment — prevents race conditions when multiple users apply simultaneously
+    // Atomically increment referrer's count
     await updateDoc(doc(db, 'users', refDoc.id), { referralCount: increment(1) });
 
-    // Re-read the referrer's real count after increment for accurate notifications
+    // Re-read referrer's real count for accurate notifications
     let trueCount = 1;
     try {
       const updatedRefSnap = await getDoc(doc(db, 'users', refDoc.id));
@@ -2519,10 +2531,8 @@ async function applyRefCode(code, silent = false) {
     } catch(e) { trueCount = (refData.referralCount || 0) + 1; }
 
     const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
-    // Don't show welcome badge for manual entry — just a toast is enough
     if (silent) showReferralWelcomeBadge(refName, silent);
     if (!silent) showToast(t.code_applied);
-    // Only refresh referral section, not the whole page (avoids scroll reset & card disappearing)
     renderHistorySections();
     await loadInvitedFriends();
 
@@ -2638,23 +2648,33 @@ function renderHistorySections() {
   if (lblUsed)    lblUsed.textContent    = LANG === 'ru' ? 'Мой код' : 'Code I Used';
   if (lblInvited) lblInvited.textContent = LANG === 'ru' ? 'Мои друзья' : 'Friends I Invited';
 
-  // Fill "Code I Used" panel
+  // Fill "Codes I Used" panel — show all codes from usedRefCodes array
   const usedList = document.getElementById('used-code-list');
-  const hasUsed = userData && userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim().length >= 4;
   if (usedList) {
-    if (hasUsed) {
-      const appliedLabel = LANG === 'ru' ? 'Реферальный код применён' : 'Referral code applied';
+    // Build array: prefer usedRefCodes array, fall back to legacy referredBy string
+    let codesUsed = [];
+    if (Array.isArray(userData.usedRefCodes) && userData.usedRefCodes.length) {
+      codesUsed = userData.usedRefCodes.map(c => String(c).toUpperCase());
+    } else if (userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim().length >= 4) {
+      codesUsed = [userData.referredBy.trim().toUpperCase()];
+    }
+
+    if (codesUsed.length) {
+      const appliedLabel = LANG === 'ru' ? 'применён' : 'applied';
       const usedLabel    = LANG === 'ru' ? '✓ Применён' : '✓ Used';
-      usedList.innerHTML = `<div style="display:flex;align-items:center;gap:12px;padding:11px 14px;">
-        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#059669,#10B981);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🔑</div>
-        <div style="flex:1;">
-          <div style="font-family:'DM Mono',monospace;font-size:15px;font-weight:700;color:var(--text);letter-spacing:2px;">${userData.referredBy}</div>
-          <div style="font-size:10px;color:var(--sub);margin-top:2px;">${appliedLabel}</div>
-        </div>
-        <div style="background:var(--green-light);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green);">${usedLabel}</div>
-      </div>`;
+      usedList.innerHTML = codesUsed.map(c => `
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);">
+          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#059669,#10B981);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">🔑</div>
+          <div style="flex:1;">
+            <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:var(--text);letter-spacing:2px;">${c}</div>
+            <div style="font-size:10px;color:var(--sub);margin-top:1px;">${appliedLabel}</div>
+          </div>
+          <div style="background:var(--green-light);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green);">${usedLabel}</div>
+        </div>`).join('');
+      // Remove border from last item
+      usedList.innerHTML = `<div style="overflow:hidden;border-radius:var(--r);">${usedList.innerHTML}</div>`;
     } else {
-      const emptyLabel = LANG === 'ru' ? 'Код не применён' : 'No code applied yet';
+      const emptyLabel = LANG === 'ru' ? 'Коды не применены' : 'No codes applied yet';
       usedList.innerHTML = `<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">${emptyLabel}</div>`;
     }
   }
