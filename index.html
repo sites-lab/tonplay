@@ -1730,6 +1730,7 @@ async function loadOrCreateUser() {
     if (userData.referredBy && (typeof userData.referredBy !== 'string' || userData.referredBy.trim().length < 4)) {
       userData.referredBy = null;
     }
+    // referredByName is loaded automatically from snap.data() above
     const updates = {};
     if (!userData.referralCode) { const code = generateReferralCode(uid); userData.referralCode = code; updates.referralCode = code; }
     if (!userData.lang) { userData.lang = LANG; updates.lang = LANG; }
@@ -2418,7 +2419,7 @@ function showReferralWelcomeBadge(refName, silent) {
             font-size:28px;margin:0 auto 12px;
             box-shadow:0 6px 20px rgba(16,185,129,0.35);
           ">🎁</div>
-          <div style="font-size:11px;font-weight:800;color:#10B981;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">You were invited by</div>
+          <div style="font-size:11px;font-weight:800;color:#10B981;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">${LANG==='ru'?'Вас пригласил':'You were invited by'}</div>
           <div style="font-size:24px;font-weight:900;color:#0F172A;letter-spacing:-0.5px;">${refName}</div>
         </div>
         <div style="
@@ -2427,9 +2428,10 @@ function showReferralWelcomeBadge(refName, silent) {
           border-radius:14px;padding:12px 16px;margin-bottom:18px;text-align:center;
         ">
           <div style="font-size:13px;color:#64748B;line-height:1.6;">
-            🎉 Welcome to <strong style="color:#0F172A;">TonPlay</strong>!<br>
-            Your referral has been registered.<br>
-            <span style="color:#10B981;font-weight:700;">Deposit TON to start earning +10% every 15 days!</span>
+            ${LANG==='ru'
+              ? `🎉 Добро пожаловать в <strong style="color:#0F172A;">TonPlay</strong>!<br>Ваш реферал зарегистрирован.<br><span style="color:#10B981;font-weight:700;">Сделайте депозит и зарабатывайте +10% каждые 15 дней!</span>`
+              : `🎉 Welcome to <strong style="color:#0F172A;">TonPlay</strong>!<br>Your referral has been registered.<br><span style="color:#10B981;font-weight:700;">Deposit TON to start earning +10% every 15 days!</span>`
+            }
           </div>
         </div>
         <button onclick="document.getElementById('ref-badge-bg').parentElement.remove()" style="
@@ -2438,7 +2440,7 @@ function showReferralWelcomeBadge(refName, silent) {
           color:#fff;border:none;border-radius:14px;
           font-family:'Inter',sans-serif;font-size:15px;font-weight:800;
           cursor:pointer;box-shadow:0 6px 20px rgba(16,185,129,0.35);
-        ">Let's Go! 🚀</button>
+        ">${LANG==='ru'?'Вперёд! 🚀':"Let's Go! 🚀"}</button>
       </div>
     </div>
   `;
@@ -2513,12 +2515,15 @@ async function applyRefCode(code, silent = false) {
 
     // Add this code to the user's usedRefCodes array
     const newUsedCodes = [...usedCodes, normalizedCode];
+    const refDisplayName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
     await updateDoc(doc(db, 'users', uid), {
       usedRefCodes: newUsedCodes,
-      referredBy: normalizedCode  // keep referredBy as the most recent for backwards compat
+      referredBy: normalizedCode,  // keep referredBy as the most recent for backwards compat
+      referredByName: refDisplayName  // store referrer display name for the Referral tab
     });
     userData.referredBy = normalizedCode;
     userData.usedRefCodes = newUsedCodes;
+    userData.referredByName = refDisplayName;
 
     // Atomically increment referrer's count
     await updateDoc(doc(db, 'users', refDoc.id), { referralCount: increment(1) });
@@ -2647,6 +2652,29 @@ function renderHistorySections() {
   const lblInvited = document.getElementById('rhtab-invited-lbl');
   if (lblUsed)    lblUsed.textContent    = LANG === 'ru' ? 'Мой код' : 'Code I Used';
   if (lblInvited) lblInvited.textContent = LANG === 'ru' ? 'Мои друзья' : 'Friends I Invited';
+
+  // Render "Referred by" card at top of Friends I Invited tab
+  const invitedSection = document.getElementById('invited-section');
+  if (invitedSection) {
+    const existingCard = document.getElementById('my-referrer-card');
+    const referrerName = userData.referredByName || null;
+    if (referrerName) {
+      const lbl = LANG === 'ru' ? 'Меня пригласил' : 'Invited by';
+      const cardHtml = `<div id="my-referrer-card" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:linear-gradient(135deg,rgba(16,185,129,0.06),rgba(16,185,129,0.02));border-bottom:2px solid rgba(16,185,129,0.15);">
+        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#10B981,#059669);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🎁</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:10px;font-weight:800;color:var(--green);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">${lbl}</div>
+          <div style="font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${referrerName}</div>
+        </div>
+        <div style="background:var(--green-light);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">✓</div>
+      </div>`;
+      if (!existingCard) {
+        invitedSection.insertAdjacentHTML('afterbegin', cardHtml);
+      }
+    } else if (existingCard) {
+      existingCard.remove();
+    }
+  }
 
   // Fill "Codes I Used" panel — show all codes from usedRefCodes array
   const usedList = document.getElementById('used-code-list');
