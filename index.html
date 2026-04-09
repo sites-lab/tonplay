@@ -436,7 +436,7 @@ html,body{
 .ms-row:not(.done-ms):not(.next-ms):not(.locked-ms) .ms-bar-fill{background:linear-gradient(90deg,#D97706,#FBBF24);}
 
 /* ─── REF ENTER CODE ─── */
-.ref-enter-card{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;width:100%;display:block;}
+.ref-enter-card{background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;width:100%;}
 .ref-input{width:100%;padding:13px 16px;background:var(--surf);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Mono',monospace;font-size:16px;outline:none;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
 .ref-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,0.1);}
 .ref-input::placeholder{text-transform:none;letter-spacing:0;font-size:12px;font-family:'Inter',sans-serif;}
@@ -1137,47 +1137,14 @@ window.LANG = LANG;
       </button>
     </div>
     <div id="milestones-list"><div class="empty-state"><div class="spinner"></div></div></div>
-
-    <!-- ── ENTER REFERRAL CODE ── -->
-    <div style="margin-top:14px;background:var(--card2);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;">
-      <div style="font-size:10px;font-weight:800;letter-spacing:.8px;color:var(--sub);text-transform:uppercase;margin-bottom:10px;" data-i18n="enter_ref_code">Enter a Referral Code</div>
-      <input id="ref-main-input" type="text" maxlength="10"
-        style="width:100%;padding:13px 16px;background:var(--surf);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-family:'DM Mono',monospace;font-size:16px;outline:none;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;box-sizing:border-box;"
-        placeholder="e.g. ABC123XY"
-        autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false"
-        oninput="this.value=this.value.toUpperCase()"
-      >
-      <button onclick="mainRefSubmit()"
-        style="width:100%;padding:13px;background:linear-gradient(135deg,#059669,#10B981);color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(16,185,129,0.25);display:flex;align-items:center;justify-content:center;gap:6px;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-        <span data-i18n="apply_code_btn">✓ Apply Code</span>
-      </button>
+    <div class="ref-enter-card">
+      <div class="sec-title" data-i18n="enter_ref_code">Enter a Referral Code</div>
+      <div id="ref-used-display"></div>
+      <input class="ref-input" id="ref-code-input" type="text" maxlength="10" data-i18n-placeholder="ref_input_placeholder" placeholder="Enter code (e.g. ABC123)">
+      <button class="btn-green" id="ref-submit-btn" onclick="submitRefCode()" data-i18n="apply_code_btn">✓ Apply Code</button>
     </div>
-
-    <!-- ── REFERRAL HISTORY TABS ── -->
-    <div id="ref-history-wrap" style="margin-bottom:10px;">
-      <!-- Row tab switcher -->
-      <div style="display:flex;gap:6px;margin-bottom:8px;">
-        <button id="rhtab-used" onclick="switchRefHistoryTab('used')" style="flex:1;padding:8px 10px;border-radius:10px;border:1.5px solid rgba(16,185,129,0.4);background:linear-gradient(145deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04));color:var(--green);font-family:'Inter',sans-serif;font-size:10px;font-weight:800;cursor:pointer;letter-spacing:.3px;">
-          🔑 <span id="rhtab-used-lbl">Code I Used</span>
-        </button>
-        <button id="rhtab-invited" onclick="switchRefHistoryTab('invited')" style="flex:1;padding:8px 10px;border-radius:10px;border:1.5px solid var(--border);background:var(--surf);color:var(--sub);font-family:'Inter',sans-serif;font-size:10px;font-weight:800;cursor:pointer;letter-spacing:.3px;">
-          👥 <span id="rhtab-invited-lbl">Friends I Invited</span>
-        </button>
-      </div>
-      <!-- CODE I USED panel -->
-      <div id="used-code-section" style="display:block;">
-        <div class="card" id="used-code-list">
-          <div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;" id="used-code-empty">—</div>
-        </div>
-      </div>
-      <!-- INVITED FRIENDS panel -->
-      <div id="invited-section" style="display:none;">
-        <div class="card" id="invited-list">
-          <div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">—</div>
-        </div>
-      </div>
-    </div>
+    <div class="sec-title" id="invited-title" style="display:none;margin-top:4px;" data-i18n="invited_friends">👥 Invited Friends</div>
+    <div class="card" id="invited-list" style="display:none;"></div>
   </div>
 
   <!-- ════════════════ WITHDRAW TAB ════════════════ -->
@@ -1313,7 +1280,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import {
   getFirestore, doc, getDoc, setDoc, updateDoc,
   collection, addDoc, getDocs,
-  query, where, orderBy, limit, serverTimestamp, increment
+  query, where, orderBy, limit, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // ─── Firebase Config ───
@@ -1323,7 +1290,7 @@ const firebaseConfig = {
   projectId: "miniapp-ton",
   storageBucket: "miniapp-ton.firebasestorage.app",
   messagingSenderId: "991105630391",
-  appId: "1:991105630391:web:551166c522317fad980d32"
+  appId: "1:991105630791:web:551166c522317fad980d32"
 };
 const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
@@ -1459,7 +1426,7 @@ async function sendTonTransaction(amount, comment, uid) {
     showDetectionBanner(t.detecting);
     showToast(t.tx_sent);
 
-    const pendingRef = await addDoc(collection(db, 'pendingPayments'), {
+    const pendingRef = await addDoc(collection(db, 'depositNotifications'), {
       userId: uid,
       userName: currentUser.username || '',
       displayName: ((currentUser.first_name||'')+' '+(currentUser.last_name||'')).trim(),
@@ -1468,6 +1435,7 @@ async function sendTonTransaction(amount, comment, uid) {
       status: 'pending', createdAt: serverTimestamp()
     });
 
+    await confirmPaymentInFirebase(comment, amount, uid, pendingRef.id);
     startPaymentDetection(comment, amount, uid, pendingRef.id);
 
   } catch (err) {
@@ -1540,24 +1508,10 @@ async function checkTransactionOnChain(comment, expectedAmount) {
 
 async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
   try {
-    // Guard 1: check pending doc status
-    const pendingSnap = await getDoc(doc(db, 'pendingPayments', pendingDocId));
-    if (!pendingSnap.exists()) return;
-    if (pendingSnap.data()?.status === 'confirmed') return;
+    const pendingSnap = await getDoc(doc(db, 'depositNotifications', pendingDocId));
+    if (pendingSnap.exists() && pendingSnap.data()?.status === 'confirmed') return;
 
-    // Guard 2: check no deposit with this comment already exists (prevent double-credit)
-    const existingDeps = await getDocs(query(
-      collection(db, 'users/' + uid + '/deposits'),
-      where('comment', '==', comment),
-      limit(1)
-    ));
-    if (!existingDeps.empty) {
-      await updateDoc(doc(db, 'pendingPayments', pendingDocId), { status: 'confirmed', confirmedAt: serverTimestamp() });
-      hideDetectionBanner();
-      return;
-    }
-
-    await updateDoc(doc(db, 'pendingPayments', pendingDocId), { status: 'confirmed', confirmedAt: serverTimestamp() });
+    await updateDoc(doc(db, 'depositNotifications', pendingDocId), { status: 'confirmed', confirmedAt: serverTimestamp() });
 
     await addDoc(collection(db, 'users/' + uid + '/deposits'), {
       userId: uid,
@@ -1648,7 +1602,6 @@ function showPaySuccess(text) {
 const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
-tg?.disableVerticalSwipes?.();
 
 async function sendBotMessage(text) {
   try {
@@ -1691,15 +1644,10 @@ async function init() {
   loadInvitedFriends();
   resumePendingDetection();
   const startCode = getStartParam();
-  // Auto-apply referral link code — only skip if this exact code was already used
-  const ownCode = (userData.referralCode || '').toUpperCase();
-  if (startCode && startCode !== ownCode) {
-    const existingUsed = Array.isArray(userData.usedRefCodes)
-      ? userData.usedRefCodes.map(c => String(c).toUpperCase())
-      : (userData.referredBy ? [String(userData.referredBy).toUpperCase()] : []);
-    if (!existingUsed.includes(startCode)) {
-      await applyRefCode(startCode, true);
-    }
+  if (startCode && !userData.referredBy && startCode !== userData.referralCode) {
+    document.getElementById('ref-code-input').value = startCode;
+    switchTab('referral', document.querySelector('.tab-btn.ref-tab'));
+    await applyRefCode(startCode, true);
   }
 }
 
@@ -1726,11 +1674,6 @@ async function loadOrCreateUser() {
   if (snap.exists()) {
     userData = { id: uid, ...snap.data() };
     if (!userData.referralCode && userData.referral_code) userData.referralCode = userData.referral_code;
-    // Normalize referredBy: clear out empty/short stale values from Firestore
-    if (userData.referredBy && (typeof userData.referredBy !== 'string' || userData.referredBy.trim().length < 4)) {
-      userData.referredBy = null;
-    }
-    // referredByName is loaded automatically from snap.data() above
     const updates = {};
     if (!userData.referralCode) { const code = generateReferralCode(uid); userData.referralCode = code; updates.referralCode = code; }
     if (!userData.lang) { userData.lang = LANG; updates.lang = LANG; }
@@ -1822,8 +1765,14 @@ function renderAll() {
   document.getElementById('info-deposited').textContent= (userData.totalDeposited||0).toFixed(2) + ' TON';
   document.getElementById('info-earned').textContent   = (userData.totalEarned||0).toFixed(2) + ' TON';
 
+  const refUsed = document.getElementById('ref-used-display');
+  if (userData.referredBy) {
+    refUsed.innerHTML = `<div class="ref-used-badge">${t.ref_used_prefix}${userData.referredBy}</div>`;
+    document.getElementById('ref-code-input').disabled = true;
+    document.getElementById('ref-submit-btn').disabled = true;
+  }
+
   renderMilestones();
-  renderHistorySections();
 }
 
 function renderMilestones() {
@@ -1881,10 +1830,10 @@ async function loadInvitedFriends() {
     if (!refCode) return;
     const snap = await getDocs(query(collection(db, 'users'), where('referredBy', '==', refCode), limit(50)));
     const friends = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const section = document.getElementById('invited-section');
-    const list    = document.getElementById('invited-list');
-    if (!friends.length) { if (section) section.style.display = 'none'; return; }
-    if (section) section.style.display = 'block';
+    const title = document.getElementById('invited-title');
+    const list  = document.getElementById('invited-list');
+    if (!friends.length) { title.style.display = 'none'; list.style.display = 'none'; return; }
+    title.style.display = 'block'; list.style.display = 'block';
     list.innerHTML = friends.map(f => {
       const name = f.displayName || (f.userName ? '@' + f.userName : f.userId || f.id);
       const un   = f.userName ? '@' + f.userName : '';
@@ -2391,163 +2340,28 @@ window.shareRefLink = function() {
   }
 };
 
-function showReferralWelcomeBadge(refName, silent) {
-  // Only show the popup when coming from a link (silent=true means auto-applied from link)
-  if (!silent) return;
-
-  const el = document.createElement('div');
-  el.id = 'ref-welcome-badge';
-  el.innerHTML = `
-    <div style="
-      position:fixed;top:0;left:0;right:0;bottom:0;z-index:9998;
-      background:rgba(0,0,0,0.45);display:flex;align-items:flex-end;
-      justify-content:center;backdrop-filter:blur(4px);
-      animation:fadeInBg .3s ease;
-    " id="ref-badge-bg">
-      <div style="
-        background:#fff;border-radius:24px 24px 0 0;
-        padding:24px 24px 40px;width:100%;
-        animation:slideUpBadge .4s cubic-bezier(.34,1.56,.64,1);
-        box-shadow:0 -8px 40px rgba(0,0,0,0.18);
-      ">
-        <div style="width:40px;height:4px;background:#E2E8F0;border-radius:2px;margin:0 auto 20px;"></div>
-        <div style="text-align:center;margin-bottom:16px;">
-          <div style="
-            width:64px;height:64px;border-radius:50%;
-            background:linear-gradient(135deg,#059669,#10B981);
-            display:flex;align-items:center;justify-content:center;
-            font-size:28px;margin:0 auto 12px;
-            box-shadow:0 6px 20px rgba(16,185,129,0.35);
-          ">🎁</div>
-          <div style="font-size:11px;font-weight:800;color:#10B981;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">${LANG==='ru'?'Вас пригласил':'You were invited by'}</div>
-          <div style="font-size:24px;font-weight:900;color:#0F172A;letter-spacing:-0.5px;">${refName}</div>
-        </div>
-        <div style="
-          background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(16,185,129,0.03));
-          border:1.5px solid rgba(16,185,129,0.25);
-          border-radius:14px;padding:12px 16px;margin-bottom:18px;text-align:center;
-        ">
-          <div style="font-size:13px;color:#64748B;line-height:1.6;">
-            ${LANG==='ru'
-              ? `🎉 Добро пожаловать в <strong style="color:#0F172A;">TonPlay</strong>!<br>Ваш реферал зарегистрирован.<br><span style="color:#10B981;font-weight:700;">Сделайте депозит и зарабатывайте +10% каждые 15 дней!</span>`
-              : `🎉 Welcome to <strong style="color:#0F172A;">TonPlay</strong>!<br>Your referral has been registered.<br><span style="color:#10B981;font-weight:700;">Deposit TON to start earning +10% every 15 days!</span>`
-            }
-          </div>
-        </div>
-        <button onclick="document.getElementById('ref-badge-bg').parentElement.remove()" style="
-          width:100%;padding:15px;
-          background:linear-gradient(135deg,#059669,#10B981);
-          color:#fff;border:none;border-radius:14px;
-          font-family:'Inter',sans-serif;font-size:15px;font-weight:800;
-          cursor:pointer;box-shadow:0 6px 20px rgba(16,185,129,0.35);
-        ">${LANG==='ru'?'Вперёд! 🚀':"Let's Go! 🚀"}</button>
-      </div>
-    </div>
-  `;
-
-  // Add animations
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes fadeInBg{from{opacity:0}to{opacity:1}}
-    @keyframes slideUpBadge{from{transform:translateY(100%)}to{transform:translateY(0)}}
-  `;
-  document.head.appendChild(style);
-  document.body.appendChild(el);
-}
-
 async function applyRefCode(code, silent = false) {
   if (!code) { if (!silent) showToast(t.enter_ref_warn); return; }
-
-  const normalizedCode = code.trim().toUpperCase();
-  const uid = String(currentUser.id);
-
-  // Guard: own code? (fast check before any network call)
-  if (normalizedCode === (userData.referralCode || '').trim().toUpperCase()) {
-    if (!silent) showToast(t.own_code_warn);
-    return;
-  }
-
-  // FIRST: check if the code actually exists in Firestore
-  let snap;
+  if (userData.referredBy) { if (!silent) showToast(t.already_used_warn); return; }
+  if (code === userData.referralCode) { if (!silent) showToast(t.own_code_warn); return; }
   try {
-    snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', normalizedCode), limit(1)));
-  } catch(queryErr) {
-    console.error('applyRefCode: query error:', queryErr);
-    if (!silent) showToast('❌ ' + (queryErr.message || 'Query failed'));
-    return;
-  }
-
-  // Code does not exist in Firestore — invalid
-  if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
-
-  const refDoc = snap.docs[0];
-  // Double-check: can't use your own code even if IDs differ but code matches
-  if (refDoc.id === uid) { if (!silent) showToast(t.own_code_warn); return; }
-
-  // THEN: re-read this user fresh from Firestore to get latest usedRefCodes array
-  let usedCodes = []; // array of referralCodes this user has already applied
-  try {
-    const freshSnap = await getDoc(doc(db, 'users', uid));
-    if (freshSnap.exists()) {
-      const d = freshSnap.data();
-      if (d.referralCode) userData.referralCode = d.referralCode;
-      // usedRefCodes is the new array field; also support legacy referredBy string
-      if (Array.isArray(d.usedRefCodes)) {
-        usedCodes = d.usedRefCodes.map(c => String(c).toUpperCase());
-      } else if (d.referredBy && typeof d.referredBy === 'string' && d.referredBy.trim().length >= 4) {
-        // migrate legacy: treat old referredBy string as first entry
-        usedCodes = [d.referredBy.trim().toUpperCase()];
-      }
-    }
-  } catch(e) {
-    console.warn('applyRefCode: could not refresh user:', e.message);
-  }
-
-  // Guard: already used THIS specific code before (same referrer)
-  if (usedCodes.includes(normalizedCode)) {
-    if (!silent) showToast(LANG === 'ru' ? '✅ Этот код уже применён' : '✅ Code already applied');
-    return;
-  }
-
-  // All good — apply the code
-  try {
+    const snap = await getDocs(query(collection(db, 'users'), where('referralCode', '==', code), limit(1)));
+    if (snap.empty) { if (!silent) showToast(t.invalid_code); return; }
+    const refDoc  = snap.docs[0];
+    if (refDoc.id === String(currentUser.id)) { if (!silent) showToast(t.own_code_warn); return; }
     const refData = refDoc.data();
-
-    // Add this code to the user's usedRefCodes array
-    const newUsedCodes = [...usedCodes, normalizedCode];
-    const refDisplayName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
-    await updateDoc(doc(db, 'users', uid), {
-      usedRefCodes: newUsedCodes,
-      referredBy: normalizedCode,  // keep referredBy as the most recent for backwards compat
-      referredByName: refDisplayName  // store referrer display name for the Referral tab
-    });
-    userData.referredBy = normalizedCode;
-    userData.usedRefCodes = newUsedCodes;
-    userData.referredByName = refDisplayName;
-
-    // Atomically increment referrer's count
-    await updateDoc(doc(db, 'users', refDoc.id), { referralCount: increment(1) });
-
-    // Re-read referrer's real count for accurate notifications
-    let trueCount = 1;
-    try {
-      const updatedRefSnap = await getDoc(doc(db, 'users', refDoc.id));
-      if (updatedRefSnap.exists()) trueCount = updatedRefSnap.data().referralCount || 1;
-    } catch(e) { trueCount = (refData.referralCount || 0) + 1; }
-
-    const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
-    if (silent) showReferralWelcomeBadge(refName, silent);
-    if (!silent) showToast(t.code_applied);
-    renderHistorySections();
-    await loadInvitedFriends();
-
+    const uid     = String(currentUser.id);
+    await updateDoc(doc(db, 'users', uid), { referredBy: code });
+    userData.referredBy = code;
+    const newCount = (refData.referralCount || 0) + 1;
+    await updateDoc(doc(db, 'users', refDoc.id), { referralCount: newCount });
+    showToast(t.code_applied);
+    renderAll();
     const newName = currentUser.username ? '@' + currentUser.username : (currentUser.first_name || uid);
-    await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${trueCount}\n🔑 <b>Code used:</b> <code>${normalizedCode}</code>`);
-    await sendReferralProgressMessage(refDoc.id, trueCount, refData);
-  } catch(e) {
-    console.error('applyRefCode error:', e);
-    if (!silent) showToast('❌ ' + (e.message || 'Unknown error'));
-  }
+    const refName = refData.userName ? '@' + refData.userName : (refData.displayName || refDoc.id);
+    await sendBotMessage(`🎉 <b>New Referral!</b>\n\n👤 <b>New user:</b> ${newName} (ID: <code>${uid}</code>)\n🔗 <b>Referred by:</b> ${refName} (ID: <code>${refDoc.id}</code>)\n📊 <b>Referrer total refs:</b> ${newCount}\n🔑 <b>Code used:</b> <code>${code}</code>`);
+    await sendReferralProgressMessage(refDoc.id, newCount, refData);
+  } catch(e) { if (!silent) showToast('❌ ' + e.message); }
 }
 
 async function sendReferralProgressMessage(referrerId, newCount, refData) {
@@ -2608,105 +2422,9 @@ window.showMilestoneInfo = function() {
 };
 
 window.submitRefCode = async function() {
-  await applyRefCode(document.getElementById('ref-code-input')?.value.trim().toUpperCase() || '', false);
+  await applyRefCode(document.getElementById('ref-code-input').value.trim().toUpperCase(), false);
 };
 
-window.mainRefSubmit = async function() {
-  const input = document.getElementById('ref-main-input');
-  const code  = (input?.value || '').trim().toUpperCase();
-  if (!code) { showToast(t.enter_ref_warn); return; }
-  await applyRefCode(code, false);
-  // Clear input after attempt regardless of result
-  if (input) input.value = '';
-};
-
-window.switchRefHistoryTab = function(tab) {
-  const usedPanel    = document.getElementById('used-code-section');
-  const invitedPanel = document.getElementById('invited-section');
-  const btnUsed    = document.getElementById('rhtab-used');
-  const btnInvited = document.getElementById('rhtab-invited');
-  if (tab === 'used') {
-    usedPanel.style.display    = 'block';
-    invitedPanel.style.display = 'none';
-    btnUsed.style.borderColor  = 'rgba(16,185,129,0.4)';
-    btnUsed.style.background   = 'linear-gradient(145deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04))';
-    btnUsed.style.color        = 'var(--green)';
-    btnInvited.style.borderColor = 'var(--border)';
-    btnInvited.style.background  = 'var(--surf)';
-    btnInvited.style.color       = 'var(--sub)';
-  } else {
-    usedPanel.style.display    = 'none';
-    invitedPanel.style.display = 'block';
-    btnInvited.style.borderColor = 'rgba(16,185,129,0.4)';
-    btnInvited.style.background  = 'linear-gradient(145deg,rgba(16,185,129,0.12),rgba(16,185,129,0.04))';
-    btnInvited.style.color       = 'var(--green)';
-    btnUsed.style.borderColor  = 'var(--border)';
-    btnUsed.style.background   = 'var(--surf)';
-    btnUsed.style.color        = 'var(--sub)';
-  }
-};
-
-function renderHistorySections() {
-  // Translate tab labels
-  const lblUsed    = document.getElementById('rhtab-used-lbl');
-  const lblInvited = document.getElementById('rhtab-invited-lbl');
-  if (lblUsed)    lblUsed.textContent    = LANG === 'ru' ? 'Мой код' : 'Code I Used';
-  if (lblInvited) lblInvited.textContent = LANG === 'ru' ? 'Мои друзья' : 'Friends I Invited';
-
-  // Render "Referred by" card at top of Friends I Invited tab
-  const invitedSection = document.getElementById('invited-section');
-  if (invitedSection) {
-    const existingCard = document.getElementById('my-referrer-card');
-    const referrerName = userData.referredByName || null;
-    if (referrerName) {
-      const lbl = LANG === 'ru' ? 'Меня пригласил' : 'Invited by';
-      const cardHtml = `<div id="my-referrer-card" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:linear-gradient(135deg,rgba(16,185,129,0.06),rgba(16,185,129,0.02));border-bottom:2px solid rgba(16,185,129,0.15);">
-        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#10B981,#059669);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🎁</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:10px;font-weight:800;color:var(--green);letter-spacing:.5px;text-transform:uppercase;margin-bottom:2px;">${lbl}</div>
-          <div style="font-size:14px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${referrerName}</div>
-        </div>
-        <div style="background:var(--green-light);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green);flex-shrink:0;">✓</div>
-      </div>`;
-      if (!existingCard) {
-        invitedSection.insertAdjacentHTML('afterbegin', cardHtml);
-      }
-    } else if (existingCard) {
-      existingCard.remove();
-    }
-  }
-
-  // Fill "Codes I Used" panel — show all codes from usedRefCodes array
-  const usedList = document.getElementById('used-code-list');
-  if (usedList) {
-    // Build array: prefer usedRefCodes array, fall back to legacy referredBy string
-    let codesUsed = [];
-    if (Array.isArray(userData.usedRefCodes) && userData.usedRefCodes.length) {
-      codesUsed = userData.usedRefCodes.map(c => String(c).toUpperCase());
-    } else if (userData.referredBy && typeof userData.referredBy === 'string' && userData.referredBy.trim().length >= 4) {
-      codesUsed = [userData.referredBy.trim().toUpperCase()];
-    }
-
-    if (codesUsed.length) {
-      const appliedLabel = LANG === 'ru' ? 'применён' : 'applied';
-      const usedLabel    = LANG === 'ru' ? '✓ Применён' : '✓ Used';
-      usedList.innerHTML = codesUsed.map(c => `
-        <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border-bottom:1px solid var(--border);">
-          <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#059669,#10B981);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;">🔑</div>
-          <div style="flex:1;">
-            <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:700;color:var(--text);letter-spacing:2px;">${c}</div>
-            <div style="font-size:10px;color:var(--sub);margin-top:1px;">${appliedLabel}</div>
-          </div>
-          <div style="background:var(--green-light);border:1px solid rgba(16,185,129,0.3);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--green);">${usedLabel}</div>
-        </div>`).join('');
-      // Remove border from last item
-      usedList.innerHTML = `<div style="overflow:hidden;border-radius:var(--r);">${usedList.innerHTML}</div>`;
-    } else {
-      const emptyLabel = LANG === 'ru' ? 'Коды не применены' : 'No codes applied yet';
-      usedList.innerHTML = `<div style="padding:16px;text-align:center;color:var(--muted);font-size:12px;">${emptyLabel}</div>`;
-    }
-  }
-}
 function updateEarnPreview() {
   const amount = parseFloat(document.getElementById('deposit-amount').value);
   const preview = document.getElementById('earn-preview');
@@ -2791,9 +2509,6 @@ window.switchTab = function(name, btn) {
     }
     renderWithdrawDepositSelect();
   }
-  if (name === 'referral') {
-    loadInvitedFriends();
-  }
 };
 
 let modalAction = null;
@@ -2823,28 +2538,26 @@ async function resumePendingDetection() {
   try {
     const uid = String(currentUser.id);
     const snap = await getDocs(query(
-      collection(db, 'pendingPayments'),
+      collection(db, 'depositNotifications'),
       where('userId', '==', uid),
       where('status', '==', 'pending'),
       orderBy('createdAt', 'desc'),
       limit(5)
     ));
     if (snap.empty) return;
-    let anyResumed = false;
+    showDetectionBanner(t.detecting);
     for (const docSnap of snap.docs) {
       const pd = docSnap.data();
       const age = Date.now() - (pd.createdAt?.toMillis?.() || 0);
       if (age > 2 * 60 * 60 * 1000) {
-        await updateDoc(doc(db, 'pendingPayments', docSnap.id), { status: 'expired' });
+        await updateDoc(doc(db, 'depositNotifications', docSnap.id), { status: 'expired' });
         continue;
       }
-      // Only resume polling — never auto-credit without on-chain verification
-      showDetectionBanner(t.detecting);
-      startPaymentDetection(pd.comment, pd.amount, uid, docSnap.id);
-      anyResumed = true;
-      break;
+      await confirmPaymentInFirebase(pd.comment, pd.amount, uid, docSnap.id);
+      hideDetectionBanner();
+      return;
     }
-    if (!anyResumed) hideDetectionBanner();
+    hideDetectionBanner();
   } catch(e) {
     console.error('resumePendingDetection error:', e);
     hideDetectionBanner();
