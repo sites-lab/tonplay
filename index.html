@@ -1553,7 +1553,11 @@ async function confirmPaymentInFirebase(comment, amount, uid, pendingDocId) {
       `🔑 <b>Comment:</b> <code>${comment}</code>\n` +
       `📱 <b>Source:</b> TON Connect (auto-detected)`
     );
-    await sendUserBotMessage(uid, amount, comment);
+    // Only send user message if this is a fresh confirmation (not a resume)
+    if (!pendingSnap.exists() || pendingSnap.data()?.botMessageSent !== true) {
+      await updateDoc(doc(db, 'depositNotifications', pendingDocId), { botMessageSent: true });
+      await sendUserBotMessage(uid, amount, comment);
+    }
     showToast(t.balance_updated);
   } catch (e) {
     console.error('Firebase confirmation error:', e);
@@ -2553,7 +2557,21 @@ async function resumePendingDetection() {
         await updateDoc(doc(db, 'depositNotifications', docSnap.id), { status: 'expired' });
         continue;
       }
-      await confirmPaymentInFirebase(pd.comment, pd.amount, uid, docSnap.id);
+      // Only attempt silent re-check — confirmPaymentInFirebase already guards against double-credits
+      // but we suppress admin/user bot messages on resume to avoid spam
+      const alreadyMessaged = pd.botMessageSent === true;
+      if (!alreadyMessaged) {
+        await confirmPaymentInFirebase(pd.comment, pd.amount, uid, docSnap.id);
+      } else {
+        // Deposit was already messaged; just silently confirm the balance if needed
+        const userRef = doc(db, 'users', uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          renderAll();
+          await loadDeposits();
+        }
+        await updateDoc(doc(db, 'depositNotifications', docSnap.id), { status: 'confirmed' });
+      }
       hideDetectionBanner();
       return;
     }
